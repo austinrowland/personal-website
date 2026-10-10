@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/*
+  "Field Notes" theme tokens — placeholder values, refined in the design phase.
+  paper: warm off-white base. ink: near-black text. accent: warm amber
+  (a quiet nod to Postman orange and the cookie table).
+*/
+@theme {
+  --color-paper: #faf7f2;
+  --color-ink: #1c1917;
+  --color-muted: #78716c;
+  --color-accent: #b45309;
+
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+html {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
