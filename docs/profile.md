@@ -141,7 +141,9 @@ field reports — one operating pattern with different props.
   avova-health.JPG, gt-with-bethanie.JPG, guatemala-summit.JPEG (Apr
   2026 — story TBD), org-fair.JPG, phr-gloves.JPG, spread-the-love-24.HEIC,
   tedx-gt.jpg, tikkun-olam-speech.jpg, ultramarathon.JPG
-- **Email:** austin@rowlandclan.net (personal domain)
+- **Public contact email:** austinrowland2002@gmail.com
+- **Booking:** https://cal.com/austin-rowland/30min
+- **Headshot:** `src/assets/headshot.jpg`
 - **Socials:** LinkedIn /in/austinrowland, Instagram /austinrowland,
   GitHub /austinrowland, X /austinrowland02
 

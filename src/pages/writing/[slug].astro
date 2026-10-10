@@ -1,0 +1,75 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("writing", (p) => !p.data.externalUrl);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const date = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "long",
+  timeZone: "UTC",
+}).format(post.data.date);
+---
+
+<Base title={post.data.title} description={post.data.description}>
+  <div
+    data-progress
+    aria-hidden="true"
+    class="fixed top-0 left-0 z-10 h-px w-full origin-left scale-x-0 bg-accent"
+  >
+  </div>
+  <article class="mx-auto max-w-2xl px-6 pt-12 pb-28 md:pt-20">
+    <p class="label text-muted">{date} · {post.data.tags.join(" · ")}</p>
+    <h1 class="mt-4 font-display text-5xl leading-[1.05] tracking-tight">
+      {post.data.title}
+    </h1>
+    <div class="prose-field mt-10">
+      <Content />
+    </div>
+    <a href="/writing" class="label link mt-16 inline-block text-muted">← all writing</a>
+  </article>
+</Base>
+
+<style is:global>
+  .prose-field {
+    font-size: 1.125rem;
+    line-height: 1.75;
+  }
+  .prose-field > * + * {
+    margin-top: 1.25em;
+  }
+  .prose-field h2 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1.15;
+    margin-top: 2em;
+  }
+  .prose-field a {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+  .prose-field blockquote {
+    border-left: 2px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  function initProgress() {
+    const bar = document.querySelector<HTMLElement>("[data-progress]");
+    if (!bar) return;
+    const update = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+    };
+    update();
+    addEventListener("scroll", update, { passive: true });
+    document.addEventListener("astro:before-swap", () => removeEventListener("scroll", update), { once: true });
+  }
+  document.addEventListener("astro:page-load", initProgress);
+</script>

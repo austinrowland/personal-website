@@ -1,0 +1,113 @@
+# Site Layout Map
+
+> Built from `docs/profile.md` and the four inspiration sites in
+> `docs/design-inspiration/` (Frederick James, Shubhu, Carter Cote, Aditya
+> Dave). Decisions: light theme by default with a dark toggle, a minimal
+> homepage, expressive motion.
+
+## Global system
+
+- **Theme:** light "paper" by default, with a dark "night" theme behind a
+  toggle in the header. The choice is saved in `localStorage`, and an inline
+  script applies it before first paint so the page never flashes.
+  - Light: paper `#faf7f2`, ink `#1c1917`, muted `#78716c`
+  - Dark: night `#0e0d0c`, bone `#ece7df`, muted `#8a837b`
+  - Accent (both themes): amber, used for one word or one mark per view at most
+- **Type:** serif display for headlines (lowercase voice), sans-serif for
+  body text, mono caps for the nav, dates, badges, and captions.
+- **Header:** social icons on the left; nav on the right in mono caps (WORK,
+  WRITING, ABOUT, PHOTOS, CONTACT); theme toggle at the far right. This
+  follows Carter's layout.
+- **Footer:** a tiny centered name and year, like Frederick's.
+- **Photos:** treated as film prints, with a soft shadow, a slight warm
+  grade, and a small mono caption.
+- **Motion:** expressive but well behaved.
+  - Scroll reveals: fade and rise, staggered within a group.
+  - View transitions between pages (Astro `ClientRouter`).
+  - Everything turns off under `prefers-reduced-motion`.
+
+## `/` Home (minimal)
+
+1. **Hero, with the signature animation.** A ▶ marker blinks, then
+   "hi, i'm austin rowland." types out in the serif. A short lowercase bio
+   fades in below, with inline links to Postman, the AI-Ready APIs post,
+   and TEDx.
+2. **Film-strip nav.** Four stacked image bars, each showing one of your
+   photos with a lowercase label. On hover, the strip expands and the photo
+   comes into full color, like a print developing.
+   - work → `phr-gloves`
+   - writing → `tedx-gt`
+   - about → `spread-the-love-24` (convert from HEIC)
+   - photos → `ultramarathon`
+3. **Closing line.** A two-tone sentence: "go and watch where it fails." in
+   ink, then "then improve the route." in muted gray, followed by a small
+   contact link.
+
+## `/work`
+
+1. **Intro.** One serif line, such as "building where the product meets
+   real people."
+2. **Experience list** (Aditya-style). Mono date ranges on the left, with
+   the role and organization in serif. Each entry has a one-line field-note
+   take and opens as an accordion to show 2–3 proof points from the resume.
+   The entries are Postman, Palo Alto Networks, Cisco, and GTRI.
+3. **Work grid** (Shubhu-style). Filter tabs: all, ventures, community,
+   research, agents. Cards use type badges: VENTURE, COMMUNITY, RESEARCH,
+   AGENT, TALK. The cards are:
+   - Avova Health
+   - Tikkun Olam Makers
+   - Spread the Love
+   - Passive haptic rehab gloves
+   - AI-Ready APIs assessment
+   - Customer insights agent
+   - TEDx talk
+
+## `/writing` and `/writing/[slug]`
+
+- A plain dated list with tags, with AI-Ready APIs pinned as the featured
+  piece. Each entry is either a local MDX post or a link to an external
+  source (the Postman blog, the LinkedIn TEDx reflection).
+- Post pages use a narrow reading column with a mono date line and a
+  progress hairline at the top.
+
+## `/about`
+
+1. **Headline.** "a little peek into my life," shown next to a fanned stack
+   of photos that spreads apart on scroll (Aditya-style).
+2. **Chapters.** A sticky mono label runs down the left (e.g. "01 / georgia
+   tech") while photo prints reveal on the right. Chapters:
+   1. georgia tech + the ra years
+   2. spread the love
+   3. tedx: ambition and discipline
+   4. tikkun olam makers
+   5. avova health
+   6. security roots
+   7. postman and agents
+   8. outside the work: running, film, coffee club, guatemala
+3. **Values strip.** Three short lines on voice and values from the
+   profile.
+
+## `/photos`
+
+- A film-print gallery: one large image at a time with a mono caption
+  (place and year). Arrow keys and swipe move through the set. A contact
+  sheet grid toggle shows every photo at once.
+
+## `/contact`
+
+- Headline: "building with agents? let's talk."
+- An email chip with a copy-to-clipboard button.
+- A cal.com booking embed, loaded only when it scrolls into view.
+
+## Inputs
+
+- Booking: https://cal.com/austin-rowland/30min
+- Contact email: austinrowland2002@gmail.com
+- Headshot: `src/assets/headshot.jpg` (home hero and about stack)
+
+## Still open
+
+- Real photos for every placeholder. `Photo.astro` renders a labeled
+  placeholder until it receives a `src`, so each one can be swapped in
+  individually. Add files under `src/assets/photos/` and pass them in.
+- The Guatemala summit story

@@ -1,0 +1,166 @@
+---
+import Base from "../layouts/Base.astro";
+import Photo from "../components/Photo.astro";
+import headshot from "../assets/headshot.jpg";
+
+const stack = [
+  { name: "gt-with-bethanie", alt: "At Georgia Tech" },
+  { name: "ultramarathon", alt: "Running an ultramarathon" },
+  { name: "tedx-gt", alt: "On stage at TEDxGeorgiaTech" },
+];
+
+const chapters = [
+  {
+    label: "georgia tech",
+    title: "computer engineering, and the ra years.",
+    body: "i studied computer engineering at georgia tech, worked as a resident assistant, and learned to build on a calendar: gym at 7, class, the library, coffee at blue donkey, then the cisco office in the afternoon.",
+    photo: "org-fair",
+  },
+  {
+    label: "spread the love",
+    title: "scope is not surrender.",
+    body: "the plan was 5,000 cookies with handwritten notes. we started with 500. the first 500 created evidence, the evidence brought helpers, and it grew to 1,000 and then 4,000+. the charm was the interface; the real work was logistics.",
+    photo: "spread-the-love-24",
+  },
+  {
+    label: "tedx",
+    title: "ambition might be your achilles heel.",
+    body: "my first talk, with no public speaking behind me. ambition expands the field of what's possible, and discipline is what moves you across it. you can do anything, but you can't do everything.",
+    photo: "tedx-gt",
+  },
+  {
+    label: "tikkun olam makers",
+    title: "all you need is the desire to help people.",
+    body: "i led a community of 100+ student makers building assistive technology for people with disabilities: eye-gaze communication software, custom wheelchairs, a piano pedal bite switch. we raised $45k+ and delivered devices to 20+ families.",
+    photo: "tikkun-olam-speech",
+  },
+  {
+    label: "avova health",
+    title: "listening before building.",
+    body: "i founded a preventative health platform and interviewed 100+ patients before writing much code. it made the finals of mayo clinic's 2024 startup competition. alongside it, i built computer vision tools for a stroke rehab glove lab.",
+    photo: "avova-health",
+  },
+  {
+    label: "security roots",
+    title: "systems that can't fail quietly.",
+    body: "critical infrastructure at gtri, cloud security at cisco, then a firewall os and vpn daemon at palo alto networks. that's also where i started building agents for my own engineering workflow.",
+    photo: "phr-gloves",
+  },
+  {
+    label: "postman",
+    title: "agents are the new audience.",
+    body: "now i'm a founding forward deployed engineer on the cto's frontier team. we build, operate, and scale new uses of postman with the largest api programs in the world, and lately that means making apis ready for the agents that consume them.",
+    photo: "postman",
+  },
+  {
+    label: "outside the work",
+    title: "running, film, and coffee.",
+    body: "i train for ultramarathons, shoot film, read, and host a coffee club. most of my favorite days involve all four. san francisco by way of maryland, with family in st. augustine.",
+    photo: "guatemala-summit",
+  },
+];
+
+const values = [
+  "make the work visible.",
+  "show up for people, especially when it's inconvenient.",
+  "good work that costs you your life isn't as good as you think.",
+];
+---
+
+<Base
+  title="About"
+  description="The longer story: Georgia Tech, Spread the Love, TEDx, Tikkun Olam Makers, Avova Health, security, and Postman."
+>
+  <section
+    class="mx-auto grid max-w-6xl items-center gap-16 px-6 pt-12 pb-24 md:grid-cols-2 md:pt-20"
+  >
+    <div class="flex flex-col gap-6">
+      <p class="label text-muted" data-reveal>about</p>
+      <h1
+        class="font-display text-5xl leading-[1.05] tracking-tight sm:text-6xl"
+        data-reveal
+        style="--i:1"
+      >
+        a little peek <span class="text-muted">into my life.</span>
+      </h1>
+      <p class="max-w-md text-lg leading-relaxed text-ink/80" data-reveal style="--i:2">
+        engineer, builder, runner, host. most of what i've made started close to
+        real people, and most of what i've learned came from watching where things
+        broke.
+      </p>
+    </div>
+    <div class="fan relative mx-auto aspect-[4/3] w-full max-w-md" data-reveal>
+      {
+        stack.map((p, i) => (
+          <div class="fan-card absolute inset-0" style={`--n:${i}`}>
+            <Photo alt={p.alt} name={p.name} class="aspect-[4/3]" />
+          </div>
+        ))
+      }
+      <div class="fan-card absolute inset-0" style="--n:3">
+        <Photo
+          src={headshot}
+          alt="Austin Rowland on the coast"
+          class="aspect-[4/3]"
+          sizes="(min-width: 768px) 28rem, 100vw"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-24">
+    <ol class="flex flex-col">
+      {
+        chapters.map((c, i) => (
+          <li class="grid gap-6 border-t border-line py-14 md:grid-cols-[14rem_1fr_1fr] md:gap-10">
+            <p class="label text-muted md:sticky md:top-8 md:self-start">
+              {String(i + 1).padStart(2, "0")} / {c.label}
+            </p>
+            <div class="flex flex-col gap-4" data-reveal>
+              <h2 class="font-display text-3xl leading-tight sm:text-4xl">{c.title}</h2>
+              <p class="leading-relaxed text-ink/80">{c.body}</p>
+            </div>
+            <div data-reveal style="--i:1" class:list={[i % 2 ? "md:rotate-[-1deg]" : "md:rotate-[1deg]"]}>
+              <Photo alt={c.title} name={c.photo} />
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="border-t border-line px-6 py-24">
+    <ul class="mx-auto flex max-w-4xl flex-col gap-4 text-center">
+      {
+        values.map((v, i) => (
+          <li
+            class:list={[
+              "font-display text-3xl leading-tight sm:text-4xl",
+              i > 0 && "text-muted",
+            ]}
+            data-reveal
+            style={`--i:${i}`}
+          >
+            {v}
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .fan-card {
+    transition: transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .fan.is-visible .fan-card {
+    transform: translate(calc((var(--n) - 1.5) * 9%), calc((var(--n) - 1.5) * -2%))
+      rotate(calc((var(--n) - 1.5) * 4deg));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fan .fan-card {
+      transform: translate(calc((var(--n) - 1.5) * 9%), calc((var(--n) - 1.5) * -2%))
+        rotate(calc((var(--n) - 1.5) * 4deg));
+    }
+  }
+</style>

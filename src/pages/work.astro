@@ -1,0 +1,147 @@
+---
+import Base from "../layouts/Base.astro";
+import PageIntro from "../components/PageIntro.astro";
+import Photo from "../components/Photo.astro";
+import { experience, projects, projectKinds } from "../data/work";
+
+const kindLabel = Object.fromEntries(
+  projectKinds.map((k) => [k.value, k.label.replace(/s$/, "")]),
+);
+---
+
+<Base
+  title="Work"
+  description="Roles, ventures, research, and agents from Austin Rowland: Postman, Palo Alto Networks, Cisco, Avova Health, Tikkun Olam Makers, and more."
+>
+  <PageIntro eyebrow="work" title="building where the product meets real people." />
+
+  <section class="mx-auto max-w-6xl px-6 pb-24" aria-labelledby="experience">
+    <h2 id="experience" class="label mb-6 text-muted">experience</h2>
+    <ol class="border-t border-line">
+      {
+        experience.map((job, i) => (
+          <li class="border-b border-line" data-reveal style={`--i:${i}`}>
+            <details class="group">
+              <summary class="grid cursor-pointer list-none gap-2 py-6 md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-8 [&::-webkit-details-marker]:hidden">
+                <span class="label text-muted">
+                  {job.start} — {job.end}
+                </span>
+                <span class="flex flex-col gap-1">
+                  <span class="font-display text-2xl leading-tight sm:text-3xl">
+                    {job.org}
+                    <span class="text-muted"> · {job.role.toLowerCase()}</span>
+                  </span>
+                  <span class="text-ink/75">{job.take}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="label text-muted transition-transform duration-300 group-open:rotate-45"
+                >
+                  +
+                </span>
+              </summary>
+              <ul class="flex flex-col gap-2 pb-7 text-ink/80 md:ml-[13rem] md:max-w-2xl">
+                {job.points.map((p) => (
+                  <li class="flex gap-3">
+                    <span class="text-accent">—</span>
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-28" aria-labelledby="projects">
+    <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <h2 id="projects" class="label text-muted">projects, ventures + talks</h2>
+      <div role="group" aria-label="Filter projects" class="flex flex-wrap gap-2" data-filters>
+        <button type="button" data-filter="all" aria-pressed="true" class="filter-btn label">
+          all
+        </button>
+        {
+          projectKinds.map((k) => (
+            <button type="button" data-filter={k.value} aria-pressed="false" class="filter-btn label">
+              {k.label.toLowerCase()}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+    <ul class="grid gap-x-8 gap-y-12 md:grid-cols-2" data-grid>
+      {
+        projects.map((p, i) => {
+          const body = (
+            <>
+              <Photo alt={p.title} name={p.photo ?? p.kind} class="aspect-[16/10]" />
+              <div class="mt-4 flex items-center gap-3">
+                <h3 class="font-display text-2xl leading-tight">{p.title}</h3>
+                <span class="label rounded-full border border-line px-2 py-0.5 text-muted">
+                  {kindLabel[p.kind]}
+                </span>
+                <span class="label ml-auto text-muted">{p.years}</span>
+              </div>
+              <p class="mt-2 text-ink/75">{p.summary}</p>
+            </>
+          );
+          return (
+            <li data-kind={p.kind} data-reveal style={`--i:${i % 2}`} class="transition-opacity">
+              {p.href ? (
+                <a href={p.href} target="_blank" rel="noopener noreferrer" class="group block transition-transform duration-500 hover:-translate-y-1">
+                  {body}
+                </a>
+              ) : (
+                <div>{body}</div>
+              )}
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .filter-btn {
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    padding: 0.35rem 0.8rem;
+    color: var(--muted);
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  .filter-btn:hover {
+    color: var(--ink);
+  }
+  .filter-btn[aria-pressed="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+</style>
+
+<script>
+  function initFilters() {
+    const group = document.querySelector<HTMLElement>("[data-filters]");
+    const grid = document.querySelector<HTMLElement>("[data-grid]");
+    if (!group || !grid || group.dataset.bound) return;
+    group.dataset.bound = "true";
+    group.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-filter]");
+      if (!btn) return;
+      const value = btn.dataset.filter;
+      group
+        .querySelectorAll("[data-filter]")
+        .forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      grid.querySelectorAll<HTMLElement>("[data-kind]").forEach((item) => {
+        item.hidden = value !== "all" && item.dataset.kind !== value;
+      });
+    });
+  }
+  document.addEventListener("astro:page-load", initFilters);
+</script>

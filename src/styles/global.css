@@ -1,24 +1,169 @@
 @import "tailwindcss";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
 
-/*
-  "Field Notes" theme tokens — placeholder values, refined in the design phase.
-  paper: warm off-white base. ink: near-black text. accent: warm amber
-  (a quiet nod to Postman orange and the cookie table).
-*/
-@theme {
-  --color-paper: #faf7f2;
-  --color-ink: #1c1917;
-  --color-muted: #78716c;
-  --color-accent: #b45309;
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
-    serif;
-  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+:root {
+  --paper: #faf7f2;
+  --ink: #1c1917;
+  --muted: #78716c;
+  --line: #e7e1d8;
+  --surface: #f2ede5;
+  --accent: #b45309;
+  color-scheme: light;
 }
 
-html {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-body);
+[data-theme="dark"] {
+  --paper: #0e0d0c;
+  --ink: #ece7df;
+  --muted: #8a837b;
+  --line: #2a2724;
+  --surface: #181614;
+  --accent: #f59e0b;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --color-accent: var(--accent);
+
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-body: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
+}
+
+@layer base {
+  html {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    transition:
+      background-color 0.4s ease,
+      color 0.4s ease;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--paper);
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+}
+
+@layer components {
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .link {
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    transition: text-decoration-color 0.2s ease;
+  }
+  .link:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  /* Film-print treatment for photos and their placeholders. */
+  .print {
+    background: var(--surface);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.06),
+      0 18px 40px -18px rgb(0 0 0 / 0.35);
+  }
+
+  .placeholder {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        transparent 0 10px,
+        color-mix(in oklab, var(--ink) 5%, transparent) 10px 11px
+      ),
+      linear-gradient(
+        160deg,
+        color-mix(in oklab, var(--accent) 18%, var(--surface)),
+        var(--surface) 70%
+      );
+  }
+}
+
+/*
+  Scroll reveals. Content is hidden only once the head script has added
+  the `js` class, so it stays visible without JavaScript.
+*/
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Signature hero: characters print in sequence after a blinking marker. */
+.type-char {
+  opacity: 0;
+  animation: type-in 0.01s linear forwards;
+  animation-delay: calc(700ms + var(--d) * 55ms);
+}
+@keyframes type-in {
+  to {
+    opacity: 1;
+  }
+}
+.caret {
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.fade-after-type {
+  opacity: 0;
+  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--after, 1.8s);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .type-char,
+  .fade-after-type,
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
 }

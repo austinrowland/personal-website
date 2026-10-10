@@ -1,20 +1,77 @@
 ---
 import Base from "../layouts/Base.astro";
+import Photo from "../components/Photo.astro";
+import FilmStrips from "../components/FilmStrips.astro";
+import headshot from "../assets/headshot.jpg";
+
+const greeting = "hi, i'm austin rowland.";
+const chars = [...greeting];
+const typeDone = 700 + chars.length * 55;
 ---
 
-<Base title="Austin Rowland">
-  <main
-    class="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-4 px-6"
+<Base>
+  <section
+    class="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-12 pb-20 md:grid-cols-[1.1fr_1fr] md:pt-20"
   >
-    <p class="font-mono text-xs uppercase tracking-widest text-muted">
-      Field notes
+    <div class="flex flex-col gap-8">
+      <h1
+        aria-label={greeting}
+        class="flex items-baseline gap-3 font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl"
+      >
+        <span aria-hidden="true" class="caret text-[0.45em] text-accent">▶</span>
+        <span aria-hidden="true">
+          {chars.map((c, i) => <span class="type-char" style={`--d:${i}`}>{c}</span>)}
+        </span>
+      </h1>
+      <div
+        class="fade-after-type flex max-w-xl flex-col gap-4 text-lg leading-relaxed text-ink/85"
+        style={`--after:${typeDone + 150}ms`}
+      >
+        <p>
+          i'm a founding forward deployed engineer at <a
+            class="link"
+            href="https://www.postman.com/"
+            target="_blank"
+            rel="noopener noreferrer">postman</a
+          > in san francisco, building agents and agent infrastructure. i work
+          inside some of the largest api programs in the world to see where agents
+          get stuck, then fix the route.
+        </p>
+        <p>
+          lately that's <a class="link" href="/writing">ai-ready apis</a>.
+          before that: security at palo alto networks and cisco, computer
+          engineering at georgia tech, cookies on the lawn, and a <a
+            class="link"
+            href="/work">tedx talk</a
+          > about ambition.
+        </p>
+      </div>
+    </div>
+    <div
+      class="fade-after-type md:rotate-[1.2deg]"
+      style={`--after:${typeDone + 450}ms`}
+    >
+      <Photo
+        src={headshot}
+        alt="Austin Rowland smiling on the coast in a cream sweatshirt and sunglasses"
+        caption="austin rowland · san francisco"
+        loading="eager"
+        sizes="(min-width: 768px) 45vw, 100vw"
+      />
+    </div>
+  </section>
+
+  <section class="px-6 pb-24">
+    <FilmStrips />
+  </section>
+
+  <section class="px-6 pb-28 text-center" data-reveal>
+    <p class="mx-auto max-w-3xl font-display text-3xl leading-tight sm:text-5xl">
+      go and watch where it fails.
+      <span class="block text-muted">then improve the route.</span>
     </p>
-    <h1 class="font-display text-5xl font-medium tracking-tight">
-      Austin Rowland
-    </h1>
-    <p class="text-lg leading-relaxed text-muted">
-      Building agents and agent infrastructure at Postman. New site in
-      progress.
-    </p>
-  </main>
+    <a href="/contact" class="label link mt-10 inline-block text-muted">
+      let's talk →
+    </a>
+  </section>
 </Base>
