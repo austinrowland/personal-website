@@ -1,6 +1,10 @@
 # Local planning/spec artifacts
 docs/superpowers/
+docs/design-inspiration/
 .superpowers/
+
+# Other local tool settings
+.codex/
 
 # macOS
 .DS_Store
