@@ -16,17 +16,18 @@ export const nav = [
   { label: "Contact", href: "/contact" },
 ];
 
+/** `icon` is a Remix Icon name from @iconify-json/ri. */
 export const socials = [
-  { label: "X", short: "x", href: "https://x.com/austinrowland02" },
-  { label: "GitHub", short: "gh", href: "https://github.com/austinrowland" },
-  {
-    label: "LinkedIn",
-    short: "in",
-    href: "https://www.linkedin.com/in/austinrowland/",
-  },
+  { label: "GitHub", icon: "github-fill", href: "https://github.com/austinrowland" },
+  { label: "X", icon: "twitter-x-fill", href: "https://x.com/austinrowland02" },
   {
     label: "Instagram",
-    short: "ig",
+    icon: "instagram-line",
     href: "https://www.instagram.com/austinrowland/",
+  },
+  {
+    label: "LinkedIn",
+    icon: "linkedin-box-fill",
+    href: "https://www.linkedin.com/in/austinrowland/",
   },
 ];

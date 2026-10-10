@@ -1,6 +1,7 @@
 ---
 import { nav, socials } from "../data/site";
 import ThemeToggle from "./ThemeToggle.astro";
+import Icon from "./Icon.astro";
 
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 ---
@@ -12,7 +13,7 @@ const path = Astro.url.pathname.replace(/\/$/, "") || "/";
     <a href="/" class="font-display text-xl leading-none" aria-label="Home">
       ar<span class="text-accent">.</span>
     </a>
-    <ul class="hidden items-center gap-3 sm:flex">
+    <ul class="hidden items-center gap-3.5 sm:flex">
       {
         socials.map((s) => (
           <li>
@@ -21,9 +22,10 @@ const path = Astro.url.pathname.replace(/\/$/, "") || "/";
               target="_blank"
               rel="noopener noreferrer"
               aria-label={s.label}
-              class="label text-muted transition-colors hover:text-ink"
+              title={s.label}
+              class="block text-muted transition-colors hover:text-ink"
             >
-              {s.short}
+              <Icon name={s.icon} class="h-[17px] w-[17px]" />
             </a>
           </li>
         ))
