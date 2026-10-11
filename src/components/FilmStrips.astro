@@ -3,10 +3,10 @@ import { Image } from "astro:assets";
 import { getPhoto, getPhotoFocus } from "../lib/photos";
 
 const strips = [
-  { label: "Work", href: "/work", photo: "phr-gloves" },
+  { label: "Work", href: "/work", photo: "tom-build-day" },
   { label: "Writing", href: "/writing", photo: "tedx-gt" },
-  { label: "About", href: "/about", photo: "spread-the-love-24" },
-  { label: "Photos", href: "/photos", photo: "ultramarathon" },
+  { label: "About", href: "/about", photo: "spread-the-love" },
+  { label: "Photos", href: "/photos", photo: "guatemala-summit" },
 ].map((s) => ({ ...s, image: getPhoto(s.photo), focus: getPhotoFocus(s.photo) }));
 ---
 

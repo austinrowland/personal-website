@@ -83,6 +83,7 @@ export const projects: Project[] = [
     years: "2026",
     summary:
       "An assessment that grades how well agents can discover, understand, and operate an API: 25 checks across five categories.",
+    photo: "postman-ai-ready-apis",
     href: "https://blog.postman.com/ai-ready-apis-agents-are-the-new-audience/",
   },
   {
@@ -106,7 +107,7 @@ export const projects: Project[] = [
     years: "2023–2024",
     summary:
       "Free cookies and handwritten notes on the Georgia Tech lawn: 500, then 1,000, then 4,000+ in total.",
-    photo: "spread-the-love-24",
+    photo: "spread-the-love",
   },
   {
     title: "Tikkun Olam Makers",
@@ -114,7 +115,7 @@ export const projects: Project[] = [
     years: "2022–2024",
     summary:
       "Led 100+ student makers building assistive technology for 20+ families, with $45k+ raised and three makeathons.",
-    photo: "tikkun-olam-speech",
+    photo: "tom-build-day",
   },
   {
     title: "Passive haptic rehab gloves",

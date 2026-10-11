@@ -141,6 +141,15 @@ field reports — one operating pattern with different props.
   avova-health.JPG, gt-with-bethanie.JPG, guatemala-summit.JPEG (Apr
   2026 — story TBD), org-fair.JPG, phr-gloves.JPG, spread-the-love-24.HEIC,
   tedx-gt.jpg, tikkun-olam-speech.jpg, ultramarathon.JPG
+- **Site photos** (web-sized, in `src/assets/photos/`): tedx-gt,
+  spread-the-love, tom-build-day (toddler mobility trainer build day),
+  avova-health (Mayo Clinic stage), georgia-tech-graduation,
+  graduation-interview (interviewed on mic at commencement),
+  guatemala-summit (volcano summit, active volcano in the background),
+  postman-ai-ready-apis (with the "Are your APIs ready for AI agents?"
+  billboard in SF)
+- **Reference photos** (not yet used, in `src/assets/reference/`):
+  shaky-fins (group photo at a "Shaky Fins" show)
 - **Public contact email:** austinrowland2002@gmail.com
 - **Booking:** https://cal.com/austin-rowland/30min
 - **Headshot:** `src/assets/headshot.jpg`
@@ -157,9 +166,9 @@ field reports — one operating pattern with different props.
 
 ## 9. Gaps to fill (next sessions)
 
-- Headshot + film photo scans (Drive folder currently empty)
+- Remaining photos: phr-gloves, tikkun-olam-speech, ultramarathon, and
+  film scans (Drive folder currently empty)
 - Which essays seed the Writing section (AI-Ready APIs is the anchor;
   TEDx reflection is a candidate)
-- The Guatemala summit story (ask)
-- Which social links to surface, and contact email choice
-  (rowlandclan.net vs austinrowland.com)
+- The Guatemala summit story: a volcano hike, details to add (ask)
+- The Shaky Fins story (ask)
