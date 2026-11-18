@@ -1,0 +1,27 @@
+---
+import Base from "../layouts/Base.astro";
+import PageIntro from "../components/PageIntro.astro";
+import { nav } from "../data/site";
+---
+
+<Base title="Page not found" description="There is no page at this address.">
+  <PageIntro eyebrow="404" title="This page wandered off.">
+    <p class="max-w-xl text-lg leading-relaxed text-ink/80" data-reveal style="--i:2">
+      the link might be old, or the page never existed. try one of these instead.
+    </p>
+    <ul class="mt-4 flex flex-wrap gap-3" data-reveal style="--i:3">
+      <li>
+        <a href="/" class="label rounded-full border border-line px-4 py-2 text-ink transition-colors hover:border-accent">home</a>
+      </li>
+      {
+        nav.map((item) => (
+          <li>
+            <a href={item.href} class="label rounded-full border border-line px-4 py-2 text-ink transition-colors hover:border-accent">
+              {item.label.toLowerCase()}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </PageIntro>
+</Base>

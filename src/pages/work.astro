@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { pages } from "../data/pages";
 import PageIntro from "../components/PageIntro.astro";
 import Photo from "../components/Photo.astro";
 import { experience, projects, projectKinds } from "../data/work";
@@ -10,10 +11,7 @@ const kindLabel = Object.fromEntries(
 );
 ---
 
-<Base
-  title="Work"
-  description="Roles, ventures, research, and agents from Austin Rowland: Postman, Palo Alto Networks, Cisco, Avova Health, Tikkun Olam Makers, and more."
->
+<Base title={pages.work.title} description={pages.work.description}>
   <PageIntro eyebrow="work" title="Building where the product meets real people." />
 
   <section class="mx-auto max-w-6xl px-6 pb-24" aria-labelledby="experience">

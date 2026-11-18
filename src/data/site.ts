@@ -31,3 +31,6 @@ export const socials = [
     href: "https://www.linkedin.com/in/austinrowland/",
   },
 ];
+
+/** Content Signals (https://contentsignals.org/) sent in robots.txt and response headers. */
+export const contentSignal = "search=yes, ai-input=yes, ai-train=yes";

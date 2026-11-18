@@ -3,13 +3,14 @@ import Base from "../layouts/Base.astro";
 import Photo from "../components/Photo.astro";
 import FilmStrips from "../components/FilmStrips.astro";
 import headshot from "../assets/headshot.jpg";
+import { homeJsonLd } from "../lib/structured-data";
 
 const greeting = "Hi, I'm Austin Rowland.";
 const chars = [...greeting];
 const typeDone = 700 + chars.length * 55;
 ---
 
-<Base>
+<Base jsonLd={homeJsonLd()}>
   <section
     class="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-12 pb-20 md:grid-cols-[1.1fr_1fr] md:pt-20"
   >
