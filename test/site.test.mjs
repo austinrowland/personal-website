@@ -33,6 +33,9 @@ describe("content negotiation", () => {
     assert.equal(prefersMarkdown("text/html,application/xhtml+xml,*/*;q=0.8"), false);
     assert.equal(prefersMarkdown("text/html, text/markdown;q=0.5"), false);
     assert.equal(prefersMarkdown(""), false);
+    assert.equal(prefersMarkdown("*/*"), false);
+    assert.equal(prefersMarkdown("text/markdown;q=0.5, text/*;q=1"), false);
+    assert.equal(prefersMarkdown("text/markdown, */*;q=0.8"), true);
   });
 
   test("markdownPathFor maps page paths to .md twins", () => {
@@ -76,6 +79,13 @@ describe("content negotiation", () => {
     const md = await get("/nope", { Accept: "text/markdown" });
     assert.equal(md.status, 404);
     assert.match(await md.text(), /# Page not found/);
+  });
+
+  test("encoded control characters in the path don't crash the server", async () => {
+    const res = await get("/%0A");
+    assert.equal(res.status, 404);
+    assert.match(res.headers.get("link"), /<\/%0A\.md>/);
+    assert.equal((await get("/")).status, 200);
   });
 });
 
