@@ -1,0 +1,56 @@
+---
+import { Image } from "astro:assets";
+import { getPhoto, getPhotoFocus } from "../lib/photos";
+
+const strips = [
+  { label: "Work", href: "/work", photo: "tom-build-day" },
+  { label: "Writing", href: "/writing", photo: "tedx-gt" },
+  { label: "About", href: "/about", photo: "spread-the-love" },
+  { label: "Photos", href: "/photos", photo: "guatemala-summit" },
+].map((s) => ({ ...s, image: getPhoto(s.photo), focus: getPhotoFocus(s.photo) }));
+---
+
+<nav aria-label="Sections" class="mx-auto flex w-full max-w-md flex-col gap-3">
+  {
+    strips.map((s, i) => (
+      <a
+        href={s.href}
+        data-reveal
+        style={`--i:${i}`}
+        class="strip print group relative flex h-14 items-center justify-center overflow-hidden transition-[height] duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] hover:h-24 focus-visible:h-24"
+      >
+        {s.image ? (
+          <>
+            <Image
+              src={s.image}
+              alt=""
+              widths={[...new Set([480, 900].map((w) => Math.min(w, s.image!.width)))]}
+              sizes="28rem"
+              class="absolute inset-0 h-full w-full object-cover grayscale transition duration-700 group-hover:scale-105 group-hover:grayscale-0 group-focus-visible:grayscale-0"
+              style={s.focus ? `object-position:${s.focus}` : undefined}
+            />
+            <span aria-hidden="true" class="absolute inset-0 bg-black/45 transition-colors duration-700 group-hover:bg-black/30" />
+          </>
+        ) : (
+          <span
+            aria-hidden="true"
+            class="placeholder absolute inset-0 grayscale transition duration-700 group-hover:scale-105 group-hover:grayscale-0 group-focus-visible:grayscale-0"
+          />
+        )}
+        <span
+          class:list={[
+            "relative font-display text-2xl tracking-tight transition-colors",
+            s.image ? "text-white" : "text-ink/80 group-hover:text-ink",
+          ]}
+        >
+          {s.label}
+        </span>
+        {!s.image && (
+          <span class="label absolute right-3 bottom-2 text-muted opacity-0 transition-opacity group-hover:opacity-100">
+            photo · {s.photo}
+          </span>
+        )}
+      </a>
+    ))
+  }
+</nav>

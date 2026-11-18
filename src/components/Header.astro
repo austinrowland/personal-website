@@ -1,0 +1,59 @@
+---
+import { nav, socials } from "../data/site";
+import ThemeToggle from "./ThemeToggle.astro";
+import Icon from "./Icon.astro";
+
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+---
+
+<header
+  class="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-6"
+>
+  <div class="flex items-center gap-5">
+    <a href="/" class="font-display text-xl leading-none" aria-label="Home">
+      ar<span class="text-accent">.</span>
+    </a>
+    <ul class="hidden items-center gap-3.5 sm:flex">
+      {
+        socials.map((s) => (
+          <li>
+            <a
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label}
+              title={s.label}
+              class="block text-muted transition-colors hover:text-ink"
+            >
+              <Icon name={s.icon} class="h-[17px] w-[17px]" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+  <nav aria-label="Primary" class="flex items-center gap-4 sm:gap-6">
+    <ul class="flex items-center gap-3 sm:gap-6">
+      {
+        nav.map((item) => {
+          const active = path.startsWith(item.href);
+          return (
+            <li>
+              <a
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                class:list={[
+                  "label transition-colors hover:text-ink",
+                  active ? "text-ink" : "text-muted",
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+    <ThemeToggle />
+  </nav>
+</header>

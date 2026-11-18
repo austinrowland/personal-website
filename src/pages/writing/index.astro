@@ -1,0 +1,58 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import PageIntro from "../../components/PageIntro.astro";
+
+const posts = (await getCollection("writing")).sort(
+  (a, b) =>
+    Number(b.data.featured) - Number(a.data.featured) ||
+    b.data.date.getTime() - a.data.date.getTime(),
+);
+
+const fmt = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Base title="Writing" description="Essays and field notes from Austin Rowland on agents, APIs, and building.">
+  <PageIntro eyebrow="writing" title="My thoughts and views on the world" />
+
+  <section class="mx-auto max-w-6xl px-6 pb-28">
+    <ul class="border-t border-line">
+      {
+        posts.map((post, i) => {
+          const external = post.data.externalUrl;
+          return (
+            <li class="border-b border-line" data-reveal style={`--i:${i}`}>
+              <a
+                href={external ?? `/writing/${post.id}`}
+                target={external ? "_blank" : undefined}
+                rel={external ? "noopener noreferrer" : undefined}
+                class="group grid gap-2 py-7 md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-8"
+              >
+                <span class="label text-muted">{fmt.format(post.data.date)}</span>
+                <span class="flex flex-col gap-2">
+                  <span class="font-display text-2xl leading-tight transition-colors group-hover:text-accent sm:text-3xl">
+                    {post.data.title}
+                  </span>
+                  <span class="text-ink/75">{post.data.description}</span>
+                  <span class="label flex flex-wrap gap-3 text-muted">
+                    {post.data.featured && <span class="text-accent">featured</span>}
+                    {post.data.publication && <span>{post.data.publication}</span>}
+                    {post.data.tags.map((t) => <span>#{t}</span>)}
+                  </span>
+                </span>
+                <span aria-hidden="true" class="label text-muted transition-transform group-hover:translate-x-1">
+                  {external ? "↗" : "→"}
+                </span>
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+    <p class="label mt-10 text-muted" data-reveal>more essays in progress.</p>
+  </section>
+</Base>

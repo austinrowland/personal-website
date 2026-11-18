@@ -1,0 +1,131 @@
+---
+import Base from "../layouts/Base.astro";
+import PageIntro from "../components/PageIntro.astro";
+import Photo from "../components/Photo.astro";
+import { gallery } from "../data/photos";
+---
+
+<Base title="Photos" description="Photos by and of Austin Rowland: film, community, running, and travel.">
+  <PageIntro eyebrow="photos" title="The Art of Noticing: World through my Lens">
+    <p class="max-w-2xl text-lg leading-relaxed text-ink/80" data-reveal style="--i:2">
+      I have always loved photography as it requires careful thought about what
+      matters to you and how you choose to showcase it. They show the way that
+      someone views the world and documents them through a lens. In a way, my
+      love for photography translates to my love for my work, my hobbies, and my
+      relationships. Anyways, if you care to see the world through my lens,
+      here's a glimpse of some meaningful moments in my life.
+    </p>
+    <div class="mt-4 flex items-center gap-2" data-reveal style="--i:3">
+      <button type="button" data-view="single" aria-pressed="true" class="view-btn label">one at a time</button>
+      <button type="button" data-view="grid" aria-pressed="false" class="view-btn label">contact sheet</button>
+    </div>
+  </PageIntro>
+
+  <section class="mx-auto max-w-6xl px-6 pb-28" data-gallery data-mode="single">
+    <div class="single-view flex flex-col gap-6">
+      <div class="relative">
+        {
+          gallery.map((p, i) => (
+            <div data-slide={i} hidden={i !== 0} class="slide">
+              <Photo alt={p.alt} name={p.name} caption={p.caption} class="aspect-[3/2]" fit="contain" sizes="(min-width: 1152px) 1104px, 100vw" />
+            </div>
+          ))
+        }
+      </div>
+      <div class="flex items-center justify-between">
+        <button type="button" data-prev class="label link text-muted">← prev</button>
+        <span class="label text-muted" data-counter aria-live="polite">01 / {String(gallery.length).padStart(2, "0")}</span>
+        <button type="button" data-next class="label link text-muted">next →</button>
+      </div>
+    </div>
+
+    <ul class="grid-view hidden grid-cols-2 gap-6 md:grid-cols-3">
+      {
+        gallery.map((p, i) => (
+          <li>
+            <button type="button" data-open={i} class="block w-full text-left transition-transform duration-500 hover:-translate-y-1">
+              <Photo alt={p.alt} name={p.name} caption={p.caption} class="aspect-[3/2]" />
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>
+
+<style>
+  [data-mode="grid"] .single-view {
+    display: none;
+  }
+  [data-mode="grid"] .grid-view {
+    display: grid;
+  }
+  .slide:not([hidden]) {
+    animation: develop 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @keyframes develop {
+    from {
+      opacity: 0;
+      filter: grayscale(1) blur(4px);
+    }
+  }
+  .view-btn {
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    padding: 0.35rem 0.8rem;
+    color: var(--muted);
+  }
+  .view-btn[aria-pressed="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+</style>
+
+<script>
+  function initGallery() {
+    const root = document.querySelector<HTMLElement>("[data-gallery]");
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = "true";
+    const slides = [...root.querySelectorAll<HTMLElement>("[data-slide]")];
+    const counter = root.querySelector<HTMLElement>("[data-counter]")!;
+    const viewBtns = [...document.querySelectorAll<HTMLButtonElement>("[data-view]")];
+    let index = 0;
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    const show = (i: number) => {
+      index = (i + slides.length) % slides.length;
+      slides.forEach((s, j) => (s.hidden = j !== index));
+      counter.textContent = `${pad(index + 1)} / ${pad(slides.length)}`;
+    };
+    const setMode = (mode: string) => {
+      root.dataset.mode = mode;
+      viewBtns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === mode)));
+    };
+
+    root.querySelector("[data-prev]")!.addEventListener("click", () => show(index - 1));
+    root.querySelector("[data-next]")!.addEventListener("click", () => show(index + 1));
+    viewBtns.forEach((b) => b.addEventListener("click", () => setMode(b.dataset.view!)));
+    root.querySelectorAll<HTMLElement>("[data-open]").forEach((b) =>
+      b.addEventListener("click", () => {
+        show(Number(b.dataset.open));
+        setMode("single");
+      }),
+    );
+
+    const onKey = (e: KeyboardEvent) => {
+      if (root.dataset.mode !== "single") return;
+      if (e.key === "ArrowLeft") show(index - 1);
+      if (e.key === "ArrowRight") show(index + 1);
+    };
+    let touchX = 0;
+    root.addEventListener("touchstart", (e) => (touchX = e.touches[0].clientX), { passive: true });
+    root.addEventListener("touchend", (e) => {
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 40) show(index + (dx < 0 ? 1 : -1));
+    });
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("astro:before-swap", () => document.removeEventListener("keydown", onKey), { once: true });
+  }
+  document.addEventListener("astro:page-load", initGallery);
+</script>

@@ -1,0 +1,22 @@
+---
+import ri from "@iconify-json/ri/icons.json";
+
+interface Props {
+  name: string;
+  class?: string;
+}
+
+const { name, class: className = "h-4 w-4" } = Astro.props;
+const icon = (ri.icons as Record<string, { body: string }>)[name];
+if (!icon) throw new Error(`Unknown Remix icon: ${name}`);
+const size = ri.width ?? 24;
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox={`0 0 ${size} ${size}`}
+  fill="currentColor"
+  aria-hidden="true"
+  class={className}
+  set:html={icon.body}
+/>

@@ -1,6 +1,10 @@
-# Local Superpowers planning/spec artifacts
+# Local planning/spec artifacts
 docs/superpowers/
+docs/design-inspiration/
 .superpowers/
+
+# Other local tool settings
+.codex/
 
 # macOS
 .DS_Store
@@ -11,12 +15,16 @@ docs/superpowers/
 # Dependencies
 node_modules/
 
-# Next.js
-.next/
-out/
+# Astro build output
+dist/
+.astro/
 
 # TypeScript
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Environment
+.env
 .env*.local
+
+# Logs
+npm-debug.log*
