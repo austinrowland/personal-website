@@ -4,8 +4,10 @@ import Photo from "../components/Photo.astro";
 import FilmStrips from "../components/FilmStrips.astro";
 import headshot from "../assets/headshot.jpg";
 import { homeJsonLd } from "../lib/structured-data";
+import { homeIntro, homeTagline } from "../data/home";
+import { pages } from "../data/pages";
 
-const greeting = "Hi, I'm Austin Rowland.";
+const greeting = pages.home.headline;
 const chars = [...greeting];
 const typeDone = 700 + chars.length * 55;
 ---
@@ -25,27 +27,24 @@ const typeDone = 700 + chars.length * 55;
         </span>
       </h1>
       <div
-        class="fade-after-type flex max-w-xl flex-col gap-4 text-lg leading-relaxed text-ink/85"
+        class="fade-after-type flex max-w-xl flex-col gap-4 text-lg lowercase leading-relaxed text-ink/85"
         style={`--after:${typeDone + 150}ms`}
       >
-        <p>
-          i'm a founding forward deployed engineer at <a
-            class="link"
-            href="https://www.postman.com/"
-            target="_blank"
-            rel="noopener noreferrer">postman</a
-          > in san francisco, building agents and agent infrastructure. i work
-          inside some of the largest api programs in the world to see where agents
-          get stuck, then fix the route.
-        </p>
-        <p>
-          lately that's <a class="link" href="/writing">ai-ready apis</a>.
-          before that: security at palo alto networks and cisco, computer
-          engineering at georgia tech, cookies on the lawn, and a <a
-            class="link"
-            href="/work">tedx talk</a
-          > about ambition.
-        </p>
+        {
+          homeIntro.map((para) => (
+            <p>
+              {para.map((s) =>
+                typeof s === "string" ? (
+                  s
+                ) : s.href.startsWith("/") ? (
+                  <a class="link" href={s.href}>{s.text}</a>
+                ) : (
+                  <a class="link" href={s.href} target="_blank" rel="noopener noreferrer">{s.text}</a>
+                ),
+              )}
+            </p>
+          ))
+        }
       </div>
     </div>
     <div
@@ -68,8 +67,8 @@ const typeDone = 700 + chars.length * 55;
 
   <section class="px-6 pb-28 text-center" data-reveal>
     <p class="mx-auto max-w-3xl font-display text-3xl leading-tight sm:text-5xl">
-      Go and watch where it fails.
-      <span class="block text-muted">Then improve the route.</span>
+      {homeTagline[0]}
+      <span class="block text-muted">{homeTagline[1]}</span>
     </p>
     <a href="/contact" class="label link mt-10 inline-block text-muted">
       let's talk →

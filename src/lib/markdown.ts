@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import { aboutIntro, chapters, values } from "../data/about";
-import { absoluteUrl, markdownPath, pages, type PageMeta } from "../data/pages";
+import { homeIntro, homeTagline, type Segment } from "../data/home";
+import { absoluteUrl, fullHeadline, markdownPath, pages, type PageMeta } from "../data/pages";
 import { gallery, galleryIntro } from "../data/photos";
 import { site, socials } from "../data/site";
 import { experience, projectKinds, projects } from "../data/work";
@@ -14,6 +15,12 @@ export type MarkdownPage = PageMeta & {
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const link = (label: string, href: string) => `[${label}](${href})`;
 const mdLink = (page: PageMeta) => link(page.title, absoluteUrl(markdownPath(page.path)));
+const segments = (parts: Segment[]) =>
+  parts
+    .map((s) =>
+      typeof s === "string" ? s : link(s.text, s.href.startsWith("/") ? absoluteUrl(markdownPath(s.href)) : s.href),
+    )
+    .join("");
 const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeZone: "UTC" });
 
 async function writingEntries() {
@@ -36,11 +43,9 @@ function contactLines(): string {
 
 function home(): string {
   const sections = [pages.work, pages.writing, pages.about, pages.photos, pages.contact];
-  return `I'm a founding forward deployed engineer at ${link("Postman", "https://www.postman.com/")} in ${site.location}, building agents and agent infrastructure. I work inside some of the largest API programs in the world to see where agents get stuck, then fix the route.
+  return `${homeIntro.map(segments).join("\n\n")}
 
-Lately that's ${link("AI-Ready APIs", absoluteUrl(markdownPath(pages.writing.path)))}. Before that: security at Palo Alto Networks and Cisco, computer engineering at Georgia Tech, free cookies on the lawn with Spread the Love, and a TEDx talk about ambition.
-
-> Go and watch where it fails. Then improve the route.
+> ${homeTagline.join(" ")}
 
 ## On this site
 
@@ -73,9 +78,7 @@ ${items
     })
     .filter(Boolean)
     .join("\n\n");
-  return `Building where the product meets real people.
-
-## Experience
+  return `## Experience
 
 ${jobs}
 
@@ -114,15 +117,11 @@ ${items}`;
 }
 
 function contact(): string {
-  return `Building with agents? Let's talk.
-
-${contactLines()}`;
+  return `${contactLines()}`;
 }
 
 function writingIndex(posts: CollectionEntry<"writing">[]): string {
-  return `My thoughts and views on the world.
-
-${posts
+  return `${posts
   .map((p) => {
     const where = p.data.publication ? `, ${p.data.publication}` : "";
     return `- ${link(p.data.title, postUrl(p))} (${dateFmt.format(p.data.date)}${where}): ${p.data.description}`;
@@ -150,9 +149,9 @@ export const notFound: MarkdownPage = {
 export async function markdownPages(): Promise<MarkdownPage[]> {
   const posts = await writingEntries();
   return [
-    { ...pages.home, content: home() },
-    { ...pages.work, content: work() },
-    { ...pages.writing, content: writingIndex(posts) },
+    page(pages.home, home()),
+    page(pages.work, work()),
+    page(pages.writing, writingIndex(posts)),
     ...posts
       .filter((p) => !p.data.externalUrl)
       .map((p) => ({
@@ -161,11 +160,17 @@ export async function markdownPages(): Promise<MarkdownPage[]> {
         description: p.data.description,
         content: post(p),
       })),
-    { ...pages.about, content: about() },
-    { ...pages.photos, content: photos() },
-    { ...pages.contact, content: contact() },
+    page(pages.about, about()),
+    page(pages.photos, photos()),
+    page(pages.contact, contact()),
   ];
 }
+
+/** Pairs a page's metadata with its body, led by the same headline the HTML page shows. */
+const page = (meta: PageMeta, body: string): MarkdownPage => ({
+  ...meta,
+  content: meta.headline ? `${fullHeadline(meta)}\n\n${body}` : body,
+});
 
 export function renderMarkdown(page: MarkdownPage): string {
   const heading = page.path === "/" ? site.name : page.title;
