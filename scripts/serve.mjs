@@ -51,7 +51,7 @@ export function prefersMarkdown(accept = "") {
   };
   if (!ranges.has("text/markdown") && !ranges.has("text/x-markdown")) return false;
   const markdown = Math.max(ranges.get("text/markdown") ?? 0, ranges.get("text/x-markdown") ?? 0);
-  const html = Math.max(quality("text/html"), quality("application/xhtml+xml"));
+  const html = quality("text/html");
   return markdown > 0 && markdown >= html;
 }
 

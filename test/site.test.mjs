@@ -36,6 +36,7 @@ describe("content negotiation", () => {
     assert.equal(prefersMarkdown("*/*"), false);
     assert.equal(prefersMarkdown("text/markdown;q=0.5, text/*;q=1"), false);
     assert.equal(prefersMarkdown("text/markdown, */*;q=0.8"), true);
+    assert.equal(prefersMarkdown("text/markdown;q=0.8, text/html;q=0, */*;q=1"), true);
   });
 
   test("markdownPathFor maps page paths to .md twins", () => {
