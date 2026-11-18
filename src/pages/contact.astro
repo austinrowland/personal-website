@@ -6,7 +6,7 @@ import { site } from "../data/site";
 ---
 
 <Base title={pages.contact.title} description={pages.contact.description}>
-  <PageIntro eyebrow="contact" title="Building with agents? Let's talk.">
+  <PageIntro eyebrow="contact" title={pages.contact.headline}>
     <div class="mt-4 flex flex-wrap items-center gap-3" data-reveal style="--i:2">
       <a href={`mailto:${site.email}`} class="rounded-full border border-line px-4 py-2 text-ink transition-colors hover:border-accent">
         {site.email}

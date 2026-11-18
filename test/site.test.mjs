@@ -90,6 +90,40 @@ describe("content negotiation", () => {
   });
 });
 
+// Strips HTML or Markdown down to comparable words, so formatting differences don't count as drift.
+const words = (s) =>
+  s
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&amp;/g, "&")
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+describe("HTML and Markdown stay in sync", () => {
+  test("every headline and paragraph on a page appears in its Markdown twin", () => {
+    for (const path of sitemapPaths()) {
+      const html = readFileSync(`dist${path}index.html`, "utf8");
+      const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+      const md = words(readFileSync(`dist${markdownPathFor(path)}`, "utf8"));
+      const blocks = [
+        ...[...main.matchAll(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/g)].map(
+          ([, attrs, inner]) => attrs.match(/aria-label="([^"]*)"/)?.[1] ?? inner,
+        ),
+        ...[...main.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/g)]
+          .filter(([, attrs]) => !/class="[^"]*\blabel\b/.test(attrs))
+          .map(([, , inner]) => inner),
+      ];
+      for (const block of blocks) {
+        const text = words(block);
+        if (text) assert.ok(md.includes(text), `${path}: "${text.slice(0, 80)}" is missing from ${markdownPathFor(path)}`);
+      }
+    }
+  });
+});
+
 describe("agent files", () => {
   test("every sitemap page has a Markdown twin listed in llms.txt or llms-full.txt", async () => {
     const llms = readFileSync("dist/llms.txt", "utf8");
