@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import Base from "../../layouts/Base.astro";
+import { pages } from "../../data/pages";
 import PageIntro from "../../components/PageIntro.astro";
 
 const posts = (await getCollection("writing")).sort(
@@ -16,7 +17,7 @@ const fmt = new Intl.DateTimeFormat("en-US", {
 });
 ---
 
-<Base title="Writing" description="Essays and field notes from Austin Rowland on agents, APIs, and building.">
+<Base title={pages.writing.title} description={pages.writing.description}>
   <PageIntro eyebrow="writing" title="My thoughts and views on the world" />
 
   <section class="mx-auto max-w-6xl px-6 pb-28">

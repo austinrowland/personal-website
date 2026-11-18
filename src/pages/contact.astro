@@ -1,10 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
+import { pages } from "../data/pages";
 import PageIntro from "../components/PageIntro.astro";
 import { site } from "../data/site";
 ---
 
-<Base title="Contact" description="Get in touch with Austin Rowland or book a 30-minute call.">
+<Base title={pages.contact.title} description={pages.contact.description}>
   <PageIntro eyebrow="contact" title="Building with agents? Let's talk.">
     <div class="mt-4 flex flex-wrap items-center gap-3" data-reveal style="--i:2">
       <a href={`mailto:${site.email}`} class="rounded-full border border-line px-4 py-2 text-ink transition-colors hover:border-accent">
