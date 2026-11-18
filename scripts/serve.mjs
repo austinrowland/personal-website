@@ -1,11 +1,12 @@
-// Serves the built site (dist/) with the agent-facing HTTP behavior a static host can't express:
-// Markdown content negotiation, discovery Link headers, Content Signals, and /.well-known aliases.
+// Serves the built site (dist/) locally and for the Devin App, with the agent-facing HTTP behavior
+// from agent-http.mjs. In production the Cloudflare Worker (worker/index.mjs) does the same.
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest } from "./agent-http.mjs";
 
-export const CONTENT_SIGNAL = "search=yes, ai-input=yes, ai-train=yes";
+export { CONTENT_SIGNAL, markdownPathFor, prefersMarkdown } from "./agent-http.mjs";
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -25,46 +26,6 @@ const TYPES = {
   ".woff": "font/woff",
   ".woff2": "font/woff2",
 };
-
-const ALIASES = {
-  "/.well-known/llms.txt": "/llms.txt",
-  "/.well-known/llms-full.txt": "/llms-full.txt",
-};
-
-/**
- * True when the client explicitly asks for text/markdown and ranks it at least as high as
- * text/html. Each type takes the quality of its most specific matching range (exact, then
- * `text/*`, then `*\/*`); wildcards alone never select Markdown.
- */
-export function prefersMarkdown(accept = "") {
-  const ranges = new Map();
-  for (const part of accept.toLowerCase().split(",")) {
-    const [type, ...params] = part.split(";").map((s) => s.trim());
-    if (!type) continue;
-    const qParam = params.find((p) => p.startsWith("q="));
-    const q = qParam ? Number(qParam.slice(2)) || 0 : 1;
-    ranges.set(type, Math.max(ranges.get(type) ?? 0, q));
-  }
-  const quality = (...types) => {
-    for (const t of [...types, "text/*", "*/*"]) if (ranges.has(t)) return ranges.get(t);
-    return 0;
-  };
-  if (!ranges.has("text/markdown") && !ranges.has("text/x-markdown")) return false;
-  const markdown = Math.max(ranges.get("text/markdown") ?? 0, ranges.get("text/x-markdown") ?? 0);
-  const html = quality("text/html");
-  return markdown > 0 && markdown >= html;
-}
-
-/** Mirrors markdownPath() in src/data/pages.ts. */
-export function markdownPathFor(pathname) {
-  const clean = pathname.replace(/\/index\.html$/, "").replace(/\/+$/, "");
-  return clean ? `${clean}.md` : "/index.md";
-}
-
-function htmlPathFor(markdownPathname) {
-  const page = markdownPathname.slice(0, -".md".length);
-  return page === "/index" ? "/" : `${page}/`;
-}
 
 async function resolveFile(root, pathname) {
   const target = path.join(root, pathname);
@@ -89,43 +50,14 @@ export function createSiteServer({ root = "dist" } = {}) {
 }
 
 async function handle(dist, req, res) {
-  let pathname;
-  try {
-    pathname = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname);
-  } catch {
-    pathname = "/";
-  }
-  pathname = ALIASES[pathname] ?? pathname;
-
-  const ext = path.extname(pathname);
-  const isPage = !ext || ext === ".html";
-  const isMarkdown = ext === ".md";
-  const negotiated = isPage && prefersMarkdown(req.headers.accept);
-  const wantPath = negotiated ? markdownPathFor(pathname) : pathname;
-
+  const plan = planRequest(decodePath(req.url ?? "/"), req.headers.accept);
   let status = 200;
-  let file = await resolveFile(dist, wantPath);
+  let file = await resolveFile(dist, plan.wantPath);
   if (!file) {
     status = 404;
-    file = await resolveFile(dist, negotiated || isMarkdown ? "/404.md" : "/404.html");
+    file = await resolveFile(dist, notFoundPath(plan));
   }
-
-  const headers = {
-    "Content-Signal": CONTENT_SIGNAL,
-    "X-Content-Type-Options": "nosniff",
-    "X-Llms-Txt": "/llms.txt",
-  };
-  const links = ['</llms.txt>; rel="llms-txt"', '</llms-full.txt>; rel="llms-full-txt"'];
-  if (isPage) {
-    headers.Vary = "Accept";
-    links.push(`<${encodeURI(markdownPathFor(pathname))}>; rel="alternate"; type="text/markdown"`);
-    links.push('</sitemap-index.xml>; rel="sitemap"');
-  }
-  if (isMarkdown || negotiated) {
-    headers["X-Robots-Tag"] = "noindex";
-    if (status === 200) links.push(`<${encodeURI(htmlPathFor(wantPath))}>; rel="canonical"`);
-  }
-  headers.Link = links.join(", ");
+  const headers = agentHeaders(plan, status);
 
   if (!file) {
     res.writeHead(404, { ...headers, "Content-Type": "text/plain; charset=utf-8" });
@@ -137,10 +69,7 @@ async function handle(dist, req, res) {
   const type = TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
   headers["Content-Type"] = type;
   headers["Content-Length"] = body.length;
-  if (type.startsWith("text/markdown")) {
-    // Rough estimate (4 characters per token), like Cloudflare's x-markdown-tokens.
-    headers["X-Markdown-Tokens"] = Math.ceil(body.toString("utf8").length / 4);
-  }
+  if (type.startsWith("text/markdown")) headers["X-Markdown-Tokens"] = markdownTokens(body.toString("utf8"));
   res.writeHead(status, headers);
   res.end(req.method === "HEAD" ? undefined : body);
 }

@@ -18,3 +18,4 @@ jobs:
       - run: npx astro check
       - run: npm run build
       - run: npm test
+      - run: npx wrangler deploy --dry-run

@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "austinrowland-com",
+  "main": "worker/index.mjs",
+  "compatibility_date": "2026-11-18",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // The Worker runs first so it can negotiate Markdown and add agent headers to every response.
+    "run_worker_first": true,
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "observability": { "enabled": true },
+  // Previews (one per branch/PR) need no separate settings: the site has no bindings besides ASSETS.
+  "previews": {}
+}
