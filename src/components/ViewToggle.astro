@@ -1,0 +1,124 @@
+---
+import { markdownPath } from "../data/pages";
+const markdown = markdownPath(Astro.url.pathname);
+---
+
+<section data-agent-view aria-label="This page as Markdown" class="mx-auto w-full max-w-3xl px-6 pt-12 pb-32">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <p class="label text-muted">what an agent reads · <a class="link" href={markdown}>{markdown}</a></p>
+    <button type="button" data-copy-markdown class="label rounded-full border border-line px-3 py-1.5 text-muted transition-colors hover:text-ink">
+      copy markdown
+    </button>
+  </div>
+  <pre data-markdown-src={markdown} class="overflow-x-auto whitespace-pre-wrap break-words rounded-md border border-line p-5 font-mono text-[13px] leading-relaxed text-ink/90">loading…</pre>
+</section>
+
+<div class="view-switch fixed bottom-5 left-1/2 z-50 -translate-x-1/2" transition:persist>
+  <div role="group" aria-label="View this site as" class="flex gap-1 rounded-full border border-line bg-paper/90 p-1 shadow-sm backdrop-blur">
+    <button type="button" data-view-mode="human" class="view-mode label flex items-center gap-2 rounded-full px-3 py-1.5">
+      <span aria-hidden="true" class="dot"></span>human
+    </button>
+    <button type="button" data-view-mode="agent" class="view-mode label flex items-center gap-2 rounded-full px-3 py-1.5">
+      <span aria-hidden="true" class="dot"></span>agent
+    </button>
+  </div>
+</div>
+
+<style>
+  .view-switch,
+  [data-agent-view] {
+    display: none;
+  }
+  :global(html.js) .view-switch {
+    display: block;
+  }
+  .view-mode {
+    color: var(--color-muted);
+  }
+  .view-mode[aria-pressed="true"] {
+    color: var(--color-ink);
+    background: var(--color-line);
+  }
+  .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    border: 1px solid currentColor;
+  }
+  .view-mode[aria-pressed="true"] .dot {
+    background: currentColor;
+  }
+  :global(html[data-view="agent"] [data-human-view]) {
+    display: none;
+  }
+  :global(html[data-view="agent"] [data-agent-view]) {
+    display: block;
+  }
+</style>
+
+<script>
+  type Mode = "human" | "agent";
+  const cache = new Map<string, string>();
+
+  function currentMode(): Mode {
+    return document.documentElement.dataset.view === "agent" ? "agent" : "human";
+  }
+
+  async function loadMarkdown() {
+    const pre = document.querySelector<HTMLPreElement>("[data-markdown-src]");
+    const src = pre?.dataset.markdownSrc;
+    if (!pre || !src) return;
+    if (!cache.has(src)) {
+      try {
+        const res = await fetch(src, { headers: { Accept: "text/markdown" } });
+        cache.set(src, res.ok ? await res.text() : `Could not load ${src} (${res.status}).`);
+      } catch {
+        return;
+      }
+    }
+    pre.textContent = cache.get(src) ?? "";
+  }
+
+  function apply(mode: Mode, { save = true } = {}) {
+    document.documentElement.dataset.view = mode;
+    if (save) {
+      try {
+        localStorage.setItem("view", mode);
+      } catch {}
+    }
+    document.querySelectorAll<HTMLButtonElement>("[data-view-mode]").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.viewMode === mode));
+    });
+    if (mode === "agent") loadMarkdown();
+  }
+
+  function init() {
+    const param = new URLSearchParams(location.search).get("view");
+    if (param === "agent" || param === "human") apply(param);
+    else apply(currentMode(), { save: false });
+
+    document.querySelectorAll<HTMLButtonElement>("[data-view-mode]").forEach((b) => {
+      if (b.dataset.bound) return;
+      b.dataset.bound = "true";
+      b.addEventListener("click", () => {
+        apply(b.dataset.viewMode as Mode);
+        window.scrollTo({ top: 0 });
+      });
+    });
+
+    const copy = document.querySelector<HTMLButtonElement>("[data-copy-markdown]");
+    if (copy && !copy.dataset.bound) {
+      copy.dataset.bound = "true";
+      copy.addEventListener("click", async () => {
+        const text = document.querySelector("[data-markdown-src]")?.textContent ?? "";
+        try {
+          await navigator.clipboard.writeText(text);
+          copy.textContent = "copied";
+          setTimeout(() => (copy.textContent = "copy markdown"), 1500);
+        } catch {}
+      });
+    }
+  }
+  document.addEventListener("astro:page-load", init);
+</script>

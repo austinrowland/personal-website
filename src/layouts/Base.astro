@@ -3,6 +3,7 @@ import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import ViewToggle from "../components/ViewToggle.astro";
 import { site } from "../data/site";
 import { markdownPath } from "../data/pages";
 
@@ -55,6 +56,12 @@ const markdown = markdownPath(Astro.url.pathname);
             theme = localStorage.getItem("theme") || "light";
           } catch {}
           doc.documentElement.dataset.theme = theme;
+          let view = "human";
+          try {
+            const param = new URLSearchParams(location.search).get("view");
+            view = param || localStorage.getItem("view") || "human";
+          } catch {}
+          doc.documentElement.dataset.view = view === "agent" ? "agent" : "human";
           doc.documentElement.classList.add("js");
         };
         apply(document);
@@ -68,7 +75,10 @@ const markdown = markdownPath(Astro.url.pathname);
   <body class="flex min-h-screen flex-col">
     <Header />
     <main class="flex-1">
-      <slot />
+      <div data-human-view>
+        <slot />
+      </div>
+      <ViewToggle />
     </main>
     <Footer />
     <script>
