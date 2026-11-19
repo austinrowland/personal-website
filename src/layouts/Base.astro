@@ -74,14 +74,18 @@ const markdown = markdownPath(Astro.url.pathname);
     <ClientRouter />
   </head>
   <body class="flex min-h-screen flex-col">
-    <Header />
+    <div data-human-view class="contents">
+      <Header />
+    </div>
     <main class="flex-1">
       <div data-human-view>
         <slot />
       </div>
       <ViewToggle />
     </main>
-    <Footer />
+    <div data-human-view class="contents">
+      <Footer />
+    </div>
     <script>
       function initReveal() {
         const els = document.querySelectorAll<HTMLElement>(

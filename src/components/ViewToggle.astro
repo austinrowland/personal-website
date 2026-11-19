@@ -1,20 +1,36 @@
 ---
 import { markdownPath } from "../data/pages";
+import { nav, site, socials } from "../data/site";
 const markdown = markdownPath(Astro.url.pathname);
+const header = [
+  `[${site.name}](/)`,
+  "",
+  ...nav.map((n) => `- [${n.label}](${n.href})`),
+].join("\n");
+const footer = [
+  `${site.name} · ${site.location}`,
+  "",
+  ...socials.map((s) => `- [${s.label}](${s.href})`),
+  `- [Email](mailto:${site.email})`,
+  "",
+  "For agents: [llms.txt](/llms.txt) · [llms-full.txt](/llms-full.txt) · [RSS](/rss.xml)",
+].join("\n");
 ---
 
-<section data-agent-view aria-label="This page as Markdown" class="mx-auto w-full max-w-3xl px-6 pt-12 pb-32">
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-    <p class="label text-muted">what an agent reads · <a class="link" href={markdown}>{markdown}</a></p>
-    <button type="button" data-copy-markdown class="label rounded-full border border-line px-3 py-1.5 text-muted transition-colors hover:text-ink">
-      copy markdown
-    </button>
+<section data-agent-view aria-label="This site as Markdown">
+  <div class="agent-frame">
+    <div class="agent-bar">
+      <span>{markdown}</span>
+      <button type="button" data-copy-markdown>copy</button>
+    </div>
+    <pre data-agent-md data-md={header}></pre>
+    <pre data-markdown-src={markdown}>loading…</pre>
+    <pre data-agent-md data-md={footer}></pre>
   </div>
-  <pre data-markdown-src={markdown} class="overflow-x-auto whitespace-pre-wrap break-words rounded-md border border-line p-5 font-mono text-[13px] leading-relaxed text-ink/90">loading…</pre>
 </section>
 
 <div class="view-switch fixed bottom-5 left-1/2 z-50 -translate-x-1/2" transition:persist>
-  <div role="group" aria-label="View this site as" class="flex gap-1 rounded-full border border-line bg-paper/90 p-1 shadow-sm backdrop-blur">
+  <div role="group" aria-label="View this site as" class="switch-group flex gap-1 rounded-full border p-1 shadow-sm backdrop-blur">
     <button type="button" data-view-mode="human" class="view-mode label flex items-center gap-2 rounded-full px-3 py-1.5">
       <span aria-hidden="true" class="dot"></span>human
     </button>
@@ -31,6 +47,10 @@ const markdown = markdownPath(Astro.url.pathname);
   }
   :global(html.js) .view-switch {
     display: block;
+  }
+  .switch-group {
+    border-color: var(--color-line);
+    background: color-mix(in srgb, var(--color-paper) 90%, transparent);
   }
   .view-mode {
     color: var(--color-muted);
@@ -49,23 +69,112 @@ const markdown = markdownPath(Astro.url.pathname);
   .view-mode[aria-pressed="true"] .dot {
     background: currentColor;
   }
+
+  /* Agent mode: the whole site becomes Markdown on a terminal-style page. */
+  :global(html[data-reader="agent"]) {
+    background: #111;
+    color-scheme: dark;
+  }
+  :global(html[data-reader="agent"] body) {
+    background: #111;
+  }
   :global(html[data-reader="agent"] [data-human-view]) {
-    display: none;
+    display: none !important;
   }
   :global(html[data-reader="agent"] [data-agent-view]) {
     display: block;
+  }
+  :global(html[data-reader="agent"]) .switch-group {
+    border-color: #333;
+    background: rgba(40, 40, 40, 0.9);
+  }
+  :global(html[data-reader="agent"]) .view-mode {
+    color: #8a8a8a;
+  }
+  :global(html[data-reader="agent"]) .view-mode[aria-pressed="true"] {
+    color: #f2f2f2;
+    background: #3a3a3a;
+  }
+  [data-agent-view] {
+    min-height: 100vh;
+    padding: 3rem 1.5rem 7rem;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #e6e6e6;
+  }
+  .agent-frame {
+    max-width: 46rem;
+    margin: 0 auto;
+    border-left: 1px solid #2c2c2c;
+    border-right: 1px solid #2c2c2c;
+    padding: 0 1.5rem;
+  }
+  .agent-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #8a8a8a;
+    margin-bottom: 1.5rem;
+  }
+  .agent-bar button {
+    color: #8a8a8a;
+    cursor: pointer;
+  }
+  .agent-bar button:hover {
+    color: #f2f2f2;
+  }
+  [data-agent-view] pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 0 0 2.5rem;
+    font: inherit;
+  }
+  [data-agent-view] :global(a) {
+    color: #f2f2f2;
+    text-decoration: none;
+  }
+  [data-agent-view] :global(a:hover) {
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+  }
+  [data-agent-view] :global(.md-url) {
+    color: #7a7a7a;
   }
 </style>
 
 <script>
   type Mode = "human" | "agent";
   const cache = new Map<string, string>();
+  const SITE = "https://austinrowland.com";
 
-  function currentMode(): Mode {
-    return document.documentElement.dataset.reader === "agent" ? "agent" : "human";
+  const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  /** Same-site Markdown links navigate to the HTML page (agent mode stays on). */
+  function hrefFor(url: string): string {
+    let path = url.startsWith(SITE) ? url.slice(SITE.length) || "/" : url;
+    if (path.startsWith("/") && path.endsWith(".md") && !path.startsWith("//")) {
+      path = path === "/index.md" ? "/" : path.slice(0, -3);
+    }
+    return path;
+  }
+
+  /** Escapes Markdown and makes its links clickable while keeping the raw syntax visible. */
+  function render(md: string): string {
+    return escape(md).replace(/(!?)\[([^\]\n]*)\]\(([^)\s]+)\)/g, (_, bang, label, url) => {
+      const href = hrefFor(url.replace(/&amp;/g, "&"));
+      const external = /^https?:/.test(href) ? ' target="_blank" rel="noopener noreferrer"' : "";
+      return `${bang}<a href="${href}"${external}>[${label}]</a><span class="md-url">(${url})</span>`;
+    });
   }
 
   async function loadMarkdown() {
+    document.querySelectorAll<HTMLPreElement>("[data-agent-md]").forEach((pre) => {
+      if (!pre.dataset.rendered) {
+        pre.innerHTML = render(pre.dataset.md ?? "");
+        pre.dataset.rendered = "true";
+      }
+    });
     const pre = document.querySelector<HTMLPreElement>("[data-markdown-src]");
     const src = pre?.dataset.markdownSrc;
     if (!pre || !src) return;
@@ -82,7 +191,11 @@ const markdown = markdownPath(Astro.url.pathname);
         return;
       }
     }
-    pre.textContent = cache.get(src) ?? "";
+    pre.innerHTML = render(cache.get(src) ?? "");
+  }
+
+  function currentMode(): Mode {
+    return document.documentElement.dataset.reader === "agent" ? "agent" : "human";
   }
 
   function apply(mode: Mode, { save = true } = {}) {
@@ -116,11 +229,11 @@ const markdown = markdownPath(Astro.url.pathname);
     if (copy && !copy.dataset.bound) {
       copy.dataset.bound = "true";
       copy.addEventListener("click", async () => {
-        const text = document.querySelector("[data-markdown-src]")?.textContent ?? "";
+        const src = document.querySelector<HTMLPreElement>("[data-markdown-src]")?.dataset.markdownSrc ?? "";
         try {
-          await navigator.clipboard.writeText(text);
+          await navigator.clipboard.writeText(cache.get(src) ?? "");
           copy.textContent = "copied";
-          setTimeout(() => (copy.textContent = "copy markdown"), 1500);
+          setTimeout(() => (copy.textContent = "copy"), 1500);
         } catch {}
       });
     }
