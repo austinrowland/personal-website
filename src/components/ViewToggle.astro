@@ -72,8 +72,13 @@ const markdown = markdownPath(Astro.url.pathname);
     if (!cache.has(src)) {
       try {
         const res = await fetch(src, { headers: { Accept: "text/markdown" } });
-        cache.set(src, res.ok ? await res.text() : `Could not load ${src} (${res.status}).`);
+        if (!res.ok) {
+          pre.textContent = `Could not load ${src} (${res.status}). Switch views to retry.`;
+          return;
+        }
+        cache.set(src, await res.text());
       } catch {
+        pre.textContent = `Could not load ${src}. Switch views to retry.`;
         return;
       }
     }
