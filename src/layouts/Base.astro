@@ -58,7 +58,8 @@ const markdown = markdownPath(Astro.url.pathname);
           doc.documentElement.dataset.theme = theme;
           let view = "human";
           try {
-            const param = new URLSearchParams(location.search).get("view");
+            // ?view= only applies on a full load; client-side navigations use the saved choice.
+            const param = doc === document ? new URLSearchParams(location.search).get("view") : null;
             view = param || localStorage.getItem("view") || "human";
           } catch {}
           doc.documentElement.dataset.reader = view === "agent" ? "agent" : "human";
