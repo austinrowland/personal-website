@@ -36,19 +36,19 @@ export const chapters: Chapter[] = [
   {
     label: "avova health",
     title: "Listening before building.",
-    body: "i founded a preventative health platform and interviewed 100+ patients before writing much code. it made the finals of mayo clinic's 2024 startup competition. alongside it, i built computer vision tools for a stroke rehab glove lab.",
+    body: "i co-founded avova, an ai health companion that pulled a patient's records from every provider into one profile. we interviewed 100+ patients before writing much code, went through create-x, and made the finals of mayo clinic's 2024 startup competition. the hard part was trust: cleaning sensitive data, keeping it hipaa-compliant, and keeping the ai from making things up. people liked it, but selling through providers and insurers didn't work before the runway ran out. the week it wound down, i started at palo alto networks.",
     photo: "avova-health",
   },
   {
     label: "security roots",
     title: "Systems that can't fail quietly.",
-    body: "critical infrastructure at gtri, cloud security at cisco, then a firewall os and vpn daemon at palo alto networks. that's also where i started building agents for my own engineering workflow.",
+    body: "critical infrastructure at gtri, cloud security at cisco, then a firewall os and vpn daemon at palo alto networks. that's also where i helped lay the groundwork for the company's agentic coding platform, and got hooked on the question i still work on: how do you make agents follow the rules before anything ships?",
     photo: "phr-gloves",
   },
   {
     label: "postman",
     title: "Agents are the new audience.",
-    body: "now i'm a founding forward deployed engineer on the cto's frontier team. we build, operate, and scale new uses of postman with the largest api programs in the world, and lately that means making apis ready for the agents that consume them.",
+    body: "now i'm a founding forward deployed engineer on the cto's frontier team. postman went from one product to five in a year, and our job is to find where each one goes with the largest api programs in the world: build it for one customer, codify it across a few, then put it on the roadmap. lately that means making apis ready for the agents that consume them.",
     photo: "postman-ai-ready-apis",
   },
   {
