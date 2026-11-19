@@ -12,6 +12,15 @@
     "not_found_handling": "404-page"
   },
   "observability": { "enabled": true },
+  // Launch switch: austinrowland.com serves a "coming soon" page until this is "true".
+  "vars": { "SITE_LIVE": "false" },
+  // Adding routes turns these off by default; keep the workers.dev site and Preview URLs.
+  "workers_dev": true,
+  "preview_urls": true,
+  "routes": [
+    { "pattern": "austinrowland.com", "custom_domain": true },
+    { "pattern": "www.austinrowland.com", "custom_domain": true }
+  ],
   // Previews (one per branch/PR) need no separate settings: the site has no bindings besides ASSETS.
   "previews": {}
 }
