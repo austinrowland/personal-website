@@ -89,7 +89,7 @@ const kindLabel = Object.fromEntries(
           return (
             <li data-kind={p.kind} data-reveal style={`--i:${i % 2}`} class="transition-opacity">
               {p.href ? (
-                <a href={p.href} target="_blank" rel="noopener noreferrer" class="group block transition-transform duration-500 hover:-translate-y-1">
+                <a href={p.href} {...(p.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})} class="group block transition-transform duration-500 hover:-translate-y-1">
                   {body}
                 </a>
               ) : (

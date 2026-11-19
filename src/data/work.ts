@@ -16,9 +16,12 @@ export const experience: Experience[] = [
     take: "working inside the largest API programs to see where agents get stuck, then fixing the route.",
     points: [
       "Part of the CTO's frontier team, running a Build, Operate, Scale model with strategic enterprises.",
+      "Helped take Postman from one product to five in a year, working out the roadmap for each new product with our frontier enterprise customers.",
+      "Turned one-off deployments into product: when a problem showed up across customers, codified it into the product or the GTM strategy, building it with the product team or on my own.",
+      "Built the CI/CD integrations that automate producing and distributing agent-ready assets (docs, MCP servers, SDKs, and CLIs) from each API change.",
       "Built AI-Ready APIs, an assessment of how ready an API is for the agents that consume it.",
+      "Helped build the core engine of Postman's internal agent OS, then GTM agents on top of it that give sellers tailored use cases and product positioning for each account.",
       "Led company-wide GTM strategy for enterprise API packaging; the playbook was trained to ~400 sellers at Sales Kick-Off.",
-      "Built a customer insights agent and a sandbox automation agent for the company's primary GTM motions.",
     ],
   },
   {
@@ -26,10 +29,11 @@ export const experience: Experience[] = [
     end: "Oct 2025",
     role: "Software Engineer",
     org: "Palo Alto Networks",
-    take: "security at the operating-system level, where the agents work first started.",
+    take: "core networking and OS work on PAN-OS, and an early piece of the company's agentic coding platform.",
     points: [
       "Shipped network, infrastructure, and security features in Python, C, and Linux for a firewall OS used by 100K+ businesses.",
       "Designed an IKE/IPSec daemon for more scalable, secure GlobalProtect VPN access.",
+      "Helped lay the groundwork for the internal agentic coding platform: a context engine that applies the company's design, security, and compliance standards to coding agents before code ships.",
       "Built pair-programmer and end-to-end testing agents with Claude Code, Gemini, and MCP.",
     ],
   },
@@ -91,14 +95,14 @@ export const projects: Project[] = [
     kind: "agent",
     years: "2026",
     summary:
-      "Compares Salesforce, Gong, and email signals against product knowledge to surface new opportunities across every Postman account.",
+      "Runs on Postman's internal agent OS: compares Salesforce, Gong, and email signals against product knowledge to give sellers tailored use cases and positioning for each account.",
   },
   {
     title: "Avova Health",
     kind: "venture",
     years: "2024",
     summary:
-      "A preventative health platform built from 100+ patient interviews. Finalist in Mayo Clinic's 2024 startup competition.",
+      "An AI health companion that pulled each patient's records from every provider into one profile. Shaped by 100+ patient interviews; finalist in Mayo Clinic's 2024 startup competition.",
     photo: "avova-health",
   },
   {
@@ -132,5 +136,6 @@ export const projects: Project[] = [
     summary:
       "TEDxGeorgiaTech. Ambition expands the field of possibility; discipline is what moves you across it.",
     photo: "tedx-gt",
+    href: "/writing/ambition-might-be-your-achilles-heel",
   },
 ];
