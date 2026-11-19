@@ -61,7 +61,7 @@ const markdown = markdownPath(Astro.url.pathname);
             const param = new URLSearchParams(location.search).get("view");
             view = param || localStorage.getItem("view") || "human";
           } catch {}
-          doc.documentElement.dataset.view = view === "agent" ? "agent" : "human";
+          doc.documentElement.dataset.reader = view === "agent" ? "agent" : "human";
           doc.documentElement.classList.add("js");
         };
         apply(document);

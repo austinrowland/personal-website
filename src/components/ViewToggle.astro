@@ -49,10 +49,10 @@ const markdown = markdownPath(Astro.url.pathname);
   .view-mode[aria-pressed="true"] .dot {
     background: currentColor;
   }
-  :global(html[data-view="agent"] [data-human-view]) {
+  :global(html[data-reader="agent"] [data-human-view]) {
     display: none;
   }
-  :global(html[data-view="agent"] [data-agent-view]) {
+  :global(html[data-reader="agent"] [data-agent-view]) {
     display: block;
   }
 </style>
@@ -62,7 +62,7 @@ const markdown = markdownPath(Astro.url.pathname);
   const cache = new Map<string, string>();
 
   function currentMode(): Mode {
-    return document.documentElement.dataset.view === "agent" ? "agent" : "human";
+    return document.documentElement.dataset.reader === "agent" ? "agent" : "human";
   }
 
   async function loadMarkdown() {
@@ -81,7 +81,7 @@ const markdown = markdownPath(Astro.url.pathname);
   }
 
   function apply(mode: Mode, { save = true } = {}) {
-    document.documentElement.dataset.view = mode;
+    document.documentElement.dataset.reader = mode;
     if (save) {
       try {
         localStorage.setItem("view", mode);
