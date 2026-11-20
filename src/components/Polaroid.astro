@@ -1,0 +1,121 @@
+---
+import Photo from "./Photo.astro";
+import type { GalleryPhoto } from "../data/photos";
+
+interface Props {
+  photo: GalleryPhoto;
+  /** Card tilt in degrees, so a grid of prints looks hand-placed. */
+  tilt?: number;
+  /** Links the print instead of flipping it. */
+  href?: string;
+}
+
+const { photo, tilt = 0, href } = Astro.props;
+const Tag = href ? "a" : "div";
+const attrs: Record<string, string | boolean> = href
+  ? { href }
+  : {
+      role: "button",
+      tabindex: "0",
+      "aria-pressed": "false",
+      "data-polaroid": true,
+    };
+---
+
+<Tag class="polaroid" style={`--tilt:${tilt}deg`} {...attrs}>
+  <span class="inner">
+    <span class="face front">
+      <Photo alt={photo.alt} name={photo.name} class="aspect-square" imgClass="film" sizes="(min-width: 768px) 22rem, 90vw" />
+      <span class="caption">{photo.caption}</span>
+    </span>
+    {
+      !href && (
+        <span class="face back">
+          <span class="caption">{photo.caption}</span>
+          <span class="story">{photo.story}</span>
+          <span class="hint label">tap to flip back</span>
+        </span>
+      )
+    }
+  </span>
+</Tag>
+
+<style>
+  .polaroid {
+    display: block;
+    perspective: 1400px;
+    cursor: pointer;
+    transform: rotate(var(--tilt));
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .polaroid:hover,
+  .polaroid:focus-visible {
+    transform: rotate(0deg) translateY(-4px);
+  }
+  .polaroid:focus-visible {
+    outline: 2px solid var(--accent, #c2410c);
+    outline-offset: 6px;
+  }
+  .inner {
+    position: relative;
+    display: block;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .polaroid[aria-pressed="true"] .inner {
+    transform: rotateY(180deg);
+  }
+  .face {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    background: #f7f3ea;
+    color: #1c1a17;
+    padding: 0.8rem 0.8rem 1.1rem;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.08),
+      0 12px 28px -12px rgb(0 0 0 / 0.35);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .back {
+    position: absolute;
+    inset: 0;
+    transform: rotateY(180deg);
+    padding: 1.4rem;
+    overflow-y: auto;
+    background:
+      repeating-linear-gradient(transparent 0 1.7rem, rgb(28 26 23 / 0.07) 1.7rem calc(1.7rem + 1px)),
+      #f3eee2;
+  }
+  .caption {
+    font-family: var(--font-display, serif);
+    font-size: 1.15rem;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .back .caption {
+    text-align: left;
+    color: #6b655c;
+  }
+  .story {
+    font-size: 0.95rem;
+    line-height: 1.7rem;
+  }
+  .hint {
+    margin-top: auto;
+    color: #8a8378;
+  }
+  .polaroid :global(.print) {
+    border-radius: 0;
+  }
+  .polaroid :global(img.film) {
+    filter: sepia(0.14) saturate(0.9) contrast(1.04);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .polaroid,
+    .inner {
+      transition: none;
+    }
+  }
+</style>
