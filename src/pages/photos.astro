@@ -33,11 +33,14 @@ import { pages } from "../data/pages";
       const back = card.querySelector<HTMLElement>(".back");
       if (!button || !back || card.dataset.bound) return;
       card.dataset.bound = "true";
-      button.addEventListener("click", () => {
+      const toggle = () => {
         const flipped = button.getAttribute("aria-pressed") !== "true";
         button.setAttribute("aria-pressed", String(flipped));
         back.setAttribute("aria-hidden", String(!flipped));
-      });
+      };
+      button.addEventListener("click", toggle);
+      // Once flipped, the button lets pointer events through so a long story can scroll; a tap on the back flips it again.
+      back.addEventListener("click", toggle);
     });
   }
   document.addEventListener("astro:page-load", initPolaroids);

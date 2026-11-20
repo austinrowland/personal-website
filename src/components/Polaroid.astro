@@ -68,6 +68,9 @@ const Tag = href ? "a" : "div";
     z-index: 1;
     cursor: pointer;
   }
+  .flip[aria-pressed="true"] {
+    pointer-events: none;
+  }
   .polaroid:has(.flip[aria-pressed="true"]) .inner {
     transform: rotateY(180deg);
   }
