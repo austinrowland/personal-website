@@ -1,6 +1,7 @@
 ---
 import { markdownPath } from "../data/pages";
 import { nav, site, socials } from "../data/site";
+import ThemeToggle from "./ThemeToggle.astro";
 const markdown = markdownPath(Astro.url.pathname);
 const header = [
   `[${site.name}](/)`,
@@ -37,6 +38,8 @@ const footer = [
     <button type="button" data-view-mode="agent" class="view-mode label flex items-center gap-2 rounded-full px-3 py-1.5">
       <span aria-hidden="true" class="dot"></span>agent
     </button>
+    <span aria-hidden="true" class="mx-1 w-px self-stretch bg-line"></span>
+    <span class="theme-slot flex items-center px-2"><ThemeToggle /></span>
   </div>
 </div>
 
@@ -87,6 +90,9 @@ const footer = [
   :global(html[data-reader="agent"]) .switch-group {
     border-color: #333;
     background: rgba(40, 40, 40, 0.9);
+  }
+  :global(html[data-reader="agent"]) .theme-slot {
+    display: none;
   }
   :global(html[data-reader="agent"]) .view-mode {
     color: #8a8a8a;

@@ -1,6 +1,5 @@
 ---
 import { nav, socials } from "../data/site";
-import ThemeToggle from "./ThemeToggle.astro";
 import Icon from "./Icon.astro";
 
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
@@ -54,6 +53,5 @@ const path = Astro.url.pathname.replace(/\/$/, "") || "/";
         })
       }
     </ul>
-    <ThemeToggle />
   </nav>
 </header>
