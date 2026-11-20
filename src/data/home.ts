@@ -17,3 +17,10 @@ export const homeIntro: Segment[][] = [
 ];
 
 export const homeTagline = ["Go and watch where it fails.", "Then improve the route."] as const;
+
+/** Titles from src/data/work.ts and photo names from src/data/photos.ts previewed on the home page. */
+export const homeFeatured = {
+  projects: ["AI-Ready APIs", "Avova Health", "Tikkun Olam Makers"],
+  photos: ["ultramarathon", "guatemala-summit", "spread-the-love"],
+  posts: 3,
+};
