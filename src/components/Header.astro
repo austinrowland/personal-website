@@ -3,16 +3,47 @@ import { nav, socials } from "../data/site";
 import Icon from "./Icon.astro";
 
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
 <header
-  class="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-6"
+  class="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-5 sm:px-6"
 >
-  <div class="flex items-center gap-5">
-    <a href="/" class="font-display text-xl leading-none" aria-label="Home">
-      ar<span class="text-accent">.</span>
-    </a>
-    <ul class="hidden items-center gap-3.5 sm:flex">
+  <a href="/" class="flex items-center gap-2.5" aria-label="Austin Rowland, home">
+    <span class="font-display text-2xl leading-none">ar<span class="text-accent">.</span></span>
+    <span class="hidden text-sm font-medium text-ink/80 md:inline">Austin Rowland</span>
+  </a>
+  <div class="flex min-w-0 items-center gap-4">
+    <nav aria-label="Primary">
+      <ul class="flex flex-wrap items-center justify-end gap-0.5 sm:gap-1">
+        {
+          nav.map((item) => {
+            const active = isActive(item.href);
+            const contact = item.href === "/contact";
+            return (
+              <li>
+                <a
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  class:list={[
+                    "block rounded-full px-2 py-1.5 text-[13px] transition-colors sm:px-3.5 sm:text-sm",
+                    contact
+                      ? "border border-line text-ink hover:border-ink"
+                      : active
+                        ? "bg-ink/[0.07] font-medium text-ink"
+                        : "text-muted hover:text-ink",
+                    contact && active && "border-ink",
+                  ]}
+                >
+                  {item.label}
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </nav>
+    <ul class="hidden items-center gap-3.5 border-l border-line pl-4 lg:flex">
       {
         socials.map((s) => (
           <li>
@@ -31,27 +62,4 @@ const path = Astro.url.pathname.replace(/\/$/, "") || "/";
       }
     </ul>
   </div>
-  <nav aria-label="Primary" class="flex items-center gap-4 sm:gap-6">
-    <ul class="flex items-center gap-3 sm:gap-6">
-      {
-        nav.map((item) => {
-          const active = path.startsWith(item.href);
-          return (
-            <li>
-              <a
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                class:list={[
-                  "label transition-colors hover:text-ink",
-                  active ? "text-ink" : "text-muted",
-                ]}
-              >
-                {item.label}
-              </a>
-            </li>
-          );
-        })
-      }
-    </ul>
-  </nav>
 </header>

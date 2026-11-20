@@ -1,6 +1,6 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import { aboutIntro, chapters, values } from "../data/about";
-import { homeIntro, homeTagline, type Segment } from "../data/home";
+import { homeFeatured, homeIntro, homeTagline, type Segment } from "../data/home";
 import { absoluteUrl, fullHeadline, markdownPath, pages, type PageMeta } from "../data/pages";
 import { gallery, galleryIntro } from "../data/photos";
 import { site, socials } from "../data/site";
@@ -41,9 +41,32 @@ function contactLines(): string {
   ].join("\n");
 }
 
-function home(): string {
+function home(posts: CollectionEntry<"writing">[]): string {
   const sections = [pages.work, pages.writing, pages.about, pages.photos, pages.contact];
+  const featured = homeFeatured.projects
+    .map((t) => projects.find((p) => p.title === t))
+    .filter((p) => p !== undefined)
+    .map((p) => `- **${p.title}** (${p.years}): ${p.summary}`);
+  const latest = posts
+    .slice(0, homeFeatured.posts)
+    .map((p) => `- ${link(p.data.title, postUrl(p))}: ${p.data.description}`);
+  const prints = homeFeatured.photos
+    .map((n) => gallery.find((p) => p.name === n))
+    .filter((p) => p !== undefined)
+    .map((p) => `- ${p.caption}: ${p.story}`);
   return `${homeIntro.map(segments).join("\n\n")}
+
+## Selected work
+
+${featured.join("\n")}
+
+## Latest writing
+
+${latest.join("\n")}
+
+## From the photo box
+
+${prints.join("\n")}
 
 > ${homeTagline.join(" ")}
 
@@ -106,7 +129,9 @@ function photos(): string {
     .map((p) => {
       const img = getPhoto(p.name);
       const caption = p.caption;
-      return img ? `- ![${p.alt}](${absoluteUrl(img.src)}) ${caption}` : `- ${p.alt}. ${caption} (photo coming soon)`;
+      return img
+        ? `- ![${p.alt}](${absoluteUrl(img.src)}) **${caption}**: ${p.story}`
+        : `- ${p.alt}. **${caption}**: ${p.story} (photo coming soon)`;
     })
     .join("\n");
   return `${galleryIntro}
@@ -149,7 +174,7 @@ export const notFound: MarkdownPage = {
 export async function markdownPages(): Promise<MarkdownPage[]> {
   const posts = await writingEntries();
   return [
-    page(pages.home, home()),
+    page(pages.home, home(posts)),
     page(pages.work, work()),
     page(pages.writing, writingIndex(posts)),
     ...posts
