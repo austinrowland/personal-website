@@ -3,15 +3,17 @@ export type Segment = string | { text: string; href: string };
 
 export const homeIntro: Segment[][] = [
   [
-    "I'm a founding forward deployed engineer at ",
+    "I'm a founding forward deployed engineer on the CTO's frontier team at ",
     { text: "Postman", href: "https://www.postman.com/" },
-    " in San Francisco, building agents and agent infrastructure. I work inside some of the largest API programs in the world to see where agents get stuck, then fix the route.",
+    " in San Francisco, helping turn an API platform into infrastructure for agents. I go inside customer deployments, find the bottleneck, and build the fix back into the product.",
   ],
   [
-    "Lately that's ",
-    { text: "AI-Ready APIs", href: "/writing" },
-    ". Before that: security at Palo Alto Networks and Cisco, computer engineering at Georgia Tech, cookies on the lawn, and a ",
-    { text: "TEDx talk", href: "/work" },
+    "What I love most is owning a problem end to end, especially one that changes how someone lives. That has taken me through security at Cisco and Palo Alto Networks, assistive tech with ",
+    { text: "Tikkun Olam Makers", href: "/work" },
+    ", and founding ",
+    { text: "Avova Health", href: "/work" },
+    ". Outside work: ultramarathons, film photos, cookies for strangers, and a ",
+    { text: "TEDx talk", href: "/writing/ambition-might-be-your-achilles-heel" },
     " about ambition.",
   ],
 ];
