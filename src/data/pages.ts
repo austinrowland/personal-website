@@ -33,10 +33,10 @@ export const pages = {
   about: {
     path: "/about",
     title: "About",
-    headline: "A little peek",
-    headlineAside: "into my life.",
+    headline: "Where I'm from,",
+    headlineAside: "and what stuck.",
     description:
-      "The longer story: Georgia Tech, Spread the Love, TEDx, Tikkun Olam Makers, Avova Health, security, and Postman.",
+      "The longer story: growing up in Walkersville, Georgia Tech, almost dropping out, founding Avova Health, and building a life in San Francisco.",
   },
   photos: {
     path: "/photos",
