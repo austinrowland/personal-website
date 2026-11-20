@@ -112,6 +112,7 @@ export const projects: Project[] = [
     summary:
       "Free cookies and handwritten notes on the Georgia Tech lawn: 500, then 1,000, then 4,000+ in total.",
     photo: "spread-the-love",
+    href: "https://nique.net/life/students-give-out-2000-cookies-for-valentines-day",
   },
   {
     title: "Tikkun Olam Makers",

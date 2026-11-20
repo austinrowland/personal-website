@@ -16,7 +16,7 @@ and [Cloudflare](https://developers.cloudflare.com/fundamentals/reference/markdo
 | `X-Markdown-Tokens` estimate on Markdown responses | `scripts/agent-http.mjs` | Cloudflare |
 | `/.well-known/llms.txt` alias | `scripts/agent-http.mjs` | Mintlify |
 | Content Signals in `robots.txt` and as a response header | `src/pages/robots.txt.ts`, `contentSignal` in `src/data/site.ts` | Cloudflare |
-| `<link rel="alternate" type="text/markdown">` in every page head and a visible footer link | `src/layouts/Base.astro`, `src/components/Footer.astro` | Mintlify, Fern |
+| `<link rel="alternate" type="text/markdown">` in every page head | `src/layouts/Base.astro` | Mintlify, Fern |
 | Human / Agent switch on every page: "agent" swaps the page for its Markdown twin (persisted in `localStorage`, or `?view=agent`) | `src/components/ViewToggle.astro` | Parallel |
 | schema.org JSON-LD (`WebSite` + `Person`, `ProfilePage`, `BlogPosting`) | `src/lib/structured-data.ts` | search engines and answer engines |
 | Sitemap, RSS, Open Graph image | `@astrojs/sitemap`, `src/pages/rss.xml.ts`, `public/og.png` | standard SEO |
