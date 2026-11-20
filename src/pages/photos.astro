@@ -29,16 +29,14 @@ import { pages } from "../data/pages";
 <script>
   function initPolaroids() {
     document.querySelectorAll<HTMLElement>("[data-polaroid]").forEach((card) => {
-      if (card.dataset.bound) return;
+      const button = card.querySelector<HTMLButtonElement>(".flip");
+      const back = card.querySelector<HTMLElement>(".back");
+      if (!button || !back || card.dataset.bound) return;
       card.dataset.bound = "true";
-      const flip = () =>
-        card.setAttribute("aria-pressed", String(card.getAttribute("aria-pressed") !== "true"));
-      card.addEventListener("click", flip);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          flip();
-        }
+      button.addEventListener("click", () => {
+        const flipped = button.getAttribute("aria-pressed") !== "true";
+        button.setAttribute("aria-pressed", String(flipped));
+        back.setAttribute("aria-hidden", String(!flipped));
       });
     });
   }

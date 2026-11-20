@@ -12,17 +12,14 @@ interface Props {
 
 const { photo, tilt = 0, href } = Astro.props;
 const Tag = href ? "a" : "div";
-const attrs: Record<string, string | boolean> = href
-  ? { href }
-  : {
-      role: "button",
-      tabindex: "0",
-      "aria-pressed": "false",
-      "data-polaroid": true,
-    };
 ---
 
-<Tag class="polaroid" style={`--tilt:${tilt}deg`} {...attrs}>
+<Tag class="polaroid" style={`--tilt:${tilt}deg`} href={href} data-polaroid={href ? undefined : true}>
+  {
+    !href && (
+      <button type="button" class="flip" aria-pressed="false" aria-label={`Flip the ${photo.caption} print`} />
+    )
+  }
   <span class="inner">
     <span class="face front">
       <Photo alt={photo.alt} name={photo.name} class="aspect-square" imgClass="film" sizes="(min-width: 768px) 22rem, 90vw" />
@@ -30,7 +27,7 @@ const attrs: Record<string, string | boolean> = href
     </span>
     {
       !href && (
-        <span class="face back">
+        <span class="face back" aria-hidden="true">
           <span class="caption">{photo.caption}</span>
           <span class="story">{photo.story}</span>
           <span class="hint label">tap to flip back</span>
@@ -49,10 +46,10 @@ const attrs: Record<string, string | boolean> = href
     transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .polaroid:hover,
-  .polaroid:focus-visible {
+  .polaroid:focus-within {
     transform: rotate(0deg) translateY(-4px);
   }
-  .polaroid:focus-visible {
+  .flip:focus-visible {
     outline: 2px solid var(--accent, #c2410c);
     outline-offset: 6px;
   }
@@ -62,7 +59,16 @@ const attrs: Record<string, string | boolean> = href
     transform-style: preserve-3d;
     transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
-  .polaroid[aria-pressed="true"] .inner {
+  .polaroid {
+    position: relative;
+  }
+  .flip {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    cursor: pointer;
+  }
+  .polaroid:has(.flip[aria-pressed="true"]) .inner {
     transform: rotateY(180deg);
   }
   .face {
