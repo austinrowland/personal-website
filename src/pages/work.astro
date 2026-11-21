@@ -47,7 +47,7 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
               class="deck-card"
               data-card={i}
               aria-controls="role-panels"
-              aria-label={`${job.org}, ${job.role}`}
+              aria-label={`${job.org}, ${job.role}, ${job.start} to ${job.end}`}
               style={`--bg:${b.bg};--fg:${b.fg};--o:${i};--a:${i}`}
             >
               <span class="label opacity-75">
@@ -65,6 +65,9 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
       {
         experience.map((job, i) => (
           <article class:list={["role-panel", { "is-active": i === 0 }]} data-panel={i}>
+            <span class="label text-muted">
+              {job.start} — {job.end}
+            </span>
             <h3 class="font-display text-3xl leading-tight">
               {job.org}
               <span class="text-muted"> · {job.role}</span>
