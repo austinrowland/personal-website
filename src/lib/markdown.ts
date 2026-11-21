@@ -1,5 +1,5 @@
 import { getCollection, type CollectionEntry } from "astro:content";
-import { aboutIntro, chapters, values } from "../data/about";
+import { letter, values } from "../data/about";
 import { homeFeatured, homeIntro, homeTagline, type Segment } from "../data/home";
 import { absoluteUrl, fullHeadline, markdownPath, pages, type PageMeta } from "../data/pages";
 import { gallery, galleryIntro } from "../data/photos";
@@ -111,15 +111,16 @@ ${grouped}`;
 }
 
 function about(): string {
-  return `${sentence(aboutIntro)}
+  return `${letter.place}, ${letter.date}
 
-${chapters
-  .map((c, i) => `## ${String(i + 1).padStart(2, "0")}. ${sentence(c.label)}: ${c.title}
+${letter.greeting}
 
-${sentence(c.body)}`)
-  .join("\n\n")}
+${letter.paragraphs.join("\n\n")}
 
-## What I believe
+${letter.signoff}
+${letter.signature}
+
+${letter.postscript}
 
 ${values.map((v) => `- ${v}`).join("\n")}`;
 }
