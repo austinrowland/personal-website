@@ -2,8 +2,14 @@
 import Base from "../layouts/Base.astro";
 import PageIntro from "../components/PageIntro.astro";
 import Polaroid from "../components/Polaroid.astro";
-import { gallery, galleryIntro, tilts } from "../data/photos";
+import CameraIntro from "../components/CameraIntro.astro";
+import { gallery, galleryIntro } from "../data/photos";
 import { pages } from "../data/pages";
+
+// Deterministic scatter so every build lays the desk out the same way.
+let seed = 7;
+const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+const scatter = gallery.map(() => ({ x: rand() * 18, y: rand() * 22, r: rand() * 7 }));
 ---
 
 <Base title={pages.photos.title} description={pages.photos.description}>
@@ -13,18 +19,84 @@ import { pages } from "../data/pages";
     </p>
   </PageIntro>
 
-  <section class="mx-auto max-w-6xl px-6 pb-28">
-    <ul class="grid gap-x-10 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+  <section class="desk" aria-label="Prints on the desk">
+    <ul class="mx-auto grid max-w-6xl grid-cols-1 gap-x-8 gap-y-12 px-8 py-20 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {
         gallery.map((p, i) => (
-          <li data-reveal style={`--i:${i % 3}`}>
-            <Polaroid photo={p} tilt={tilts[i % tilts.length]} />
+          <li style={`--x:${scatter[i].x}px;--y:${scatter[i].y}px;--d:${i * 90}ms`}>
+            <Polaroid photo={p} tilt={scatter[i].r} />
           </li>
         ))
       }
     </ul>
   </section>
+  <CameraIntro />
 </Base>
+
+<style>
+  .desk {
+    --shade: transparent;
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(var(--shade), var(--shade)),
+      radial-gradient(ellipse at 50% -10%, rgb(255 236 205 / 0.4), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.11' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.22 0 0 0 0 0.12 0 0 0 0 0.05 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+      linear-gradient(90deg, #7a4d2c, #94633d 30%, #845532 55%, #9a6941 80%, #7d502f);
+    box-shadow: inset 0 40px 60px -40px rgb(0 0 0 / 0.55);
+  }
+  :global([data-theme="dark"]) .desk {
+    --shade: rgb(10 8 6 / 0.45);
+  }
+  .desk li {
+    position: relative;
+    transform: translate(var(--x), var(--y));
+    transition:
+      transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 0.6s ease;
+  }
+  .desk li:hover,
+  .desk li:focus-within {
+    z-index: 10;
+  }
+  .desk li:has([aria-pressed="true"]) {
+    z-index: 20;
+    transform: translate(0, -6px) scale(1.05);
+  }
+  .desk li:has([aria-pressed="true"]) :global(.polaroid) {
+    transform: rotate(0deg);
+  }
+  .desk :global(.polaroid .face) {
+    box-shadow:
+      0 2px 3px rgb(0 0 0 / 0.25),
+      0 18px 30px -14px rgb(0 0 0 / 0.6);
+  }
+
+  /* After the flash, prints land on the desk and develop. */
+  :global(html[data-intro="play"]) .desk li {
+    opacity: 0;
+  }
+  :global(html[data-intro="done"]) .desk li {
+    animation: land 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d) backwards;
+  }
+  @keyframes land {
+    from {
+      opacity: 0;
+      transform: translate(var(--x), calc(var(--y) - 40px)) scale(1.12);
+    }
+  }
+  :global(html[data-intro="play"]) .desk :global(.front img) {
+    filter: brightness(0.3) sepia(0.6) saturate(0.5);
+  }
+  :global(html[data-intro="done"]) .desk :global(.front img) {
+    transition: filter 3s ease calc(var(--d) + 0.4s);
+  }
+  @media (max-width: 639px) {
+    .desk li {
+      --x: 0px !important;
+    }
+  }
+</style>
 
 <script>
   function initPolaroids() {

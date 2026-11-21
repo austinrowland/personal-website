@@ -1,0 +1,144 @@
+---
+/** Full-screen Polaroid Sun 600 intro for the Photos page. Skipped for reduced motion, Agent view, or ?intro=off. */
+---
+
+<div class="camera-intro" data-camera-intro aria-hidden="true">
+  <script is:inline>
+    (() => {
+      const d = document.documentElement;
+      const play =
+        !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+        d.dataset.reader !== "agent" &&
+        !/[?&]intro=off\b/.test(location.search);
+      if (play) d.dataset.intro = "play";
+      else delete d.dataset.intro;
+    })();
+  </script>
+  <canvas></canvas>
+  <p class="cheese label">say cheese</p>
+  <button type="button" class="skip label" data-skip tabindex="-1">skip intro</button>
+  <div class="flash" data-flash></div>
+</div>
+
+<style>
+  .camera-intro {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: radial-gradient(ellipse at 50% 45%, var(--paper), var(--surface) 75%);
+    transition: opacity 0.9s ease;
+  }
+  :global(html[data-intro="play"]) .camera-intro,
+  .camera-intro.is-leaving {
+    display: block;
+  }
+  .camera-intro.is-leaving {
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* After the flash, only the white fades, so the desk appears out of it. */
+  .camera-intro.is-leaving:has(.flash.is-on) {
+    background: transparent;
+  }
+  .camera-intro.is-leaving:has(.flash.is-on) > :not(.flash) {
+    visibility: hidden;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .cheese {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(50% + clamp(4.5rem, 24vw, 14rem));
+    text-align: center;
+    color: var(--muted);
+    opacity: 0;
+    animation: cheese 0.6s ease 1.2s forwards;
+  }
+  .skip {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    color: var(--muted);
+  }
+  .skip:hover {
+    color: var(--ink);
+  }
+  .flash {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash.is-on {
+    animation: flash 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  @keyframes cheese {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes flash {
+    0% {
+      opacity: 0;
+    }
+    7% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("astro:page-load", async () => {
+    const root = document.querySelector<HTMLElement>("[data-camera-intro]");
+    const doc = document.documentElement;
+    if (!root || doc.dataset.intro !== "play" || root.dataset.bound) return;
+    root.dataset.bound = "true";
+    root.setAttribute("aria-hidden", "false");
+    const skip = root.querySelector<HTMLButtonElement>("[data-skip]")!;
+    skip.tabIndex = 0;
+    const flash = root.querySelector<HTMLElement>("[data-flash]")!;
+    let stop: (() => void) | undefined;
+    let finished = false;
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      doc.dataset.intro = "done";
+      root.classList.add("is-leaving");
+      setTimeout(() => {
+        stop?.();
+        root.remove();
+      }, 1100);
+    };
+    skip.addEventListener("click", finish);
+    setTimeout(finish, 6000);
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        stop?.();
+        delete doc.dataset.intro;
+      },
+      { once: true },
+    );
+
+    try {
+      const { playSun600 } = await import("../lib/sun600");
+      if (finished) return;
+      stop = playSun600(root.querySelector("canvas")!, {
+        onFlash: () => flash.classList.add("is-on"),
+        onDone: finish,
+      });
+    } catch {
+      finish();
+    }
+  });
+</script>
