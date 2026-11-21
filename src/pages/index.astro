@@ -1,15 +1,30 @@
 ---
 import Base from "../layouts/Base.astro";
 import Photo from "../components/Photo.astro";
-import FilmStrips from "../components/FilmStrips.astro";
+import Polaroid from "../components/Polaroid.astro";
+import { getCollection } from "astro:content";
+import { gallery, tilts } from "../data/photos";
+import { projects, projectKinds } from "../data/work";
 import headshot from "../assets/headshot.jpg";
 import { homeJsonLd } from "../lib/structured-data";
-import { homeIntro, homeTagline } from "../data/home";
+import { homeFeatured, homeIntro, homeTagline } from "../data/home";
 import { pages } from "../data/pages";
 
 const greeting = pages.home.headline;
 const chars = [...greeting];
 const typeDone = 700 + chars.length * 55;
+
+const featured = homeFeatured.projects
+  .map((t) => projects.find((p) => p.title === t))
+  .filter((p) => p !== undefined);
+const kindLabel = (k: string) => projectKinds.find((x) => x.value === k)?.label ?? k;
+const posts = (await getCollection("writing"))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, homeFeatured.posts);
+const dateFmt = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+const prints = homeFeatured.photos
+  .map((n) => gallery.find((p) => p.name === n))
+  .filter((p) => p !== undefined);
 ---
 
 <Base jsonLd={homeJsonLd()}>
@@ -61,8 +76,66 @@ const typeDone = 700 + chars.length * 55;
     </div>
   </section>
 
-  <section class="px-6 pb-24">
-    <FilmStrips />
+  <section class="mx-auto max-w-6xl px-6 pb-24">
+    <div class="mb-8 flex items-baseline justify-between gap-4 border-t border-line pt-10">
+      <h2 class="font-display text-3xl sm:text-4xl">Selected work</h2>
+      <a href="/work" class="label link text-muted">all work →</a>
+    </div>
+    <ul class="grid gap-6 md:grid-cols-3">
+      {
+        featured.map((p, i) => (
+          <li data-reveal style={`--i:${i}`}>
+            <a href={p.href ?? "/work"} {...(p.href?.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})} class="group flex h-full flex-col gap-3 rounded-sm border border-line p-6 transition-colors hover:border-ink">
+              <span class="label text-muted">{kindLabel(p.kind)} · {p.years}</span>
+              <h3 class="font-display text-2xl leading-tight">{p.title}</h3>
+              <p class="leading-relaxed text-ink/75">{p.summary}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-24">
+    <div class="mb-4 flex items-baseline justify-between gap-4 border-t border-line pt-10">
+      <h2 class="font-display text-3xl sm:text-4xl">Latest writing</h2>
+      <a href="/writing" class="label link text-muted">all writing →</a>
+    </div>
+    <ul class="flex flex-col">
+      {
+        posts.map((p) => (
+          <li class="border-b border-line last:border-b-0">
+            <a
+              href={p.data.externalUrl ?? `/writing/${p.id}`}
+              {...(p.data.externalUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              class="group grid gap-1 py-5 sm:grid-cols-[1fr_auto] sm:gap-8"
+            >
+              <span class="flex flex-col gap-1">
+                <h3 class="font-display text-2xl leading-tight transition-colors group-hover:text-accent">{p.data.title}</h3>
+                <p class="text-ink/70">{p.data.description}</p>
+              </span>
+              <span class="label text-muted sm:pt-2">{dateFmt.format(p.data.date)}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-24">
+    <div class="mb-10 flex items-baseline justify-between gap-4 border-t border-line pt-10">
+      <h2 class="font-display text-3xl sm:text-4xl">From the photo box</h2>
+      <a href="/photos" class="label link text-muted">all photos →</a>
+    </div>
+    <ul class="grid gap-10 sm:grid-cols-3">
+      {
+        prints.map((p, i) => (
+          <li data-reveal style={`--i:${i}`}>
+            <Polaroid photo={p} tilt={tilts[i]} href="/photos" />
+          </li>
+        ))
+      }
+    </ul>
   </section>
 
   <section class="px-6 pb-28 text-center" data-reveal>
