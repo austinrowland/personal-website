@@ -9,49 +9,79 @@ import { photoAlt } from "../data/photos";
 const kindLabel = Object.fromEntries(
   projectKinds.map((k) => [k.value, k.label.replace(/s$/, "")]),
 );
+const pad = (n: number) => String(n).padStart(2, "0");
+const external = (href: string) =>
+  href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {};
+
+const brand: Record<string, { bg: string; fg: string }> = {
+  Postman: { bg: "#ff6c37", fg: "#fff8f3" },
+  "Palo Alto Networks": { bg: "#1f1d1b", fg: "#fa582d" },
+  "Cisco Systems": { bg: "#049fd9", fg: "#f2fbff" },
+  "Georgia Tech Research Institute": { bg: "#003057", fg: "#d6c48f" },
+};
+const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
 ---
 
 <Base title={pages.work.title} description={pages.work.description}>
   <PageIntro eyebrow="work" title={pages.work.headline} />
 
-  <section class="mx-auto max-w-6xl px-6 pb-24" aria-labelledby="experience">
-    <h2 id="experience" class="label mb-6 text-muted">experience</h2>
-    <ol class="border-t border-line">
+  <section class="deck-wrap mx-auto max-w-6xl px-6 pb-24" aria-labelledby="experience" data-deck>
+    <div class="mb-6 flex items-center justify-between gap-4">
+      <h2 id="experience" class="label text-muted">experience</h2>
+      <div class="deck-controls flex items-center gap-3">
+        <button type="button" class="deck-btn" data-prev aria-label="Previous role">←</button>
+        <span class="label w-16 text-center text-muted" data-counter aria-hidden="true">
+          01 / {pad(experience.length)}
+        </span>
+        <button type="button" class="deck-btn" data-next aria-label="Next role">→</button>
+      </div>
+    </div>
+
+    <div class="deck-stage" role="group" aria-roledescription="carousel" aria-label="Roles">
+      {
+        experience.map((job, i) => {
+          const b = brand[job.org] ?? fallback;
+          return (
+            <button
+              type="button"
+              class="deck-card"
+              data-card={i}
+              aria-controls="role-panels"
+              aria-label={`${job.org}, ${job.role}`}
+              style={`--bg:${b.bg};--fg:${b.fg};--o:${i};--a:${i}`}
+            >
+              <span class="label opacity-75">
+                {job.start} — {job.end}
+              </span>
+              <span class="font-display text-4xl leading-[0.95] sm:text-5xl">{job.org}</span>
+              <span class="label opacity-75">{job.role}</span>
+            </button>
+          );
+        })
+      }
+    </div>
+
+    <div id="role-panels" class="mx-auto mt-12 max-w-2xl" aria-live="polite">
       {
         experience.map((job, i) => (
-          <li class="border-b border-line" data-reveal style={`--i:${i}`}>
-            <details class="group">
-              <summary class="grid cursor-pointer list-none gap-2 py-6 md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-8 [&::-webkit-details-marker]:hidden">
-                <span class="label text-muted">
-                  {job.start} — {job.end}
-                </span>
-                <span class="flex flex-col gap-1">
-                  <span class="font-display text-2xl leading-tight sm:text-3xl">
-                    {job.org}
-                    <span class="text-muted"> · {job.role}</span>
-                  </span>
-                  <span class="text-ink/75">{job.take}</span>
-                </span>
-                <span
-                  aria-hidden="true"
-                  class="label text-muted transition-transform duration-300 group-open:rotate-45"
-                >
-                  +
-                </span>
-              </summary>
-              <ul class="flex flex-col gap-2 pb-7 text-ink/80 md:ml-[13rem] md:max-w-2xl">
-                {job.points.map((p) => (
-                  <li class="flex gap-3">
-                    <span class="text-accent">—</span>
-                    <span>{p}</span>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </li>
+          <article class:list={["role-panel", { "is-active": i === 0 }]} data-panel={i}>
+            <h3 class="font-display text-3xl leading-tight">
+              {job.org}
+              <span class="text-muted"> · {job.role}</span>
+            </h3>
+            <p class="mt-2 text-lg text-ink/75">{job.take}</p>
+            <ul class="mt-5 flex flex-col gap-2 text-ink/80">
+              {job.points.map((p) => (
+                <li class="flex gap-3">
+                  <span class="text-accent">—</span>
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
         ))
       }
-    </ol>
+    </div>
   </section>
 
   <section class="mx-auto max-w-6xl px-6 pb-28" aria-labelledby="projects">
@@ -72,9 +102,9 @@ const kindLabel = Object.fromEntries(
     </div>
     <ul class="grid gap-x-8 gap-y-12 md:grid-cols-2" data-grid>
       {
-        projects.map((p, i) => {
-          const body = (
-            <>
+        projects.map((p, i) => (
+          <li data-kind={p.kind} data-reveal style={`--i:${i % 2}`} class="tile group relative">
+            <div class="transition-transform duration-500 group-hover:-translate-y-1">
               <Photo alt={photoAlt(p.photo, p.title)} name={p.photo ?? p.kind} class="aspect-[16/10]" />
               <div class="mt-4 flex items-center gap-3">
                 <h3 class="font-display text-2xl leading-tight">{p.title}</h3>
@@ -84,26 +114,263 @@ const kindLabel = Object.fromEntries(
                 <span class="label ml-auto text-muted">{p.years}</span>
               </div>
               <p class="mt-2 text-ink/75">{p.summary}</p>
-            </>
-          );
-          return (
-            <li data-kind={p.kind} data-reveal style={`--i:${i % 2}`} class="transition-opacity">
-              {p.href ? (
-                <a href={p.href} {...(p.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})} class="group block transition-transform duration-500 hover:-translate-y-1">
-                  {body}
-                </a>
-              ) : (
-                <div>{body}</div>
-              )}
-            </li>
-          );
-        })
+            </div>
+            <button
+              type="button"
+              class="tile-open absolute inset-0 rounded-sm"
+              data-open={i}
+              aria-haspopup="dialog"
+              aria-label={`Open ${p.title}`}
+            >
+              <span class="tile-hint label">view ↗</span>
+            </button>
+          </li>
+        ))
       }
     </ul>
   </section>
+
+  <dialog class="viewer" aria-label="Project viewer" data-viewer>
+    <div class="viewer-panel">
+      <div class="flex items-center justify-between gap-4 px-6 pt-5">
+        <span class="label text-muted" data-viewer-counter aria-hidden="true"></span>
+        <button type="button" class="deck-btn" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="viewer-slides">
+        {
+          projects.map((p, i) => (
+            <article class="viewer-slide" data-slide={i} aria-roledescription="slide" aria-label={p.title} inert>
+              <Photo
+                alt={photoAlt(p.photo, p.title)}
+                name={p.photo ?? p.kind}
+                class="aspect-[4/3] md:aspect-[5/4]"
+                widths={[800, 1200, 1600]}
+                sizes="(min-width: 768px) 60vw, 100vw"
+              />
+              <div class="flex flex-col gap-4">
+                <span class="label text-muted">
+                  {kindLabel[p.kind]} · {p.years}
+                </span>
+                <h3 class="font-display text-4xl leading-[1.02] sm:text-5xl">{p.title}</h3>
+                <p class="text-lg leading-relaxed text-ink/80">{p.summary}</p>
+                {p.href && (
+                  <a class="link label self-start" href={p.href} {...external(p.href)}>
+                    {p.href.startsWith("http") ? "read more ↗" : "read more →"}
+                  </a>
+                )}
+              </div>
+            </article>
+          ))
+        }
+      </div>
+      <div class="flex items-center justify-between px-6 pb-5">
+        <button type="button" class="deck-btn" data-viewer-prev aria-label="Previous project">←</button>
+        <span class="label hidden text-muted sm:inline">← → to browse · esc to close</span>
+        <button type="button" class="deck-btn" data-viewer-next aria-label="Next project">→</button>
+      </div>
+    </div>
+  </dialog>
 </Base>
 
 <style>
+  .deck-wrap {
+    overflow-x: clip;
+  }
+  .deck-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    color: var(--muted);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+  .deck-btn:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .deck-controls {
+    display: none;
+  }
+  :global(.js) .deck-controls {
+    display: flex;
+  }
+
+  /* Without JS the cards are a plain row; with JS they stack into a cover-flow deck. */
+  .deck-stage {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .deck-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.5rem;
+    width: min(78vw, 26rem);
+    min-height: 15rem;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    background: var(--bg);
+    color: var(--fg);
+    text-align: left;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.12) inset,
+      0 30px 60px -30px rgb(28 25 23 / 0.55);
+  }
+  :global(.js) .deck-stage {
+    display: block;
+    position: relative;
+    height: clamp(15rem, 34vw, 20rem);
+    perspective: 1400px;
+    touch-action: pan-y;
+  }
+  :global(.js) .deck-card {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 100%;
+    margin-left: calc(min(78vw, 26rem) / -2);
+    transform: translateX(calc(var(--o) * 20%)) translateZ(calc(var(--a) * -110px))
+      rotateY(calc(var(--o) * -9deg));
+    opacity: clamp(0, calc(3 - var(--a)), 1);
+    z-index: calc(10 - var(--a));
+    filter: brightness(calc(1 - var(--a) * 0.12)) saturate(calc(1 - var(--a) * 0.2));
+    transition:
+      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+      filter 0.8s ease;
+  }
+  :global(.js) .deck-card > * {
+    opacity: clamp(0, calc(1 - var(--a)), 1);
+    transition: opacity 0.5s ease;
+  }
+  :global(.js) .deck-card[aria-current="true"]:hover {
+    transform: translateY(-4px);
+  }
+  .deck-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+  }
+
+  .role-panel + .role-panel {
+    margin-top: 3rem;
+  }
+  :global(.js) .role-panel {
+    display: none;
+  }
+  :global(.js) .role-panel.is-active {
+    display: block;
+    margin-top: 0;
+    animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .tile-open {
+    cursor: zoom-in;
+  }
+  .tile-open:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 6px;
+  }
+  .tile-hint {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 9999px;
+    background: var(--paper);
+    color: var(--ink);
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+  .tile:hover .tile-hint,
+  .tile-open:focus-visible .tile-hint {
+    opacity: 1;
+    transform: none;
+  }
+
+  .viewer {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 1rem;
+    background: transparent;
+    color: var(--ink);
+  }
+  .viewer[open] {
+    display: grid;
+    place-items: center;
+  }
+  .viewer::backdrop {
+    background: rgb(14 13 12 / 0.82);
+    backdrop-filter: blur(6px);
+  }
+  :global(html:has(.viewer[open])) {
+    overflow: hidden;
+  }
+  .viewer-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: min(72rem, 100%);
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+    border-radius: 1.25rem;
+    background: var(--paper);
+    animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+    touch-action: pan-y;
+  }
+  .viewer-slides {
+    display: grid;
+    padding: 0 1.5rem;
+  }
+  .viewer-slide {
+    grid-area: 1 / 1;
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+    opacity: 0;
+    transform: translateX(var(--from, 24px));
+    transition:
+      opacity 0.5s ease,
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .viewer-slide.is-active {
+    opacity: 1;
+    transform: none;
+  }
+  @media (min-width: 768px) {
+    .viewer-slide {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .deck-card,
+    .viewer-slide {
+      transition: none;
+    }
+    :global(.js) .role-panel.is-active,
+    .viewer-panel {
+      animation: none;
+    }
+  }
+
   .filter-btn {
     border: 1px solid var(--line);
     border-radius: 9999px;
@@ -125,6 +392,142 @@ const kindLabel = Object.fromEntries(
 </style>
 
 <script>
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /** Calls back with -1 or 1 when the pointer is dragged sideways far enough. */
+  function onSwipe(el: HTMLElement, cb: (dir: 1 | -1) => void) {
+    let x0: number | null = null;
+    el.addEventListener("pointerdown", (e) => (x0 = e.clientX));
+    el.addEventListener("pointerup", (e) => {
+      if (x0 === null) return;
+      const dx = e.clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 40) {
+        el.dataset.swiped = "true";
+        cb(dx < 0 ? 1 : -1);
+      }
+    });
+  }
+  /** True (once) if the click that follows a swipe should be ignored. */
+  function swallowSwipe(el: HTMLElement) {
+    if (el.dataset.swiped !== "true") return false;
+    delete el.dataset.swiped;
+    return true;
+  }
+
+  function initDeck() {
+    const deck = document.querySelector<HTMLElement>("[data-deck]");
+    if (!deck || deck.dataset.bound) return;
+    deck.dataset.bound = "true";
+    const stage = deck.querySelector<HTMLElement>(".deck-stage")!;
+    const cards = [...deck.querySelectorAll<HTMLButtonElement>("[data-card]")];
+    const panels = [...deck.querySelectorAll<HTMLElement>("[data-panel]")];
+    const counter = deck.querySelector<HTMLElement>("[data-counter]");
+    const n = cards.length;
+    let active = 0;
+    let timer: number | undefined;
+    let touched = false;
+
+    const show = (i: number) => {
+      active = (i + n) % n;
+      cards.forEach((c, j) => {
+        const o = j - active;
+        c.style.setProperty("--o", String(o));
+        c.style.setProperty("--a", String(Math.abs(o)));
+        c.setAttribute("aria-current", String(o === 0));
+      });
+      panels.forEach((p, j) => p.classList.toggle("is-active", j === active));
+      if (counter) counter.textContent = `${pad(active + 1)} / ${pad(n)}`;
+    };
+    const stop = () => {
+      clearInterval(timer);
+      timer = undefined;
+    };
+    const start = () => {
+      if (!touched && !timer && !reduceMotion()) timer = window.setInterval(() => show(active + 1), 5000);
+    };
+    const go = (i: number) => {
+      touched = true;
+      stop();
+      show(i);
+    };
+
+    cards.forEach((c, j) =>
+      c.addEventListener("click", () => {
+        if (!swallowSwipe(stage)) go(j);
+      }),
+    );
+    deck.querySelector("[data-prev]")?.addEventListener("click", () => go(active - 1));
+    deck.querySelector("[data-next]")?.addEventListener("click", () => go(active + 1));
+    stage.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      go(active + (e.key === "ArrowRight" ? 1 : -1));
+      cards[active].focus();
+    });
+    onSwipe(stage, (d) => go(active + d));
+    deck.addEventListener("mouseenter", stop);
+    deck.addEventListener("focusin", stop);
+    deck.addEventListener("mouseleave", start);
+
+    new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()), {
+      threshold: 0.4,
+    }).observe(stage);
+    document.addEventListener("astro:before-swap", stop, { once: true });
+    show(0);
+  }
+
+  function initViewer() {
+    const dialog = document.querySelector<HTMLDialogElement>("[data-viewer]");
+    const grid = document.querySelector<HTMLElement>("[data-grid]");
+    if (!dialog || !grid || dialog.dataset.bound) return;
+    dialog.dataset.bound = "true";
+    const slides = [...dialog.querySelectorAll<HTMLElement>("[data-slide]")];
+    const counter = dialog.querySelector<HTMLElement>("[data-viewer-counter]");
+    const arrows = dialog.querySelectorAll<HTMLElement>("[data-viewer-prev], [data-viewer-next]");
+    let order: number[] = [];
+    let pos = 0;
+
+    const render = (dir = 1) => {
+      slides.forEach((s, j) => {
+        const on = j === order[pos];
+        s.style.setProperty("--from", `${dir * 24}px`);
+        s.classList.toggle("is-active", on);
+        s.inert = !on;
+      });
+      if (counter) counter.textContent = `${pad(pos + 1)} / ${pad(order.length)}`;
+      arrows.forEach((a) => (a.style.visibility = order.length > 1 ? "visible" : "hidden"));
+    };
+    const step = (d: 1 | -1) => {
+      pos = (pos + d + order.length) % order.length;
+      render(d);
+    };
+
+    grid.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-open]");
+      if (!btn) return;
+      order = [...grid.querySelectorAll<HTMLElement>("[data-kind]:not([hidden]) [data-open]")].map(
+        (b) => Number(b.dataset.open),
+      );
+      pos = Math.max(0, order.indexOf(Number(btn.dataset.open)));
+      render();
+      dialog.showModal();
+    });
+    dialog.querySelector("[data-viewer-prev]")?.addEventListener("click", () => step(-1));
+    dialog.querySelector("[data-viewer-next]")?.addEventListener("click", () => step(1));
+    dialog.querySelector("[data-close]")?.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog && !swallowSwipe(dialog)) dialog.close();
+    });
+    dialog.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") step(1);
+      else if (e.key === "ArrowLeft") step(-1);
+    });
+    onSwipe(dialog, (d) => step(d));
+    document.addEventListener("astro:before-swap", () => dialog.open && dialog.close(), { once: true });
+  }
+
   function initFilters() {
     const group = document.querySelector<HTMLElement>("[data-filters]");
     const grid = document.querySelector<HTMLElement>("[data-grid]");
@@ -142,5 +545,10 @@ const kindLabel = Object.fromEntries(
       });
     });
   }
-  document.addEventListener("astro:page-load", initFilters);
+
+  document.addEventListener("astro:page-load", () => {
+    initDeck();
+    initViewer();
+    initFilters();
+  });
 </script>
