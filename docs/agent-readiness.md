@@ -11,10 +11,10 @@ and [Cloudflare](https://developers.cloudflare.com/fundamentals/reference/markdo
 | `/llms.txt` index of every page with descriptions | `src/pages/llms.txt.ts` | llmstxt.org, Mintlify, Fern |
 | `/llms-full.txt`, the whole site in one file (~3k tokens) | `src/pages/llms-full.txt.ts` | Mintlify |
 | Markdown twin of every page (`/work.md`, `/index.md`, `/writing/<post>.md`) | `src/pages/[...path].md.ts`, `src/lib/markdown.ts` | Mintlify, Fern |
-| `Accept: text/markdown` content negotiation, `Vary: Accept` | `scripts/agent-http.mjs` | Cloudflare, Mintlify |
-| `Link` headers (`llms-txt`, `alternate` Markdown, `sitemap`) and `X-Llms-Txt` | `scripts/agent-http.mjs` | Mintlify |
-| `X-Markdown-Tokens` estimate on Markdown responses | `scripts/agent-http.mjs` | Cloudflare |
-| `/.well-known/llms.txt` alias | `scripts/agent-http.mjs` | Mintlify |
+| `Accept: text/markdown` content negotiation, `Vary: Accept` | `scripts/agent-http.ts` | Cloudflare, Mintlify |
+| `Link` headers (`llms-txt`, `alternate` Markdown, `sitemap`) and `X-Llms-Txt` | `scripts/agent-http.ts` | Mintlify |
+| `X-Markdown-Tokens` estimate on Markdown responses | `scripts/agent-http.ts` | Cloudflare |
+| `/.well-known/llms.txt` alias | `scripts/agent-http.ts` | Mintlify |
 | Content Signals in `robots.txt` and as a response header | `src/pages/robots.txt.ts`, `contentSignal` in `src/data/site.ts` | Cloudflare |
 | `<link rel="alternate" type="text/markdown">` in every page head | `src/layouts/Base.astro` | Mintlify, Fern |
 | Human / Agent switch on every page: "agent" swaps the page for its Markdown twin (persisted in `localStorage`, or `?view=agent`) | `src/components/ViewToggle.astro` | Parallel |
@@ -28,11 +28,11 @@ search engines index one copy.
 ## Hosting
 
 Static hosts serve the `.md` and `.txt` files as-is, but the HTTP behaviors (content negotiation, `Link`
-headers, the `.well-known` alias) need code. They live in `scripts/agent-http.mjs`, which two servers share:
+headers, the `.well-known` alias) need code. They live in `scripts/agent-http.ts`, which two servers share:
 
-- **Production:** the Cloudflare Worker `austinrowland-com` (`worker/index.mjs`, `wrangler.jsonc`) serves
+- **Production:** the Cloudflare Worker `austinrowland-com` (`worker/index.ts`, `wrangler.jsonc`) serves
   `dist/` through the `ASSETS` binding with `run_worker_first`, so every response gets the agent headers.
-- **Local and the Devin App:** `npm run serve` (`scripts/serve.mjs`); `npm test` runs against it.
+- **Local and the Devin App:** `npm run serve` (`scripts/serve.ts`); `npm test` runs against it.
 
 ## Deploys
 

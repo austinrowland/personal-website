@@ -1,14 +1,14 @@
 // Serves the built site (dist/) locally and for the Devin App, with the agent-facing HTTP behavior
-// from agent-http.mjs. In production the Cloudflare Worker (worker/index.mjs) does the same.
-import { createServer } from "node:http";
+// from agent-http.ts. In production the Cloudflare Worker (worker/index.ts) does the same.
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest } from "./agent-http.mjs";
+import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest } from "./agent-http.ts";
 
-export { CONTENT_SIGNAL, markdownPathFor, prefersMarkdown } from "./agent-http.mjs";
+export { CONTENT_SIGNAL, markdownPathFor, prefersMarkdown } from "./agent-http.ts";
 
-const TYPES = {
+const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
@@ -27,7 +27,7 @@ const TYPES = {
   ".woff2": "font/woff2",
 };
 
-async function resolveFile(root, pathname) {
+async function resolveFile(root: string, pathname: string): Promise<string | null> {
   const target = path.join(root, pathname);
   if (target !== root && !target.startsWith(root + path.sep)) return null;
   for (const candidate of [target, path.join(target, "index.html"), `${target}.html`]) {
@@ -38,7 +38,7 @@ async function resolveFile(root, pathname) {
   return null;
 }
 
-export function createSiteServer({ root = "dist" } = {}) {
+export function createSiteServer({ root = "dist" }: { root?: string } = {}) {
   const dist = path.resolve(root);
   return createServer((req, res) => {
     handle(dist, req, res).catch((error) => {
@@ -49,7 +49,7 @@ export function createSiteServer({ root = "dist" } = {}) {
   });
 }
 
-async function handle(dist, req, res) {
+async function handle(dist: string, req: IncomingMessage, res: ServerResponse) {
   const plan = planRequest(decodePath(req.url ?? "/"), req.headers.accept);
   let status = 200;
   let file = await resolveFile(dist, plan.wantPath);
@@ -68,8 +68,8 @@ async function handle(dist, req, res) {
   const body = await readFile(file);
   const type = TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
   headers["Content-Type"] = type;
-  headers["Content-Length"] = body.length;
-  if (type.startsWith("text/markdown")) headers["X-Markdown-Tokens"] = markdownTokens(body.toString("utf8"));
+  headers["Content-Length"] = String(body.length);
+  if (type.startsWith("text/markdown")) headers["X-Markdown-Tokens"] = String(markdownTokens(body.toString("utf8")));
   res.writeHead(status, headers);
   res.end(req.method === "HEAD" ? undefined : body);
 }

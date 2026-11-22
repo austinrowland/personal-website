@@ -1,6 +1,6 @@
 // Cloudflare Worker for austinrowland.com: serves the static Astro build (dist/, via the ASSETS
-// binding) with the same agent-facing behavior as scripts/serve.mjs.
-import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest } from "../scripts/agent-http.mjs";
+// binding) with the same agent-facing behavior as scripts/serve.ts.
+import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest } from "../scripts/agent-http.ts";
 
 // austinrowland.com shows a placeholder until SITE_LIVE is "true" in wrangler.jsonc; workers.dev
 // and Preview URLs always serve the full site.
@@ -19,7 +19,7 @@ const PLACEHOLDER = `<!doctype html>
 </html>
 `;
 
-function placeholder(request) {
+function placeholder(request: Request) {
   const isRobots = new URL(request.url).pathname === "/robots.txt";
   return new Response(request.method === "HEAD" ? null : isRobots ? "User-agent: *\nDisallow: /\n" : PLACEHOLDER, {
     headers: {
@@ -38,7 +38,7 @@ export default {
     const plan = planRequest(decodePath(request.url), request.headers.get("accept") ?? "");
     // Markdown is read to estimate tokens, so fetch it with GET even for HEAD requests. The 404
     // fallback drops conditional headers: a 304 for 404.md would leave the error without a body.
-    const assetRequest = (path, { conditional = true } = {}) => {
+    const assetRequest = (path: string, { conditional = true } = {}) => {
       const headers = new Headers(request.headers);
       if (!conditional) for (const name of CONDITIONAL_HEADERS) headers.delete(name);
       const method = plan.wantsMarkdown ? "GET" : request.method;
@@ -55,7 +55,7 @@ export default {
     const headers = new Headers(response.headers);
     for (const [name, value] of Object.entries(agentHeaders(plan, status))) headers.set(name, value);
 
-    let body = response.body;
+    let body: BodyInit | null = response.body;
     if (status < 300 || status === 404) {
       const type = headers.get("content-type") ?? "";
       if (plan.wantsMarkdown || type.startsWith("text/markdown")) {
@@ -68,4 +68,4 @@ export default {
     }
     return new Response(body, { status, statusText: status === 404 ? "Not Found" : response.statusText, headers });
   },
-};
+} satisfies ExportedHandler<Env>;

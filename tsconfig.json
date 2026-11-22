@@ -1,5 +1,10 @@
 {
   "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    // scripts/ and test/ run on Node's type stripping, which only removes type syntax.
+    "erasableSyntaxOnly": true
+  },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  // worker/ has its own tsconfig for the Workers runtime.
+  "exclude": ["dist", "worker"]
 }
