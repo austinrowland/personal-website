@@ -1,0 +1,126 @@
+---
+/**
+ * Sumi-e style drawings for the Story chapters. `.ink-s` strokes brush in with scroll,
+ * `.ink-w` washes soak in after them, and the accent matches the logo's sun and canoe.
+ */
+import type { InkScene } from "../data/story";
+
+interface Props {
+  scene: InkScene;
+  class?: string;
+}
+const { scene, class: className } = Astro.props;
+const sun = "color-mix(in oklab, var(--sun) 32%, var(--paper))";
+---
+
+<svg viewBox="0 0 200 200" aria-hidden="true" class:list={["ink", className]} fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+  {
+    scene === "town" && (
+      <>
+        <g class="ink-w" filter="url(#ink-bleed)">
+          <circle cx="152" cy="58" r="20" fill={sun} stroke="none" />
+          <path d="M0 152 C40 130 80 136 110 146 C140 156 170 138 200 140 V200 H0 Z" fill="url(#wash-down)" stroke="none" />
+        </g>
+        <g filter="url(#ink-rough)">
+          <path class="ink-s" pathLength="1" stroke-width="3.24" d="M6 152 C40 132 80 136 110 146 C140 156 170 139 196 141" />
+          <path class="ink-s" pathLength="1" stroke-width="2.16" d="M30 164 C70 156 120 166 176 158" />
+          <path class="ink-s" pathLength="1" stroke-width="2.3" d="M40 147 V122 L55 108 L70 122 V147" />
+          <path class="ink-s" pathLength="1" stroke-width="1.58" d="M51 147 V135 H59 V147" />
+          <path class="ink-s" pathLength="1" stroke-width="2.16" d="M130 150 L135 112 M150 150 L145 112 M132 132 H148" />
+          <path class="ink-s" pathLength="1" stroke-width="2.3" d="M127 104 C127 94 153 94 153 104 C153 114 127 114 127 104 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="1.73" d="M92 142 V112" />
+          <path class="ink-s" pathLength="1" stroke-width="1.44" d="M60 62 q5 -5 10 0 q5 -5 10 0 M86 48 q4 -4 8 0 q4 -4 8 0" />
+        </g>
+        <path class="ink-w" d="M92 112 L108 117 L92 122 Z" fill="var(--accent)" stroke="none" />
+      </>
+    )
+  }
+  {
+    scene === "tower" && (
+      <>
+        <g class="ink-w" filter="url(#ink-bleed)">
+          <path d="M30 40 C80 20 150 30 176 60 C186 110 170 150 150 160 H50 C30 140 20 80 30 40 Z" fill="currentColor" opacity="0.07" stroke="none" />
+          <path d="M100 52 L116 70 V160 H84 V70 Z" fill="currentColor" opacity="0.14" stroke="none" />
+        </g>
+        <g filter="url(#ink-rough)">
+          <path class="ink-s" pathLength="1" stroke-width="2.88" d="M20 160 H180" />
+          <path class="ink-s" pathLength="1" stroke-width="2.45" d="M84 160 V70 L100 52 L116 70 V160" />
+          <path class="ink-s" pathLength="1" stroke-width="2.02" d="M48 160 V110 H84 M116 110 H152 V160" />
+          <path class="ink-s" pathLength="1" stroke-width="1.44" d="M95 86 V98 M105 86 V98 M95 112 V124 M105 112 V124 M60 122 V134 M72 122 V134 M128 122 V134 M140 122 V134" />
+          <path class="ink-s" pathLength="1" stroke-width="1.87" d="M54 34 C40 40 38 62 54 70 C66 76 78 70 80 62 C68 66 56 58 58 46 C59 40 56 36 54 34 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="1.87" d="M146 176 H168 L165 192 H149 Z M168 180 C175 180 175 188 166 188" />
+          <path class="ink-s" pathLength="1" stroke-width="1.3" d="M153 170 C149 165 157 162 153 156 M161 170 C157 165 165 162 161 156" />
+        </g>
+        <path class="ink-w" d="M90 76 H110" stroke="var(--accent)" stroke-width="4" />
+      </>
+    )
+  }
+  {
+    scene === "note" && (
+      <>
+        <g class="ink-w" filter="url(#ink-bleed)">
+          <path d="M38 66 L122 56 L130 122 L46 132 Z" fill="currentColor" opacity="0.06" stroke="none" />
+          <circle cx="146" cy="146" r="28" fill={sun} stroke="none" />
+        </g>
+        <g filter="url(#ink-rough)">
+          <path class="ink-s" pathLength="1" stroke-width="2.3" d="M38 66 L122 56 L130 122 L46 132 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="1.3" d="M42 99 L126 89" />
+          <path class="ink-s" pathLength="1" stroke-width="1.44" d="M54 80 q6 -5 12 0 t12 0 t12 0 t10 -1 M56 112 q6 -5 12 0 t12 0" />
+          <path class="ink-s" pathLength="1" stroke-width="2.45" d="M146 118 C162 118 174 130 174 146 C174 162 162 174 146 174 C130 174 118 162 118 146 C118 130 130 118 146 118 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="2.88" d="M136 136 l2 1 M154 132 l1 2 M150 154 l2 1 M134 156 l1 2 M146 146 l1 1" />
+        </g>
+        <path class="ink-w" d="M102 104 C96 96 86 102 92 110 L102 120 L112 110 C118 102 108 96 102 104 Z" fill="var(--accent)" stroke="none" />
+      </>
+    )
+  }
+  {
+    scene === "pulse" && (
+      <>
+        <g class="ink-w" filter="url(#ink-bleed)">
+          <path d="M100 156 C58 126 48 92 70 74 C84 63 98 70 100 86 C102 70 116 63 130 74 C152 92 142 126 100 156 Z" fill="var(--accent)" opacity="0.22" stroke="none" />
+        </g>
+        <g filter="url(#ink-rough)">
+          <path class="ink-s" pathLength="1" stroke-width="1.73" d="M22 42 l18 -4 l4 20 l-18 4 Z M34 78 l18 2 l-2 20 l-18 -2 Z M150 34 l18 4 l-4 20 l-18 -4 Z M164 76 l16 -6 l6 18 l-16 6 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="1.15" d="M48 54 L68 72 M56 92 L70 92 M150 54 L132 72 M164 84 L142 92" />
+          <path class="ink-s" pathLength="1" stroke-width="2.59" d="M100 156 C58 126 48 92 70 74 C84 63 98 70 100 86 C102 70 116 63 130 74 C152 92 142 126 100 156 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="2.16" d="M14 116 H70 L78 100 L88 132 L96 108 L102 116 H186" />
+        </g>
+      </>
+    )
+  }
+  {
+    scene === "stage" && (
+      <>
+        <g class="ink-w" filter="url(#ink-bleed)">
+          <path d="M86 14 L114 14 L146 152 L54 152 Z" fill={sun} opacity="0.7" stroke="none" />
+        </g>
+        <g filter="url(#ink-rough)">
+          <path class="ink-s" pathLength="1" stroke-width="4.32" d="M150 62 C136 34 98 26 72 40 C44 56 36 96 52 124 C68 152 108 162 136 146 C158 134 168 108 162 84" />
+          <path class="ink-s" pathLength="1" stroke-width="2.59" d="M34 152 H166" />
+          <path class="ink-s" pathLength="1" stroke-width="2.16" d="M100 86 C104 86 107 89 107 93 C107 97 104 100 100 100 C96 100 93 97 93 93 C93 89 96 86 100 86 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="2.45" d="M100 102 V128 M100 108 L88 120 M100 108 L114 96" />
+          <path class="ink-s" pathLength="1" stroke-width="2.45" d="M100 128 L92 150 M100 128 L108 150" />
+        </g>
+      </>
+    )
+  }
+  {
+    scene === "trail" && (
+      <>
+        <g class="ink-w" filter="url(#ink-bleed)">
+          <circle cx="132" cy="62" r="24" fill={sun} stroke="none" />
+          <path d="M10 140 L66 70 L92 104 L118 78 L190 140 Z" fill="url(#wash-down)" stroke="none" />
+        </g>
+        <g filter="url(#ink-rough)">
+          <path class="ink-s" pathLength="1" stroke-width="2.88" d="M10 140 L66 70 L92 104 L118 78 L190 140" />
+          <path class="ink-s" pathLength="1" stroke-width="1.73" d="M66 70 L75 83 L67 80 L58 84" />
+          <path class="ink-s" pathLength="1" stroke-width="2.16" d="M20 178 C60 162 92 172 120 160 C146 150 170 152 192 146" />
+          <path class="ink-s" pathLength="1" stroke-width="1.15" d="M20 150 q8 -3 16 0 M150 150 q8 -3 16 0 M70 160 q6 -2 12 0" />
+          <path class="ink-s" pathLength="1" stroke-width="1.87" d="M126 128 C129 128 131 130 131 133 C131 136 129 138 126 138 C123 138 121 136 121 133 C121 130 123 128 126 128 Z" />
+          <path class="ink-s" pathLength="1" stroke-width="2.16" d="M124 140 L118 154 M122 144 L132 148 M122 144 L112 146 M118 154 L128 160 M118 154 L108 158" />
+          <path class="ink-s" pathLength="1" stroke-width="1.3" d="M40 46 q4 -4 8 0 q4 -4 8 0 M160 30 q3 -3 6 0 q3 -3 6 0" />
+        </g>
+      </>
+    )
+  }
+</svg>
