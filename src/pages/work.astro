@@ -61,7 +61,7 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
                 {b.logo ? (
                   <span
                     class="deck-logo"
-                    style={`--logo:url(${b.logo.src});--ratio:${b.logo.width / b.logo.height}`}
+                    style={`--logo:url(${b.logo.src})`}
                   />
                 ) : (
                   <span class="font-display text-4xl leading-[0.95] sm:text-5xl">{job.org}</span>
@@ -228,9 +228,10 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
     gap: 1rem;
   }
   .deck-card {
+    position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 1.5rem;
     width: min(78vw, 26rem);
     min-height: 15rem;
@@ -243,18 +244,21 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
       0 1px 0 rgb(255 255 255 / 0.12) inset,
       0 30px 60px -30px rgb(28 25 23 / 0.55);
   }
+  /* Centered on the whole card, scaled to fit with an even margin on every side. */
   .deck-brand {
-    flex: 1;
+    position: absolute;
+    inset: 20% 12%;
     display: flex;
     align-items: center;
-    gap: 0.9rem;
+    justify-content: center;
+    text-align: center;
   }
   /* Logos are masks, so each one renders in its card's foreground color. */
   .deck-logo {
-    width: min(100%, calc(var(--ratio) * 3.75rem));
-    aspect-ratio: var(--ratio);
+    width: 100%;
+    height: 100%;
     background: currentColor;
-    mask: var(--logo) left center / contain no-repeat;
+    mask: var(--logo) center / contain no-repeat;
   }
   :global(.js) .deck-stage {
     display: block;
