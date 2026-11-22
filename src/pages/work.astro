@@ -452,6 +452,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     right: 1.5rem;
     bottom: 7.5rem;
     left: 1.5rem;
+    min-height: 6rem;
     overflow-y: auto;
     opacity: 0;
   }
@@ -486,6 +487,14 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       width: min(36vw, 28rem);
       max-height: 78vh;
       transform: translateY(-50%);
+    }
+  }
+  @media (max-width: 1023px) and (max-height: 480px) {
+    :global(.js) .panels {
+      bottom: 4.5rem;
+    }
+    :global(.js) .scroll-hint {
+      display: none;
     }
   }
   @media (prefers-reduced-motion: reduce) {
