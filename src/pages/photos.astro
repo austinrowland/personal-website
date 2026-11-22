@@ -10,6 +10,7 @@ import { pages } from "../data/pages";
 let seed = 7;
 const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
 const scatter = gallery.map(() => ({ x: rand() * 18, y: rand() * 22, r: rand() * 7 }));
+const soonTilt = -4;
 ---
 
 <Base title={pages.photos.title} description={pages.photos.description}>
@@ -21,6 +22,21 @@ const scatter = gallery.map(() => ({ x: rand() * 18, y: rand() * 22, r: rand() *
 
   <section class="desk" aria-label="Prints on the desk">
     <ul class="mx-auto grid max-w-6xl grid-cols-1 gap-x-8 gap-y-12 px-8 py-20 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <li class="soon-slot">
+        <div
+          class="soon"
+          data-soon
+          data-tilt={soonTilt}
+          style={`--tilt:${soonTilt}deg`}
+          role="img"
+          aria-label="A print lying face down, labeled coming soon: more memories are still developing"
+        >
+          <span class="soon-text">
+            <span class="soon-title">coming soon</span>
+            <span class="soon-note">more memories developing</span>
+          </span>
+        </div>
+      </li>
       {
         gallery.map((p, i) => (
           <li style={`--x:${scatter[i].x}px;--y:${scatter[i].y}px;--d:${i * 90}ms`}>
@@ -30,6 +46,12 @@ const scatter = gallery.map(() => ({ x: rand() * 18, y: rand() * 22, r: rand() *
       }
     </ul>
   </section>
+  <p class="label mx-auto max-w-6xl px-8 py-6 text-muted">
+    Camera model:
+    <a class="link" href="https://sketchfab.com/3d-models/none-9bb257925efb43d189c3e73f427131a2">Polaroid 600</a> by
+    <a class="link" href="https://sketchfab.com/Grecha">Grecha</a>,
+    <a class="link" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+  </p>
   <CameraIntro />
 </Base>
 
@@ -72,11 +94,54 @@ const scatter = gallery.map(() => ({ x: rand() * 18, y: rand() * 22, r: rand() *
       0 18px 30px -14px rgb(0 0 0 / 0.6);
   }
 
+  /* The print that just came out of the camera, lying face down. Same size as a print with a one-line caption. */
+  .soon-slot {
+    container-type: inline-size;
+  }
+  .soon {
+    position: relative;
+    display: block;
+    height: calc(100cqw + 2.51rem);
+    transform: rotate(var(--tilt));
+    background: linear-gradient(135deg, #252321, #171615);
+    box-shadow:
+      0 2px 3px rgb(0 0 0 / 0.25),
+      0 18px 30px -14px rgb(0 0 0 / 0.6);
+    color: #f2eee6;
+  }
+  /* Laid out like the back of the 3D print in the intro, so the two line up at the handoff. */
+  .soon-text {
+    position: absolute;
+    left: 50%;
+    top: 47%;
+    transform: rotate(-4deg);
+  }
+  .soon-title,
+  .soon-note {
+    position: absolute;
+    left: 0;
+    translate: -50% -50%;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .soon-title {
+    top: 0;
+    font-family: "Permanent Marker", "Marker Felt", cursive;
+    font-size: 15cqw;
+  }
+  .soon-note {
+    top: 14cqw;
+    font-family: "Caveat", "Bradley Hand", cursive;
+    font-weight: 500;
+    font-size: 8.5cqw;
+    opacity: 0.7;
+  }
+
   /* After the flash, prints land on the desk and develop. */
   :global(html[data-intro="play"]) .desk li {
     opacity: 0;
   }
-  :global(html[data-intro="done"]) .desk li {
+  :global(html[data-intro="done"]) .desk li:not(.soon-slot) {
     animation: land 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d) backwards;
   }
   @keyframes land {
