@@ -108,7 +108,8 @@ const MODEL = "/models/polaroid-600.glb";
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 2rem;
+    /* Above the Human/Agent pill, on the first screen, which starts below the site header. */
+    bottom: calc(5rem + var(--offset, 0px));
     text-align: center;
     color: var(--muted);
     opacity: clamp(0, calc(1 - var(--p) * 25), 1);
@@ -135,6 +136,14 @@ const MODEL = "/models/polaroid-600.glb";
   @media (max-width: 639px) {
     :global(html[data-intro="play"]) .hero {
       inset-block-start: 54svh;
+    }
+    :global(html[data-intro="play"]) .skip {
+      right: 0;
+      left: 0;
+      bottom: 3.75rem;
+    }
+    :global(html[data-intro="play"]) .cue {
+      bottom: calc(5.5rem + var(--offset, 0px));
     }
     :global(html[data-intro="play"]) .hero :global([data-beat="2"] p) {
       font-size: 1rem;
@@ -173,6 +182,9 @@ const MODEL = "/models/polaroid-600.glb";
     const desk = document.querySelector<HTMLElement>("[data-desk]");
     let stop: (() => void) | undefined;
 
+    const offset = () => stage.style.setProperty("--offset", `${root.offsetTop}px`);
+    offset();
+    addEventListener("resize", offset);
     const progress = () => {
       const length = root.offsetHeight - innerHeight;
       return Math.min(Math.max(-root.getBoundingClientRect().top / length, 0), 1);
