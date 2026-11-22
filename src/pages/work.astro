@@ -687,14 +687,18 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       typing.el.textContent = typing.text;
       typing = undefined;
     };
+    // A card types out once; coming back to it shows the full text with the caret at the end.
+    const typed = new WeakSet<HTMLElement>();
     const type = (el: HTMLElement) => {
       stopTyping();
       seq.querySelectorAll(".caret").forEach((c) => c.classList.remove("caret"));
       if (reduce.matches) return;
+      el.classList.add("caret");
+      if (typed.has(el)) return;
+      typed.add(el);
       const text = el.textContent ?? "";
       let i = 0;
       el.textContent = "";
-      el.classList.add("caret");
       const step = () => {
         el.textContent = text.slice(0, ++i);
         typing = i < text.length ? { el, text, timer: window.setTimeout(step, 11) } : undefined;
@@ -709,6 +713,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       if (g === mode) counter.textContent = `${pad(g.active + 1)} / ${pad(n)}`;
       const el = g.panels[g.active].querySelector<HTMLElement>("[data-type]");
       if (animate && el) type(el);
+      else if (el && g === mode) typed.add(el);
     };
     const go = (g: Group, i: number) => {
       g.active = (i + g.cards.length) % g.cards.length;
