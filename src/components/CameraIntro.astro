@@ -162,11 +162,14 @@ const POSTER = poster.src;
     position: absolute;
     left: 0;
     right: 0;
-    /* Above the Human/Agent pill, on the first screen, which starts below the site header. */
-    bottom: calc(5rem + var(--offset, 0px));
+    /* Just under the headline (--cue-top is measured), or above the Human/Agent pill until it's measured. */
+    top: calc(var(--cue-top, 100svh - 6rem) + 1rem);
     text-align: center;
     color: var(--muted);
     opacity: clamp(0, calc(1 - var(--p) * 25), 1);
+  }
+  :global(html[data-intro="play"]) .cue[hidden] {
+    display: none;
   }
   :global(html[data-intro="play"]) .skip {
     display: block;
@@ -188,25 +191,26 @@ const POSTER = poster.src;
     opacity: 0;
   }
   @media (max-width: 639px) {
-    :global(html[data-intro="play"]) .hero {
-      inset-block-start: 54svh;
-    }
     :global(html[data-intro="play"]) .skip {
       right: 0;
       left: 0;
       bottom: 3.75rem;
     }
-    :global(html[data-intro="play"]) .cue {
-      bottom: calc(5.5rem + var(--offset, 0px));
+    /* Start the headline right under the camera (whose bottom is at 37cqh + 0.171u) and keep it to a size that leaves
+       room for the cue above the Human/Agent pill. */
+    :global(html[data-intro="play"]) .hero {
+      inset-block-start: calc(37cqh + 0.171 * var(--u) + 0.5rem);
     }
-    /* On phones the paragraph is long: start it just under the camera (whose bottom is at 37cqh + 0.171u) and size it to end above the skip link. */
+    :global(html[data-intro="play"]) .hero :global([data-beat="1"]) {
+      padding-block-start: 0;
+    }
+    :global(html[data-intro="play"]) .hero :global([data-beat="1"] h1) {
+      font-size: clamp(2rem, 9.5cqw, 2.75rem);
+    }
+    /* On phones the paragraph is long: size it to end above the skip link. */
     :global(html[data-intro="play"]) .hero :global([data-beat="2"] p) {
       font-size: clamp(0.8125rem, 2.1cqh, 1rem);
       line-height: 1.45;
-    }
-    :global(html[data-intro="play"]) .hero :global([data-beat="2"]) {
-      position: relative;
-      inset-block-start: calc(0.171 * var(--u) - 17cqh + 0.75rem);
     }
   }
 </style>
@@ -275,7 +279,20 @@ const POSTER = poster.src;
     let stop: (() => void) | undefined;
     let raf = 0;
 
-    const offset = () => stage.style.setProperty("--offset", `${root.offsetTop}px`);
+    const hero = root.querySelector<HTMLElement>(".hero")!;
+    const title = hero.querySelector<HTMLElement>('[data-beat="1"] h1');
+    const cue = root.querySelector<HTMLElement>(".cue")!;
+    const offset = () => {
+      stage.style.setProperty("--offset", `${root.offsetTop}px`);
+      // The cue sits right under the headline, however many lines it wraps to (offsets ignore the scroll scale).
+      if (!title) return;
+      const top = hero.offsetTop + title.offsetTop + title.offsetHeight;
+      stage.style.setProperty("--cue-top", `${top}px`);
+      // On short screens there's no room between the headline and the Human/Agent pill, so the cue stays hidden.
+      const rem = parseFloat(getComputedStyle(doc).fontSize);
+      const pill = document.querySelector(".view-switch")?.getBoundingClientRect().top ?? innerHeight - 4.5 * rem;
+      cue.hidden = root.offsetTop + top + 2.25 * rem > pill - 0.25 * rem;
+    };
     offset();
     addEventListener("resize", offset);
     const progress = () => {
