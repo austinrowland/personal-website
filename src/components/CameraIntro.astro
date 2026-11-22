@@ -179,12 +179,12 @@ const MODEL = "/models/polaroid-600.glb";
     };
     const giveUp = () => {
       stop?.();
-      const y = scrollY;
-      const before = root.offsetTop + root.offsetHeight;
+      // Keep whatever was on screen in place as the pinned stage collapses, anchored on the desk.
+      const before = desk?.getBoundingClientRect().top ?? 0;
       delete doc.dataset.intro;
       delete doc.dataset.landed;
-      // Keep whatever was on screen in place as the pinned stage collapses.
-      if (y > root.offsetTop) scrollTo({ top: Math.max(0, y - (before - (root.offsetTop + root.offsetHeight))), behavior: "instant" });
+      const shift = (desk?.getBoundingClientRect().top ?? 0) - before;
+      if (desk && before < innerHeight && shift) scrollBy({ top: shift, behavior: "instant" });
     };
 
     root.querySelector("[data-skip]")!.addEventListener("click", () => {
