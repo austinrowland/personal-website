@@ -54,6 +54,13 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
         </div>
       </div>
 
+      <button type="button" class="scroll-hint label" data-hint="down">
+        Scroll to Highlights <span class="hint-arrow" aria-hidden="true">↓</span>
+      </button>
+      <button type="button" class="scroll-hint label" data-hint="up">
+        <span class="hint-arrow" aria-hidden="true">↑</span> Scroll to Experience
+      </button>
+
       <div class="group" data-group="role">
         <div class="center" data-title>
           <h2 id="experience" class="font-display">Experience</h2>
@@ -375,6 +382,48 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
   :global(.js) .group {
     display: contents;
   }
+  .scroll-hint {
+    position: absolute;
+    z-index: 210;
+    bottom: 4.75rem;
+    left: 50%;
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--paper) 85%, transparent);
+    color: var(--muted);
+    white-space: nowrap;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .scroll-hint:hover,
+  .scroll-hint:focus-visible {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  :global(.js) .scroll-hint {
+    display: inline-flex;
+  }
+  .hint-arrow {
+    display: inline-block;
+    animation: hint-nudge 1.6s ease-in-out infinite;
+  }
+  [data-hint="up"] .hint-arrow {
+    animation-direction: reverse;
+  }
+  @keyframes hint-nudge {
+    0%,
+    100% {
+      transform: translateY(-2px);
+    }
+    50% {
+      transform: translateY(3px);
+    }
+  }
   :global(.js) .center {
     position: absolute;
     top: 50%;
@@ -401,7 +450,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     z-index: 150;
     top: calc(50% + var(--H) * 0.12 + 1rem);
     right: 1.5rem;
-    bottom: 4.5rem;
+    bottom: 7.5rem;
     left: 1.5rem;
     overflow-y: auto;
     opacity: 0;
@@ -427,6 +476,9 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     .seq {
       --W: min(30vw, 24rem);
     }
+    .scroll-hint {
+      left: calc(50% - min(100vw, 72rem) * 0.24);
+    }
     :global(.js) .panels {
       top: 50%;
       bottom: auto;
@@ -441,6 +493,9 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       height: 220vh;
     }
     :global(.caret)::after {
+      animation: none;
+    }
+    .hint-arrow {
       animation: none;
     }
   }
@@ -662,6 +717,33 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     });
     onSwipe(stage, (dir) => go(mode, mode.active + dir));
 
+    // Tween the page through the sequence so a click plays it like a scroll.
+    const hints = [...seq.querySelectorAll<HTMLButtonElement>("[data-hint]")];
+    let glide = 0;
+    const cancelGlide = () => {
+      cancelAnimationFrame(glide);
+      glide = 0;
+    };
+    const glideTo = (to: number) => {
+      cancelGlide();
+      const from = scrollY;
+      const ms = reduce.matches ? 0 : 2800;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = ms ? clamp((now - t0) / ms) : 1;
+        scrollTo({ top: from + (to - from) * ease(t), behavior: "instant" });
+        glide = t < 1 ? requestAnimationFrame(step) : 0;
+      };
+      glide = requestAnimationFrame(step);
+    };
+    for (const h of hints) {
+      h.addEventListener("click", () => {
+        const top = seq.getBoundingClientRect().top + scrollY;
+        glideTo(h.dataset.hint === "down" ? top + seq.offsetHeight - innerHeight : top);
+      });
+    }
+    for (const ev of ["wheel", "touchstart", "keydown"]) addEventListener(ev, cancelGlide, { passive: true });
+
     let raf = 0;
     const frame = () => {
       const p = progress();
@@ -677,6 +759,8 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       fade(roles.panelBox, roleVis);
       fade(projs.panelBox, projVis);
       fade(head, Math.max(roleVis, projVis));
+      fade(hints[0], roleVis * (snap ? 1 : 1 - clamp((p - 0.01) / 0.05)));
+      fade(hints[1], projVis * (snap ? 1 : clamp((p - 0.93) / 0.05)));
       const m = p < 0.5 ? roles : projs;
       if (m !== mode) {
         mode = m;
@@ -705,6 +789,8 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
         stop();
         stopTyping();
         removeEventListener("resize", measure);
+        cancelGlide();
+        for (const ev of ["wheel", "touchstart", "keydown"]) removeEventListener(ev, cancelGlide);
       },
       { once: true },
     );

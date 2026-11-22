@@ -59,6 +59,9 @@
      one at a time.
    - The photo ring condenses into a second clickable stack. Each card is
      tagged Project, Venture or Speaking.
+   - A "Scroll to Highlights ↓" pill under the first stack and a "↑ Scroll to
+     Experience" pill under the second fade out once scrolling starts; clicking
+     one glides the page through the sequence.
    - Projects without a photo appear in the Markdown view only. Reduced motion
      swaps between the two stacks with no ring; without JS both are plain lists.
 
