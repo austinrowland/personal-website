@@ -39,7 +39,7 @@ export const experience: Experience[] = [
   },
   {
     start: "Jan 2024",
-    end: "Jul 2024",
+    end: "Aug 2024",
     role: "Founder",
     org: "Avova Health",
     take: "found a real need, and learned that a real need and a working business are two different problems.",
