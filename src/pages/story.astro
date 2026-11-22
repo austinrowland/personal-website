@@ -78,8 +78,10 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
 </Base>
 
 <style>
-  .story-hero {
-    min-height: min(78vh, 44rem);
+  @media (min-width: 768px) {
+    .story-hero {
+      min-height: min(78vh, 44rem);
+    }
   }
   .chapter {
     display: grid;
