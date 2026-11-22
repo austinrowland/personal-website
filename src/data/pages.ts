@@ -33,10 +33,10 @@ export const pages = {
   story: {
     path: "/story",
     title: "Story",
-    headline: "Where I'm from,",
-    headlineAside: "and what stuck.",
+    headline: "Live for Today,",
+    headlineAside: "Build for Tomorrow",
     description:
-      "The longer story: growing up in Walkersville, Georgia Tech, almost dropping out, founding Avova Health, and building a life in San Francisco.",
+      "Austin Rowland's story: from Walkersville and Georgia Tech to Avova Health and San Francisco, how helping people grew into building for tomorrow, and learning to live for today.",
   },
   memories: {
     path: "/memories",
