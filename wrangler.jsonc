@@ -13,7 +13,7 @@
   },
   "observability": { "enabled": true },
   // Launch switch: austinrowland.com serves a "coming soon" page until this is "true".
-  "vars": { "SITE_LIVE": "true" },
+  "vars": { "SITE_LIVE": "false" },
   // Adding routes turns these off by default; keep the workers.dev site and Preview URLs.
   "workers_dev": true,
   "preview_urls": true,
