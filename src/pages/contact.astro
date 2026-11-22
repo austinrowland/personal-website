@@ -7,14 +7,14 @@ import { site } from "../data/site";
 
 <Base title={pages.contact.title} description={pages.contact.description}>
   <PageIntro eyebrow="contact" title={pages.contact.headline}>
-    <div class="mt-4 flex flex-wrap items-center gap-3" data-reveal style="--i:2">
-      <a href={`mailto:${site.email}`} class="rounded-full border border-line px-4 py-2 text-ink transition-colors hover:border-accent">
+    <div class="mt-4 flex items-center gap-2 sm:gap-3" data-reveal style="--i:2">
+      <a href={`mailto:${site.email}`} class="min-w-0 truncate rounded-full border border-line px-3 py-2 text-sm text-ink transition-colors hover:border-accent sm:px-4 sm:text-base">
         {site.email}
       </a>
       <button
         type="button"
         data-copy={site.email}
-        class="label rounded-full border border-line px-3 py-2 text-muted transition-colors hover:text-ink"
+        class="label shrink-0 rounded-full border border-line px-3 py-2 text-muted transition-colors hover:text-ink"
       >
         copy
       </button>
@@ -28,13 +28,8 @@ import { site } from "../data/site";
         open in cal.com ↗
       </a>
     </div>
-    <div class="print overflow-hidden rounded-sm" data-reveal>
-      <iframe
-        src={site.calUrl}
-        title="Book a 30-minute call with Austin Rowland"
-        loading="lazy"
-        class="h-[720px] w-full border-0 bg-paper"
-      ></iframe>
+    <div class="print min-h-[540px] overflow-hidden rounded-sm bg-paper" data-reveal data-tuck-switch>
+      <div data-cal-inline={site.calUrl.replace("https://cal.com/", "")}></div>
     </div>
   </section>
 </Base>
@@ -56,4 +51,45 @@ import { site } from "../data/site";
     });
   }
   document.addEventListener("astro:page-load", initCopy);
+
+  type CalApi = ((...args: unknown[]) => void) & { q?: unknown[][]; ns?: Record<string, CalApi>; loaded?: boolean };
+  type CalWindow = Window & { Cal?: CalApi };
+
+  /** Cal.com's inline embed: its script sizes the frame to the calendar and shows only the booker. */
+  function initCal() {
+    const el = document.querySelector<HTMLElement>("[data-cal-inline]");
+    if (!el || el.dataset.bound) return;
+    el.dataset.bound = "true";
+    const w = window as CalWindow;
+    if (!w.Cal) {
+      const cal: CalApi = (...args) => {
+        if (!cal.loaded) {
+          cal.ns = {};
+          cal.q = cal.q ?? [];
+          document.head.appendChild(document.createElement("script")).src = "https://app.cal.com/embed/embed.js";
+          cal.loaded = true;
+        }
+        if (args[0] === "init" && typeof args[1] === "string") {
+          const ns = args[1];
+          const api: CalApi = (...a) => void api.q!.push(a);
+          api.q = [];
+          cal.ns![ns] ??= api;
+          cal.ns![ns].q!.push(args);
+          cal.q!.push(["initNamespace", ns]);
+          return;
+        }
+        cal.q!.push(args);
+      };
+      w.Cal = cal;
+      cal("init", "contact", { origin: "https://app.cal.com" });
+    }
+    const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    w.Cal!.ns!.contact("inline", {
+      elementOrSelector: el,
+      calLink: el.dataset.calInline,
+      config: { layout: "month_view", theme },
+    });
+    w.Cal!.ns!.contact("ui", { layout: "month_view", theme, hideEventTypeDetails: false });
+  }
+  document.addEventListener("astro:page-load", initCal);
 </script>

@@ -4,6 +4,7 @@ export const site = {
   description:
     "Austin Rowland is a founding forward deployed engineer at Postman in San Francisco, building agents and agent infrastructure.",
   email: "austinrowland2002@gmail.com",
+  tagline: "Live for Today, Build for Tomorrow",
   calUrl: "https://cal.com/austin-rowland/30min",
   location: "San Francisco",
 };

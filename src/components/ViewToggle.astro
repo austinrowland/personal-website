@@ -50,6 +50,11 @@ const footer = [
   }
   :global(html.js) .view-switch {
     display: block;
+    transition: opacity 0.2s;
+  }
+  .view-switch.is-tucked:not(:has(:focus-visible)) {
+    opacity: 0;
+    pointer-events: none;
   }
   .switch-group {
     border-color: var(--color-line);
@@ -245,4 +250,19 @@ const footer = [
     }
   }
   document.addEventListener("astro:page-load", init);
+
+  /** Embeds marked data-tuck-switch scroll internally, so the switch hides while one sits under it (unless it has keyboard focus). */
+  function tuck() {
+    const sw = document.querySelector<HTMLElement>(".view-switch");
+    if (!sw) return;
+    const zone = sw.getBoundingClientRect();
+    const covered = [...document.querySelectorAll("[data-tuck-switch]")].some((el) => {
+      const r = el.getBoundingClientRect();
+      return r.top < zone.bottom && r.bottom > zone.top;
+    });
+    sw.classList.toggle("is-tucked", covered);
+  }
+  addEventListener("scroll", tuck, { passive: true });
+  addEventListener("resize", tuck);
+  document.addEventListener("astro:page-load", tuck);
 </script>

@@ -39,7 +39,7 @@ const markdown = markdownPath(Astro.url.pathname);
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${site.name}: ${site.description}`} />
+    <meta property="og:image:alt" content={`austinrowland.com: ${site.tagline}`} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@austinrowland02" />
     <link rel="alternate" type="text/markdown" href={markdown} title="This page as Markdown" />
@@ -47,6 +47,8 @@ const markdown = markdownPath(Astro.url.pathname);
     <link rel="sitemap" href="/sitemap-index.xml" />
     {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="generator" content={Astro.generator} />
     <!-- Runs before paint so the saved theme never flashes. -->
     <script is:inline>
