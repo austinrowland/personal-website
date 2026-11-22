@@ -83,6 +83,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
                   ) : (
                     <span class="card-org font-display">{job.org}</span>
                   )}
+                  <span class="card-role">{job.role}</span>
                   <span class="card-meta">
                     <span>
                       {year(job.start)} — {year(job.end)}
@@ -219,7 +220,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
   /* Logos are masks, so each one renders in its card's foreground color. */
   .card-logo {
     position: absolute;
-    inset: 22% 14%;
+    inset: 16% 14% 32%;
     background: currentColor;
     mask: var(--logo) center / contain no-repeat;
   }
@@ -231,6 +232,19 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     font-size: 2.25rem;
     line-height: 1;
     text-align: center;
+  }
+  .role .card-org {
+    inset: 16% 14% 32%;
+  }
+  .card-role {
+    position: absolute;
+    right: 1rem;
+    bottom: 2.1rem;
+    left: 1rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
   }
   .card-meta {
     position: absolute;
