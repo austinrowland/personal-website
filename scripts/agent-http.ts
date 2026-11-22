@@ -9,6 +9,20 @@ export const ALIASES: Record<string, string> = {
   "/.well-known/llms-full.txt": "/llms-full.txt",
 };
 
+/** Renamed pages: old path → new path. Covers `/old`, `/old/`, `/old/index.html` and `/old.md`. */
+export const RENAMED: Record<string, string> = {
+  "/about": "/story",
+  "/photos": "/memories",
+};
+
+/** Where a renamed page now lives, keeping the same form (page or Markdown twin), or null. */
+export function redirectFor(pathname: string): string | null {
+  const match = pathname.match(/^(\/[^/.]+)(\/|\/index\.html|\.md)?$/);
+  const target = match && RENAMED[match[1]];
+  if (!target) return null;
+  return match[2] === ".md" ? `${target}.md` : `${target}/`;
+}
+
 /**
  * True when the client explicitly asks for text/markdown and ranks it at least as high as
  * text/html. Each type takes the quality of its most specific matching range (exact, then
@@ -100,6 +114,12 @@ export function agentHeaders(plan: Plan, status: number): Record<string, string>
   }
   headers.Link = links.join(", ");
   return headers;
+}
+
+/** A 301 to a renamed page's new path, with the same discovery headers as every other response. */
+export function redirectHeaders(location: string): Record<string, string> {
+  const plan: Plan = { pathname: location, isPage: false, wantsMarkdown: false, wantPath: location };
+  return { ...agentHeaders(plan, 301), Location: location };
 }
 
 /** Rough estimate (4 characters per token), like Cloudflare's x-markdown-tokens. */

@@ -45,8 +45,8 @@ export function profilePageJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
-    url: absoluteUrl(pages.about.path),
-    name: `${pages.about.title} · ${site.name}`,
+    url: absoluteUrl(pages.story.path),
+    name: `${pages.story.title} · ${site.name}`,
     isPartOf: { "@id": websiteId },
     mainEntity: person(),
   };

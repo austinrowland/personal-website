@@ -17,7 +17,8 @@ before(async () => {
 });
 after(() => server?.close());
 
-const get = (path: string, headers: Record<string, string> = {}) => fetch(base + path, { headers });
+const get = (path: string, headers: Record<string, string> = {}, init: RequestInit = {}) =>
+  fetch(base + path, { headers, ...init });
 const header = (res: Response, name: string) => res.headers.get(name) ?? "";
 
 function sitemapPaths() {
@@ -58,11 +59,11 @@ describe("content negotiation", () => {
   });
 
   test("fingerprinted build assets are cached for a year; pages are not", async () => {
-    const html = await (await get("/photos/")).text();
+    const html = await (await get("/memories/")).text();
     const asset = html.match(/\/_astro\/[^"']+\.js/)?.[0];
-    assert.ok(asset, "no /_astro/ script on /photos/");
+    assert.ok(asset, "no /_astro/ script on /memories/");
     assert.equal((await get(asset)).headers.get("cache-control"), "public, max-age=31536000, immutable");
-    assert.equal((await get("/photos/")).headers.get("cache-control"), null);
+    assert.equal((await get("/memories/")).headers.get("cache-control"), null);
     assert.equal((await get("/_astro/missing.js")).headers.get("cache-control"), null);
   });
 
@@ -82,6 +83,24 @@ describe("content negotiation", () => {
     const [a, b] = await Promise.all([get("/llms.txt"), get("/.well-known/llms.txt")]);
     assert.equal(b.status, 200);
     assert.equal(await b.text(), await a.text());
+  });
+
+  test("renamed pages redirect to their new paths", async () => {
+    for (const [from, to] of [
+      ["/about", "/story/"],
+      ["/about/", "/story/"],
+      ["/about.md", "/story.md"],
+      ["/photos/?x=1", "/memories/?x=1"],
+      ["/photos.md", "/memories.md"],
+    ]) {
+      const res = await get(from, {}, { redirect: "manual" });
+      assert.equal(res.status, 301, from);
+      assert.equal(res.headers.get("location"), to, from);
+      assert.match(header(res, "content-signal"), /ai-input=yes/, from);
+      assert.match(header(res, "link"), /<\/llms\.txt>; rel="llms-txt"/, from);
+    }
+    assert.equal((await get("/story/")).status, 200);
+    assert.equal((await get("/memories.md")).status, 200);
   });
 
   test("missing pages return 404 in the requested format", async () => {
