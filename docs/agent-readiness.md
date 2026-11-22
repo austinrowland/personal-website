@@ -48,7 +48,7 @@ the Worker answers them with a noindex "coming soon" page (and a `Disallow: /` r
 `vars.SITE_LIVE` in `wrangler.jsonc` is `"true"`. To launch, flip it in a PR and merge. workers.dev and
 Preview URLs always serve the full site.
 
-GitHub Actions CI (`.github/workflows/ci.yml`) still gates PRs with `astro check`, the build, `npm test`,
+GitHub Actions CI (`.github/workflows/ci.yml`) still gates PRs with `npm run check` (`astro check` plus the Worker type check), the build, `npm test`,
 and `wrangler deploy --dry-run`.
 
 ## Not applicable here
