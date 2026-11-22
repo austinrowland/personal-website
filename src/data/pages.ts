@@ -7,6 +7,8 @@ export type PageMeta = {
   /** The page's visible headline; `headlineAside` is the muted tail some pages show after it. */
   headline?: string;
   headlineAside?: string;
+  /** A short paragraph under the headline. */
+  lede?: string;
 };
 
 /** Titles and descriptions shared by the HTML pages, their Markdown twins, and llms.txt. */
@@ -20,9 +22,10 @@ export const pages = {
   work: {
     path: "/work",
     title: "Work",
-    headline: "Building where the product meets real people.",
+    headline: "Building Where the Product Meets Real People",
+    lede: "I've always viewed engineering as a means to an end to impact others, which led me to ponder the debate of product-focus vs engineering-focus lens in which to view the world. These days I find myself getting equally lost in both.",
     description:
-      "Roles, ventures, research, and agents from Austin Rowland: Postman, Palo Alto Networks, Cisco, Avova Health, Tikkun Olam Makers, and more.",
+      "Roles, projects, ventures, and talks from Austin Rowland: Postman, Palo Alto Networks, Cisco, Avova Health, Tikkun Olam Makers, and more.",
   },
   writing: {
     path: "/writing",

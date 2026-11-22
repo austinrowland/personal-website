@@ -12,7 +12,6 @@ export type MarkdownPage = PageMeta & {
   content: string;
 };
 
-const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const link = (label: string, href: string) => `[${label}](${href})`;
 const mdLink = (page: PageMeta) => link(page.title, absoluteUrl(markdownPath(page.path)));
 const segments = (parts: Segment[]) =>
@@ -59,7 +58,7 @@ function work(): string {
     .map(
       (job) => `### ${job.role}, ${job.org}
 
-${job.start} – ${job.end}. ${sentence(job.take)}
+${job.start} – ${job.end}. ${job.take}
 
 ${job.points.map((p) => `- ${p}`).join("\n")}`,
     )
@@ -80,7 +79,7 @@ ${items
 
 ${jobs}
 
-## Projects
+## Highlights
 
 ${grouped}`;
 }
@@ -173,7 +172,9 @@ export async function markdownPages(): Promise<MarkdownPage[]> {
 /** Pairs a page's metadata with its body, led by the same headline the HTML page shows. */
 const page = (meta: PageMeta, body: string): MarkdownPage => ({
   ...meta,
-  content: meta.headline ? `${fullHeadline(meta)}\n\n${body}` : body,
+  content: meta.headline
+      ? [fullHeadline(meta), meta.lede, body].filter(Boolean).join("\n\n")
+      : body,
 });
 
 export function renderMarkdown(page: MarkdownPage): string {

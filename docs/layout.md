@@ -46,22 +46,24 @@
 
 ## `/work`
 
-1. **Intro.** One serif line, such as "building where the product meets
-   real people."
-2. **Experience list** (Aditya-style). Mono date ranges on the left, with
-   the role and organization in serif. Each entry has a one-line field-note
-   take and opens as an accordion to show 2–3 proof points from the resume.
-   The entries are Postman, Palo Alto Networks, Cisco, and GTRI.
-3. **Work grid** (Shubhu-style). Filter tabs: all, ventures, community,
-   research, agents. Cards use type badges: VENTURE, COMMUNITY, RESEARCH,
-   AGENT, TALK. The cards are:
-   - Avova Health
-   - Tikkun Olam Makers
-   - Spread the Love
-   - Passive haptic rehab gloves
-   - AI-Ready APIs assessment
-   - Customer insights agent
-   - TEDx talk
+1. **Intro.** One serif line, "Building Where the Product Meets Real People",
+   with a short lede under it.
+2. **Experience → Highlights** (one pinned scroll sequence, Aditya Dave-style
+   exploded view, "Orbit" look: faint circuit-board traces and a dashed orbit ring).
+   - Starts as a stack of role cards with company logos. Clicking a card, the
+     arrows, a swipe or the arrow keys rotates through roles; the details sit
+     beside the stack on desktop and under it on phones.
+   - Scrolling explodes the stack into a tilted ring around "Experience".
+   - The ring turns, and each role card flies off to the right. Once they are
+     all gone, "Highlights" fades in and the photo cards fly in from the left
+     one at a time.
+   - The photo ring condenses into a second clickable stack. Each card is
+     tagged Project, Venture or Speaking.
+   - A "Scroll to Highlights ↓" pill under the first stack and a "↑ Scroll to
+     Experience" pill under the second fade out once scrolling starts; clicking
+     one glides the page through the sequence.
+   - Projects without a photo appear in the Markdown view only. Reduced motion
+     swaps between the two stacks with no ring; without JS both are plain lists.
 
 ## `/writing` and `/writing/[slug]`
 

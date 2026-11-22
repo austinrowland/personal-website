@@ -1,20 +1,19 @@
 ---
+import { Image } from "astro:assets";
 import Base from "../layouts/Base.astro";
 import { pages } from "../data/pages";
 import PageIntro from "../components/PageIntro.astro";
-import Photo from "../components/Photo.astro";
 import { experience, projects, projectKinds } from "../data/work";
-import { photoAlt } from "../data/photos";
+import { getPhoto, getPhotoFocus } from "../lib/photos";
 import postmanLogo from "../assets/logos/postman.png";
 import ciscoLogo from "../assets/logos/cisco.svg";
 import panLogo from "../assets/logos/palo-alto-networks.svg";
 import gtriLogo from "../assets/logos/gtri.png";
 import avovaLogo from "../assets/logos/avova-health.png";
 
-const kindLabel = Object.fromEntries(
-  projectKinds.map((k) => [k.value, k.label.replace(/s$/, "")]),
-);
+const kindLabel = Object.fromEntries(projectKinds.map((k) => [k.value, k.one]));
 const pad = (n: number) => String(n).padStart(2, "0");
+const year = (s: string) => s.replace(/^\w+ (\d{4})$/, "$1");
 const external = (href: string) =>
   href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {};
 
@@ -27,173 +26,155 @@ const brand: Record<string, { bg: string; fg: string; logo?: Logo }> = {
   "Georgia Tech Research Institute": { bg: "#003057", fg: "#d6c48f", logo: gtriLogo },
 };
 const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
+
+// Highlights are photo cards, so projects without a photo stay in the Markdown view only.
+const highlights = projects.flatMap((p) => {
+  const image = getPhoto(p.photo);
+  return image ? [{ ...p, image, focus: getPhotoFocus(p.photo) }] : [];
+});
+const years = highlights.flatMap((p) => p.years.match(/\d{4}/g) ?? []).map(Number);
+const roleSpan = `${experience.at(-1)!.start} — ${experience[0].end}`;
+const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
 ---
 
 <Base title={pages.work.title} description={pages.work.description}>
-  <PageIntro eyebrow="work" title={pages.work.headline} />
+  <PageIntro eyebrow="work" title={pages.work.headline} lede={pages.work.lede} />
 
-  <section class="deck-wrap mx-auto max-w-6xl px-6 pb-24" aria-labelledby="experience" data-deck>
-    <div class="mb-6 flex items-center justify-between gap-4">
-      <h2 id="experience" class="label text-muted">experience</h2>
-      <div class="deck-controls flex items-center gap-3">
-        <button type="button" class="deck-btn" data-prev aria-label="Previous role">←</button>
-        <span class="label w-16 text-center text-muted" data-counter aria-hidden="true">
-          01 / {pad(experience.length)}
-        </span>
-        <button type="button" class="deck-btn" data-next aria-label="Next role">→</button>
+  <section class="seq" aria-label="Experience and highlights" data-seq>
+    <div class="stage" data-stage>
+      <div class="backdrop" aria-hidden="true"><div class="orbit"></div></div>
+      <div class="stage-head" data-head>
+        <span class="label text-muted" data-head-label aria-hidden="true">experience</span>
+        <div class="flex items-center gap-3">
+          <button type="button" class="deck-btn" data-prev aria-label="Previous card">←</button>
+          <span class="label w-16 text-center text-muted" data-counter aria-hidden="true">
+            01 / {pad(experience.length)}
+          </span>
+          <button type="button" class="deck-btn" data-next aria-label="Next card">→</button>
+        </div>
       </div>
-    </div>
 
-    <div class="deck-stage" role="group" aria-roledescription="carousel" aria-label="Roles">
-      {
-        experience.map((job, i) => {
-          const b = brand[job.org] ?? fallback;
-          return (
-            <button
-              type="button"
-              class="deck-card"
-              data-card={i}
-              aria-controls="role-panels"
-              aria-label={`${job.org}, ${job.role}, ${job.start} to ${job.end}`}
-              style={`--bg:${b.bg};--fg:${b.fg};--o:${i};--a:${i}`}
-            >
-              <span class="deck-brand">
-                {b.logo ? (
-                  <span
-                    class="deck-logo"
-                    style={`--logo:url(${b.logo.src})`}
-                  />
-                ) : (
-                  <span class="font-display text-4xl leading-[0.95] sm:text-5xl">{job.org}</span>
-                )}
-              </span>
-              <span class="label opacity-75">{job.role}</span>
-            </button>
-          );
-        })
-      }
-    </div>
+      <button type="button" class="scroll-hint label" data-hint="down">
+        Scroll to Highlights <span class="hint-arrow" aria-hidden="true">↓</span>
+      </button>
+      <button type="button" class="scroll-hint label" data-hint="up">
+        <span class="hint-arrow" aria-hidden="true">↑</span> Scroll to Experience
+      </button>
 
-    <div id="role-panels" class="mx-auto mt-12 max-w-2xl" aria-live="polite">
-      {
-        experience.map((job, i) => (
-          <article class:list={["role-panel", { "is-active": i === 0 }]} data-panel={i}>
-            <span class="label text-muted">
-              {job.start} — {job.end}
-            </span>
-            <h3 class="sr-only">{job.role}, {job.org}</h3>
-            <p class="mt-2 text-lg text-ink/75">{job.take}</p>
-            <ul class="mt-5 flex flex-col gap-2 text-ink/80">
-              {job.points.map((p) => (
-                <li class="flex gap-3">
-                  <span class="text-accent">—</span>
-                  <span>{p}</span>
-                </li>
-              ))}
-            </ul>
-          </article>
-        ))
-      }
-    </div>
-  </section>
-
-  <section class="mx-auto max-w-6xl px-6 pb-28" aria-labelledby="projects">
-    <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
-      <h2 id="projects" class="label text-muted">projects, ventures + talks</h2>
-      <div role="group" aria-label="Filter projects" class="flex flex-wrap gap-2" data-filters>
-        <button type="button" data-filter="all" aria-pressed="true" class="filter-btn label">
-          all
-        </button>
-        {
-          projectKinds.map((k) => (
-            <button type="button" data-filter={k.value} aria-pressed="false" class="filter-btn label">
-              {k.label.toLowerCase()}
-            </button>
-          ))
-        }
-      </div>
-    </div>
-    <ul class="grid gap-x-8 gap-y-12 md:grid-cols-2" data-grid>
-      {
-        projects.map((p, i) => (
-          <li data-kind={p.kind} data-reveal style={`--i:${i % 2}`} class="tile group relative">
-            <div class="transition-transform duration-500 group-hover:-translate-y-1">
-              <Photo alt={photoAlt(p.photo, p.title)} name={p.photo ?? p.kind} class="aspect-[16/10]" />
-              <div class="mt-4 flex items-center gap-3">
-                <h3 class="font-display text-2xl leading-tight">{p.title}</h3>
-                <span class="label rounded-full border border-line px-2 py-0.5 text-muted">
-                  {kindLabel[p.kind]}
+      <div class="group" data-group="role">
+        <div class="center" data-title>
+          <h2 id="experience" class="font-display">Experience</h2>
+          <span class="label text-muted">{roleSpan}</span>
+        </div>
+        <div class="cards" role="group" aria-roledescription="carousel" aria-labelledby="experience">
+          {
+            experience.map((job, i) => {
+              const b = brand[job.org] ?? fallback;
+              return (
+                <button
+                  type="button"
+                  class="card role"
+                  data-card={i}
+                  aria-label={`${job.org}, ${job.role}, ${job.start} to ${job.end}`}
+                  style={`--bg:${b.bg};--fg:${b.fg}`}
+                >
+                  {b.logo ? (
+                    <span class="card-logo" style={`--logo:url(${b.logo.src})`} />
+                  ) : (
+                    <span class="card-org font-display">{job.org}</span>
+                  )}
+                  <span class="card-role">{job.role}</span>
+                  <span class="card-meta">
+                    <span>
+                      {year(job.start)} — {year(job.end)}
+                    </span>
+                    <span>{pad(i + 1)}</span>
+                  </span>
+                </button>
+              );
+            })
+          }
+        </div>
+        <div class="panels" data-panels>
+          {
+            experience.map((job, i) => (
+              <article class:list={["panel", { "is-active": i === 0 }]} data-panel={i}>
+                <span class="label text-muted">
+                  {job.start} — {job.end}
                 </span>
-                <span class="label ml-auto text-muted">{p.years}</span>
-              </div>
-              <p class="mt-2 text-ink/75">{p.summary}</p>
-            </div>
-            {p.href && (
-              <a class="link label relative z-10 mt-3 inline-block" href={p.href} {...external(p.href)}>
-                {p.href.startsWith("http") ? "read more ↗" : "read more →"}
-              </a>
-            )}
-            <button
-              type="button"
-              class="tile-open absolute inset-0 rounded-sm"
-              data-open={i}
-              aria-haspopup="dialog"
-              aria-label={`Open ${p.title}`}
-            >
-              <span class="tile-hint label">view ↗</span>
-            </button>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <dialog class="viewer" aria-label="Project viewer" data-viewer>
-    <div class="viewer-panel">
-      <div class="flex items-center justify-between gap-4 px-6 pt-5">
-        <span class="label text-muted" data-viewer-counter aria-hidden="true"></span>
-        <button type="button" class="deck-btn" data-close aria-label="Close">✕</button>
+                <h3 class="sr-only">
+                  {job.role}, {job.org}
+                </h3>
+                <p class="take" data-type>{job.take}</p>
+                <ul class="mt-4 flex flex-col gap-2 text-ink/80">
+                  {job.points.map((p) => (
+                    <li class="flex gap-3">
+                      <span class="text-accent">—</span>
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))
+          }
+        </div>
       </div>
-      <div class="viewer-slides">
-        {
-          projects.map((p, i) => (
-            <article class="viewer-slide" data-slide={i} aria-roledescription="slide" aria-label={p.title} inert>
-              <Photo
-                alt={photoAlt(p.photo, p.title)}
-                name={p.photo ?? p.kind}
-                class="aspect-[4/3] md:aspect-[5/4]"
-                widths={[800, 1200, 1600]}
-                sizes="(min-width: 768px) 60vw, 100vw"
-              />
-              <div class="flex flex-col gap-4">
+
+      <div class="group" data-group="proj">
+        <div class="center" data-title>
+          <h2 id="highlights" class="font-display">Highlights</h2>
+          <span class="label text-muted">{highlightSpan}</span>
+        </div>
+        <div class="cards" role="group" aria-roledescription="carousel" aria-labelledby="highlights">
+          {
+            highlights.map((p, i) => (
+              <button
+                type="button"
+                class="card proj"
+                data-card={i}
+                aria-label={`${p.title}, ${kindLabel[p.kind]}, ${p.years}`}
+              >
+                <Image
+                  src={p.image}
+                  alt=""
+                  widths={[400, 800]}
+                  sizes="(min-width: 1024px) 24rem, 64vw"
+                  class="proj-img"
+                  style={p.focus ? `object-position:${p.focus}` : undefined}
+                />
+                <span class="proj-title font-display">{p.title}</span>
+                <span class="card-meta">
+                  <span>{kindLabel[p.kind]}</span>
+                  <span>{p.years}</span>
+                </span>
+              </button>
+            ))
+          }
+        </div>
+        <div class="panels" data-panels>
+          {
+            highlights.map((p, i) => (
+              <article class:list={["panel", { "is-active": i === 0 }]} data-panel={i}>
                 <span class="label text-muted">
                   {kindLabel[p.kind]} · {p.years}
                 </span>
-                <h3 class="font-display text-4xl leading-[1.02] sm:text-5xl">{p.title}</h3>
-                <p class="text-lg leading-relaxed text-ink/80">{p.summary}</p>
+                <h3 class="panel-title font-display">{p.title}</h3>
+                <p class="take" data-type>{p.summary}</p>
                 {p.href && (
-                  <a class="link label self-start" href={p.href} {...external(p.href)}>
+                  <a class="link label mt-4 inline-block" href={p.href} {...external(p.href)}>
                     {p.href.startsWith("http") ? "read more ↗" : "read more →"}
                   </a>
                 )}
-              </div>
-            </article>
-          ))
-        }
-      </div>
-      <div class="flex items-center justify-between px-6 pb-5">
-        <button type="button" class="deck-btn" data-viewer-prev aria-label="Previous project">←</button>
-        <span class="label hidden text-muted sm:inline">← → to browse · esc to close</span>
-        <button type="button" class="deck-btn" data-viewer-next aria-label="Next project">→</button>
+              </article>
+            ))
+          }
+        </div>
       </div>
     </div>
-  </dialog>
+  </section>
 </Base>
 
 <style>
-  .deck-wrap {
-    overflow-x: clip;
-  }
   .deck-btn {
     display: inline-grid;
     place-items: center;
@@ -201,237 +182,373 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
     height: 2.25rem;
     border: 1px solid var(--line);
     border-radius: 9999px;
+    background: var(--paper);
     color: var(--muted);
     transition:
       color 0.2s ease,
-      border-color 0.2s ease,
-      background-color 0.2s ease;
+      border-color 0.2s ease;
   }
   .deck-btn:hover {
     color: var(--ink);
     border-color: var(--ink);
   }
-  .deck-controls {
-    display: none;
+
+  .seq {
+    --W: min(78vw, 24rem);
+    --H: calc(var(--W) * 0.62);
   }
-  :global(.js) .deck-controls {
+  .card {
+    position: relative;
+    display: block;
+    width: var(--W);
+    height: var(--H);
+    border-radius: 1.1rem;
+    overflow: hidden;
+    text-align: left;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.14) inset,
+      0 24px 50px -24px rgb(28 25 23 / 0.45);
+  }
+  .card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+  }
+  .role {
+    background: var(--bg);
+    color: var(--fg);
+  }
+  /* Logos are masks, so each one renders in its card's foreground color. */
+  .card-logo {
+    position: absolute;
+    inset: 16% 14% 32%;
+    background: currentColor;
+    mask: var(--logo) center / contain no-repeat;
+  }
+  .card-org {
+    position: absolute;
+    inset: 22% 14%;
+    display: grid;
+    place-items: center;
+    font-size: 2.25rem;
+    line-height: 1;
+    text-align: center;
+  }
+  .role .card-org {
+    inset: 16% 14% 32%;
+  }
+  .card-role {
+    position: absolute;
+    right: 1rem;
+    bottom: 2.1rem;
+    left: 1rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+  }
+  .card-meta {
+    position: absolute;
+    z-index: 1;
+    right: 1rem;
+    bottom: 0.75rem;
+    left: 1rem;
     display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font: 500 0.625rem var(--font-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .proj {
+    border: 6px solid #fff;
+    border-radius: 0.6rem;
+    background: #222;
+    color: #fff;
+  }
+  .proj::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent 45%, rgb(0 0 0 / 0.65));
+  }
+  .proj :global(.proj-img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .proj-title {
+    position: absolute;
+    z-index: 1;
+    right: 0.9rem;
+    bottom: 1.9rem;
+    left: 0.9rem;
+    font-size: 1.4rem;
+    line-height: 1.05;
+  }
+  .center h2 {
+    font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+    line-height: 1.05;
+  }
+  .take {
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: color-mix(in oklab, var(--ink) 80%, transparent);
+  }
+  .panel-title {
+    margin-top: 0.25rem;
+    font-size: 2rem;
+    line-height: 1.05;
+  }
+  :global(.caret)::after {
+    content: "";
+    display: inline-block;
+    width: 0.55em;
+    height: 1em;
+    margin-left: 2px;
+    vertical-align: -2px;
+    background: var(--accent);
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
   }
 
-  /* Without JS the cards are a plain row; with JS they stack into a cover-flow deck. */
-  .deck-stage {
+  /* Without JS everything is a plain list: role cards, their details, then highlights. */
+  :global(html:not(.js)) .stage {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 7rem;
+  }
+  :global(html:not(.js)) .backdrop,
+  :global(html:not(.js)) .stage-head {
+    display: none;
+  }
+  :global(html:not(.js)) .group {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  :global(html:not(.js)) .cards {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
   }
-  .deck-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 1.5rem;
-    width: min(78vw, 26rem);
-    min-height: 15rem;
-    padding: 1.5rem;
-    border-radius: 1.25rem;
-    background: var(--bg);
-    color: var(--fg);
-    text-align: left;
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.12) inset,
-      0 30px 60px -30px rgb(28 25 23 / 0.55);
+  :global(html:not(.js)) .panel + .panel {
+    margin-top: 2.5rem;
   }
-  /* Centered on the whole card, scaled to fit with an even margin on every side. */
-  .deck-brand {
-    position: absolute;
-    inset: 20% 12%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+
+  /* With JS the section pins to the screen and scrolling drives the cards. */
+  :global(.js) .seq {
+    height: 700vh;
   }
-  /* Logos are masks, so each one renders in its card's foreground color. */
-  .deck-logo {
-    width: 100%;
-    height: 100%;
-    background: currentColor;
-    mask: var(--logo) center / contain no-repeat;
-  }
-  :global(.js) .deck-stage {
-    display: block;
-    position: relative;
-    height: clamp(15rem, 34vw, 20rem);
+  :global(.js) .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
     perspective: 1400px;
     touch-action: pan-y;
   }
-  :global(.js) .deck-card {
+  .backdrop {
     position: absolute;
-    top: 0;
+    inset: 0;
+    pointer-events: none;
+    mask: radial-gradient(ellipse 70% 60% at 50% 50%, #000 30%, transparent 75%);
+  }
+  .backdrop::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, var(--ink) 17%, transparent);
+    mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' fill='none' stroke='%23000' stroke-width='1.2'><path d='M0 40H60L80 60H150M150 60V120L170 140H220M40 220V170L60 150H110M110 150V100M190 0V30L210 50V90M0 120H30L50 100'/><g stroke-width='1.4'><circle cx='150' cy='60' r='3'/><circle cx='110' cy='100' r='3'/><circle cx='30' cy='120' r='3'/><circle cx='210' cy='90' r='3'/><circle cx='60' cy='150' r='3'/></g></svg>") 0 0 / 220px 220px;
+  }
+  .orbit {
+    position: absolute;
+    top: 50%;
     left: 50%;
-    height: 100%;
-    margin-left: calc(min(78vw, 26rem) / -2);
-    transform: translateX(calc(var(--o) * 20%)) translateZ(calc(var(--a) * -110px))
-      rotateY(calc(var(--o) * -9deg));
-    opacity: clamp(0, calc(3 - var(--a)), 1);
-    z-index: calc(10 - var(--a));
-    filter: brightness(calc(1 - var(--a) * 0.12)) saturate(calc(1 - var(--a) * 0.2));
-    transition:
-      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
-      opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
-      filter 0.8s ease;
+    width: min(92vw, 62rem);
+    height: min(52vw, 26rem);
+    border: 1px dashed color-mix(in oklab, var(--accent) 45%, transparent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotateX(68deg);
   }
-  :global(.js) .deck-card > * {
-    opacity: clamp(0, calc(1 - var(--a)), 1);
-    transition: opacity 0.5s ease;
-  }
-  :global(.js) .deck-card[aria-current="true"]:hover {
-    transform: translateY(-4px);
-  }
-  .deck-card:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 4px;
-  }
-
-  .role-panel + .role-panel {
-    margin-top: 3rem;
-  }
-  :global(.js) .role-panel {
-    display: none;
-  }
-  :global(.js) .role-panel.is-active {
-    display: block;
-    margin-top: 0;
-    animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .tile-open {
-    cursor: zoom-in;
-  }
-  :global(html:not(.js)) .tile-open {
-    display: none;
-  }
-  .tile-open:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 6px;
-  }
-  .tile-hint {
+  :global(.js) .stage-head {
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    padding: 0.3rem 0.6rem;
-    border-radius: 9999px;
-    background: var(--paper);
-    color: var(--ink);
-    opacity: 0;
-    transform: translateY(4px);
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-  }
-  .tile:hover .tile-hint,
-  .tile-open:focus-visible .tile-hint {
-    opacity: 1;
-    transform: none;
-  }
-
-  .viewer {
-    width: 100vw;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    margin: 0;
-    padding: 1rem;
-    background: transparent;
-    color: var(--ink);
-  }
-  .viewer[open] {
-    display: grid;
-    place-items: center;
-  }
-  .viewer::backdrop {
-    background: rgb(14 13 12 / 0.82);
-    backdrop-filter: blur(6px);
-  }
-  :global(html:has(.viewer[open])) {
-    overflow: hidden;
-  }
-  .viewer-panel {
+    z-index: 200;
+    top: 1.5rem;
+    left: 50%;
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: min(72rem, 100%);
-    max-height: calc(100dvh - 2rem);
-    overflow: auto;
-    border-radius: 1.25rem;
-    background: var(--paper);
-    animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
-    touch-action: pan-y;
-  }
-  .viewer-slides {
-    display: grid;
-    padding: 0 1.5rem;
-  }
-  .viewer-slide {
-    grid-area: 1 / 1;
-    display: grid;
-    gap: 2rem;
     align-items: center;
+    justify-content: space-between;
+    width: min(72rem, 100%);
+    padding: 0 1.5rem;
+    transform: translateX(-50%);
+  }
+  :global(.js) .group {
+    display: contents;
+  }
+  .scroll-hint {
+    position: absolute;
+    z-index: 210;
+    bottom: 4.75rem;
+    left: 50%;
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--paper) 85%, transparent);
+    color: var(--muted);
+    white-space: nowrap;
+    transform: translateX(-50%);
     opacity: 0;
-    transform: translateX(var(--from, 24px));
-    transition:
-      opacity 0.5s ease,
-      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition: color 0.2s, border-color 0.2s;
   }
-  .viewer-slide.is-active {
-    opacity: 1;
-    transform: none;
+  .scroll-hint:hover,
+  .scroll-hint:focus-visible {
+    border-color: var(--ink);
+    color: var(--ink);
   }
-  @media (min-width: 768px) {
-    .viewer-slide {
-      grid-template-columns: 1.4fr 1fr;
+  :global(.js) .scroll-hint {
+    display: inline-flex;
+  }
+  .hint-arrow {
+    display: inline-block;
+    animation: hint-nudge 1.6s ease-in-out infinite;
+  }
+  [data-hint="up"] .hint-arrow {
+    animation-direction: reverse;
+  }
+  @keyframes hint-nudge {
+    0%,
+    100% {
+      transform: translateY(-2px);
+    }
+    50% {
+      transform: translateY(3px);
     }
   }
-
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
+  :global(.js) .center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  :global(.js) .center h2 {
+    margin-bottom: 0.6rem;
+  }
+  :global(.js) .card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: calc(var(--H) / -2) 0 0 calc(var(--W) / -2);
+    will-change: transform;
+    opacity: 0;
+  }
+  :global(.js) .panels {
+    position: absolute;
+    z-index: 150;
+    top: calc(50% + var(--H) * 0.12 + 1rem);
+    right: 1.5rem;
+    bottom: 7.5rem;
+    left: 1.5rem;
+    min-height: 6rem;
+    overflow-y: auto;
+    opacity: 0;
+  }
+  :global(.js) .panel {
+    display: none;
+  }
+  :global(.js) .panel.is-active {
+    display: block;
+  }
+  @media (min-width: 640px) {
+    .seq {
+      --W: min(64vw, 22rem);
+    }
+    :global(.js) .panels {
+      left: 50%;
+      right: auto;
+      width: min(86vw, 36rem);
+      transform: translateX(-50%);
+    }
+  }
+  @media (min-width: 1024px) {
+    .seq {
+      --W: min(30vw, 24rem);
+    }
+    .scroll-hint {
+      left: calc(50% - min(100vw, 72rem) * 0.24);
+    }
+    :global(.js) .panels {
+      top: 50%;
+      bottom: auto;
+      left: calc(50% + 6vw);
+      width: min(36vw, 28rem);
+      max-height: 78vh;
+      transform: translateY(-50%);
+    }
+  }
+  @media (max-width: 1023px) and (max-height: 480px) {
+    :global(.js) .panels {
+      bottom: 4.5rem;
+    }
+    :global(.js) .scroll-hint {
+      display: none;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    :global(.js) .deck-card,
-    .viewer-slide {
-      transition: none;
+    :global(.js) .seq {
+      height: 220vh;
     }
-    :global(.js) .role-panel.is-active,
-    .viewer-panel {
+    :global(.caret)::after {
       animation: none;
     }
-  }
-
-  .filter-btn {
-    border: 1px solid var(--line);
-    border-radius: 9999px;
-    padding: 0.35rem 0.8rem;
-    color: var(--muted);
-    transition:
-      background-color 0.2s ease,
-      color 0.2s ease,
-      border-color 0.2s ease;
-  }
-  .filter-btn:hover {
-    color: var(--ink);
-  }
-  .filter-btn[aria-pressed="true"] {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--paper);
+    .hint-arrow {
+      animation: none;
+    }
   }
 </style>
 
 <script>
+  type Pose = { x: number; y: number; z: number; ry: number; rz: number; s: number; op: number; b: number };
+  type Group = {
+    root: HTMLElement;
+    title: HTMLElement;
+    cards: HTMLButtonElement[];
+    panels: HTMLElement[];
+    panelBox: HTMLElement;
+    active: number;
+  };
+
   const pad = (n: number) => String(n).padStart(2, "0");
-  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const ease = (t: number) => t * t * (3 - 2 * t);
+  const mix = (a: Pose, b: Pose, t: number): Pose => {
+    const out = { ...a };
+    for (const k of Object.keys(a) as (keyof Pose)[]) out[k] = a[k] + (b[k] - a[k]) * t;
+    return out;
+  };
+  const mod = (a: number) => ((a % 360) + 360) % 360;
+  const TILTS = [-28, 10, 18, -22, 24, -12, 30];
+  /** Degrees of ring rotation a card takes to fly off or settle in. */
+  const SPAN = 40;
 
   /** Calls back with -1 or 1 when the pointer is dragged sideways far enough. */
   function onSwipe(el: HTMLElement, cb: (dir: 1 | -1) => void) {
@@ -447,146 +564,262 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
       }
     });
   }
-  /** True (once) if the click that follows a swipe should be ignored. */
   function swallowSwipe(el: HTMLElement) {
     if (el.dataset.swiped !== "true") return false;
     delete el.dataset.swiped;
     return true;
   }
 
-  function initDeck() {
-    const deck = document.querySelector<HTMLElement>("[data-deck]");
-    if (!deck || deck.dataset.bound) return;
-    deck.dataset.bound = "true";
-    const stage = deck.querySelector<HTMLElement>(".deck-stage")!;
-    const cards = [...deck.querySelectorAll<HTMLButtonElement>("[data-card]")];
-    const panels = [...deck.querySelectorAll<HTMLElement>("[data-panel]")];
-    const counter = deck.querySelector<HTMLElement>("[data-counter]");
-    const n = cards.length;
-    let active = 0;
-    let timer: number | undefined;
-    let touched = false;
+  function initWork() {
+    const seq = document.querySelector<HTMLElement>("[data-seq]");
+    if (!seq || seq.dataset.bound) return;
+    seq.dataset.bound = "true";
+    const stage = seq.querySelector<HTMLElement>("[data-stage]")!;
+    const head = seq.querySelector<HTMLElement>("[data-head]")!;
+    const headLabel = seq.querySelector<HTMLElement>("[data-head-label]")!;
+    const counter = seq.querySelector<HTMLElement>("[data-counter]")!;
+    const group = (name: string): Group => {
+      const root = seq.querySelector<HTMLElement>(`[data-group="${name}"]`)!;
+      return {
+        root,
+        title: root.querySelector<HTMLElement>("[data-title]")!,
+        cards: [...root.querySelectorAll<HTMLButtonElement>("[data-card]")],
+        panels: [...root.querySelectorAll<HTMLElement>("[data-panel]")],
+        panelBox: root.querySelector<HTMLElement>("[data-panels]")!,
+        active: 0,
+      };
+    };
+    const roles = group("role");
+    const projs = group("proj");
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 
-    const show = (i: number) => {
-      active = (i + n) % n;
-      cards.forEach((c, j) => {
-        const o = j - active;
-        c.style.setProperty("--o", String(o));
-        c.style.setProperty("--a", String(Math.abs(o)));
-        c.setAttribute("aria-current", String(o === 0));
+    // Roles start evenly around the ring and leave when they reach its right edge;
+    // highlights enter at its left edge and finish evenly spaced.
+    const slots = (n: number) => Array.from({ length: n }, (_, i) => -90 + (i * 360) / n);
+    const roleStart = slots(roles.cards.length);
+    const projEnd = slots(projs.cards.length);
+    const roleExit = roleStart.map((a) => mod(-a) || 360);
+    const projEnter = projEnd.map((f) => 360 - mod(f - 180));
+
+    let d = { W: 0, H: 0, vw: 0, vh: 0, wide: false };
+    const measure = () => {
+      const c = roles.cards[0];
+      d = { W: c.offsetWidth, H: c.offsetHeight, vw: stage.clientWidth, vh: stage.clientHeight, wide: stage.clientWidth >= 1024 };
+    };
+
+    const stackPose = (i: number, g: Group): Pose => {
+      const n = g.cards.length;
+      const o = (i - g.active + n) % n;
+      const x = d.wide ? -Math.min(d.vw, 1152) * 0.24 : 0;
+      const y = d.wide ? 0 : -d.H * 0.45;
+      return { x: x + o * d.W * 0.2, y, z: -110 * o, ry: -9 * o, rz: 0, s: 1, op: o < 3 ? 1 : 0, b: 1 - o * 0.1 };
+    };
+    const ringPose = (deg: number, k: number): Pose => {
+      const a = (deg * Math.PI) / 180;
+      const narrow = d.vw < 640;
+      const R = Math.min(d.vw * 0.3, d.vh * 0.36);
+      const rx = narrow ? d.vw * 0.36 : R * 1.45;
+      const ry = narrow ? d.vh * 0.34 : R * 0.9;
+      return { x: Math.cos(a) * rx, y: Math.sin(a) * ry, z: 0, ry: 0, rz: TILTS[k % TILTS.length], s: narrow ? 0.36 : 0.62, op: 1, b: 1 };
+    };
+
+    const progress = () => {
+      const r = seq.getBoundingClientRect();
+      return clamp(-r.top / (r.height - innerHeight));
+    };
+
+    function layout(p: number) {
+      const poses = new Map<HTMLElement, Pose>();
+      if (reduce.matches) {
+        const showProj = p >= 0.5;
+        roles.cards.forEach((c, i) => poses.set(c, { ...stackPose(i, roles), ...(showProj && { op: 0 }) }));
+        projs.cards.forEach((c, j) => poses.set(c, { ...stackPose(j, projs), ...(!showProj && { op: 0 }) }));
+        return { poses, tE: 0, tC: showProj ? 1 : 0, sw: showProj ? 1 : 0, roleVis: showProj ? 0 : 1, projVis: showProj ? 1 : 0 };
+      }
+      const tE = ease(clamp((p - 0.08) / 0.16));
+      const sw = clamp((p - 0.26) / 0.48);
+      const phi = clamp(sw / 0.5) * 360;
+      const phi2 = clamp((sw - 0.5) / 0.5) * 375;
+      const tC = ease(clamp((p - 0.76) / 0.14));
+      roles.cards.forEach((c, i) => {
+        let pose = mix(stackPose(i, roles), ringPose(roleStart[i], i), tE);
+        if (sw > 0) {
+          const e = ease(clamp((phi - roleExit[i]) / SPAN));
+          pose = ringPose(roleStart[i] + Math.min(phi, roleExit[i]), i);
+          pose.x += e * d.vw * 0.75;
+          pose.rz += e * 40;
+          pose.op = 1 - e;
+        }
+        poses.set(c, pose);
       });
-      panels.forEach((p, j) => p.classList.toggle("is-active", j === active));
-      if (counter) counter.textContent = `${pad(active + 1)} / ${pad(n)}`;
+      projs.cards.forEach((c, j) => {
+        let pose: Pose;
+        if (p > 0.76) pose = mix(ringPose(projEnd[j], j + 2), stackPose(j, projs), tC);
+        else {
+          const g = ease(clamp((phi2 - projEnter[j]) / SPAN));
+          const slot = ringPose(projEnd[j] - 360 + Math.min(360, Math.max(phi2, projEnter[j])), j + 2);
+          pose = mix({ ...slot, x: slot.x - d.vw * 0.7, rz: slot.rz - 40, op: 0 }, slot, g);
+        }
+        poses.set(c, pose);
+      });
+      return { poses, tE, tC, sw, roleVis: 1 - clamp(tE * 3), projVis: clamp((tC - 0.8) * 5) };
+    }
+
+    const cur = new Map<HTMLElement, Pose>();
+    const apply = (el: HTMLElement, q: Pose) => {
+      el.style.transform = `translate3d(${q.x}px, ${q.y}px, ${q.z}px) rotateY(${q.ry}deg) rotateZ(${q.rz}deg) scale(${q.s})`;
+      el.style.opacity = String(q.op);
+      el.style.filter = q.b < 0.999 ? `brightness(${q.b})` : "";
+      el.style.zIndex = String(Math.round(100 + q.z / 10 + q.op * 5));
+      el.style.pointerEvents = q.op > 0.5 ? "auto" : "none";
     };
-    const stop = () => {
-      clearInterval(timer);
-      timer = undefined;
-    };
-    const start = () => {
-      if (!touched && !timer && !reduceMotion()) timer = window.setInterval(() => show(active + 1), 5000);
-    };
-    const go = (i: number) => {
-      touched = true;
-      stop();
-      show(i);
+    const fade = (el: HTMLElement, v: number) => {
+      el.style.opacity = String(v);
+      el.style.visibility = v < 0.01 ? "hidden" : "";
+      el.style.pointerEvents = v > 0.5 ? "" : "none";
     };
 
-    cards.forEach((c, j) =>
-      c.addEventListener("click", () => {
-        if (!swallowSwipe(stage)) go(j);
-      }),
-    );
-    deck.querySelector("[data-prev]")?.addEventListener("click", () => go(active - 1));
-    deck.querySelector("[data-next]")?.addEventListener("click", () => go(active + 1));
+    let mode: Group = roles;
+    let typing: { el: HTMLElement; text: string; timer: number } | undefined;
+    const stopTyping = () => {
+      if (!typing) return;
+      clearTimeout(typing.timer);
+      typing.el.textContent = typing.text;
+      typing = undefined;
+    };
+    const type = (el: HTMLElement) => {
+      stopTyping();
+      seq.querySelectorAll(".caret").forEach((c) => c.classList.remove("caret"));
+      if (reduce.matches) return;
+      const text = el.textContent ?? "";
+      let i = 0;
+      el.textContent = "";
+      el.classList.add("caret");
+      const step = () => {
+        el.textContent = text.slice(0, ++i);
+        typing = i < text.length ? { el, text, timer: window.setTimeout(step, 11) } : undefined;
+      };
+      step();
+    };
+
+    const show = (g: Group, animate = true) => {
+      const n = g.cards.length;
+      g.cards.forEach((c, j) => c.setAttribute("aria-current", String(j === g.active)));
+      g.panels.forEach((p, j) => p.classList.toggle("is-active", j === g.active));
+      if (g === mode) counter.textContent = `${pad(g.active + 1)} / ${pad(n)}`;
+      const el = g.panels[g.active].querySelector<HTMLElement>("[data-type]");
+      if (animate && el) type(el);
+    };
+    const go = (g: Group, i: number) => {
+      g.active = (i + g.cards.length) % g.cards.length;
+      show(g);
+    };
+
+    // Scroll to the end of the sequence that shows a group's stack, e.g. when a keyboard
+    // user tabs onto a card that isn't on screen yet.
+    const reveal = (g: Group) => {
+      if (g === mode) return;
+      const top = seq.getBoundingClientRect().top + scrollY;
+      scrollTo({ top: g === roles ? top : top + seq.offsetHeight - innerHeight, behavior: "instant" });
+    };
+
+    for (const g of [roles, projs]) {
+      g.cards.forEach((c, j) => {
+        c.addEventListener("click", () => {
+          if (swallowSwipe(stage)) return;
+          go(g, j === g.active ? j + 1 : j);
+        });
+        c.addEventListener("focus", () => reveal(g));
+      });
+    }
+    seq.querySelector("[data-prev]")?.addEventListener("click", () => go(mode, mode.active - 1));
+    seq.querySelector("[data-next]")?.addEventListener("click", () => go(mode, mode.active + 1));
     stage.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       e.preventDefault();
-      go(active + (e.key === "ArrowRight" ? 1 : -1));
-      cards[active].focus();
+      go(mode, mode.active + (e.key === "ArrowRight" ? 1 : -1));
+      mode.cards[mode.active].focus();
     });
-    onSwipe(stage, (d) => go(active + d));
-    deck.addEventListener("mouseenter", stop);
-    deck.addEventListener("focusin", stop);
-    deck.addEventListener("mouseleave", start);
+    onSwipe(stage, (dir) => go(mode, mode.active + dir));
 
-    new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()), {
-      threshold: 0.4,
-    }).observe(stage);
-    document.addEventListener("astro:before-swap", stop, { once: true });
-    show(0);
-  }
-
-  function initViewer() {
-    const dialog = document.querySelector<HTMLDialogElement>("[data-viewer]");
-    const grid = document.querySelector<HTMLElement>("[data-grid]");
-    if (!dialog || !grid || dialog.dataset.bound) return;
-    dialog.dataset.bound = "true";
-    const slides = [...dialog.querySelectorAll<HTMLElement>("[data-slide]")];
-    const counter = dialog.querySelector<HTMLElement>("[data-viewer-counter]");
-    const arrows = dialog.querySelectorAll<HTMLElement>("[data-viewer-prev], [data-viewer-next]");
-    let order: number[] = [];
-    let pos = 0;
-
-    const render = (dir = 1) => {
-      slides.forEach((s, j) => {
-        const on = j === order[pos];
-        s.style.setProperty("--from", `${dir * 24}px`);
-        s.classList.toggle("is-active", on);
-        s.inert = !on;
-      });
-      if (counter) counter.textContent = `${pad(pos + 1)} / ${pad(order.length)}`;
-      arrows.forEach((a) => (a.style.visibility = order.length > 1 ? "visible" : "hidden"));
+    // Tween the page through the sequence so a click plays it like a scroll.
+    const hints = [...seq.querySelectorAll<HTMLButtonElement>("[data-hint]")];
+    let glide = 0;
+    const cancelGlide = () => {
+      cancelAnimationFrame(glide);
+      glide = 0;
     };
-    const step = (d: 1 | -1) => {
-      pos = (pos + d + order.length) % order.length;
-      render(d);
+    const glideTo = (to: number) => {
+      cancelGlide();
+      const from = scrollY;
+      const ms = reduce.matches ? 0 : 2800;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = ms ? clamp((now - t0) / ms) : 1;
+        scrollTo({ top: from + (to - from) * ease(t), behavior: "instant" });
+        glide = t < 1 ? requestAnimationFrame(step) : 0;
+      };
+      glide = requestAnimationFrame(step);
+    };
+    for (const h of hints) {
+      h.addEventListener("click", () => {
+        const top = seq.getBoundingClientRect().top + scrollY;
+        glideTo(h.dataset.hint === "down" ? top + seq.offsetHeight - innerHeight : top);
+      });
+    }
+    for (const ev of ["wheel", "touchstart", "keydown"]) addEventListener(ev, cancelGlide, { passive: true });
+
+    let raf = 0;
+    const frame = () => {
+      const p = progress();
+      const { poses, tE, tC, sw, roleVis, projVis } = layout(p);
+      const snap = reduce.matches;
+      for (const [el, target] of poses) {
+        const next = snap ? target : mix(cur.get(el) ?? target, target, 0.16);
+        cur.set(el, next);
+        apply(el, next);
+      }
+      roles.title.style.opacity = String(tE * (1 - ease(clamp((sw - 0.4) / 0.1))));
+      projs.title.style.opacity = String(ease(clamp((sw - 0.5) / 0.1)) * (1 - tC));
+      fade(roles.panelBox, roleVis);
+      fade(projs.panelBox, projVis);
+      fade(head, Math.max(roleVis, projVis));
+      fade(hints[0], roleVis * (snap ? 1 : 1 - clamp((p - 0.01) / 0.05)));
+      fade(hints[1], projVis * (snap ? 1 : clamp((p - 0.93) / 0.05)));
+      const m = p < 0.5 ? roles : projs;
+      if (m !== mode) {
+        mode = m;
+        headLabel.textContent = m === roles ? "experience" : "highlights";
+        show(m);
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    const start = () => {
+      measure();
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
     };
 
-    grid.addEventListener("click", (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-open]");
-      if (!btn) return;
-      order = [...grid.querySelectorAll<HTMLElement>("[data-kind]:not([hidden]) [data-open]")].map(
-        (b) => Number(b.dataset.open),
-      );
-      pos = Math.max(0, order.indexOf(Number(btn.dataset.open)));
-      render();
-      dialog.showModal();
-    });
-    dialog.querySelector("[data-viewer-prev]")?.addEventListener("click", () => step(-1));
-    dialog.querySelector("[data-viewer-next]")?.addEventListener("click", () => step(1));
-    dialog.querySelector("[data-close]")?.addEventListener("click", () => dialog.close());
-    dialog.addEventListener("click", (e) => {
-      if (e.target === dialog && !swallowSwipe(dialog)) dialog.close();
-    });
-    dialog.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight") step(1);
-      else if (e.key === "ArrowLeft") step(-1);
-    });
-    onSwipe(dialog, (d) => step(d));
-    document.addEventListener("astro:before-swap", () => dialog.open && dialog.close(), { once: true });
+    measure();
+    addEventListener("resize", measure);
+    show(roles, false);
+    show(projs, false);
+    new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())).observe(seq);
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        stop();
+        stopTyping();
+        removeEventListener("resize", measure);
+        cancelGlide();
+        for (const ev of ["wheel", "touchstart", "keydown"]) removeEventListener(ev, cancelGlide);
+      },
+      { once: true },
+    );
   }
 
-  function initFilters() {
-    const group = document.querySelector<HTMLElement>("[data-filters]");
-    const grid = document.querySelector<HTMLElement>("[data-grid]");
-    if (!group || !grid || group.dataset.bound) return;
-    group.dataset.bound = "true";
-    group.addEventListener("click", (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-filter]");
-      if (!btn) return;
-      const value = btn.dataset.filter;
-      group
-        .querySelectorAll("[data-filter]")
-        .forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
-      grid.querySelectorAll<HTMLElement>("[data-kind]").forEach((item) => {
-        item.hidden = value !== "all" && item.dataset.kind !== value;
-      });
-    });
-  }
-
-  document.addEventListener("astro:page-load", () => {
-    initDeck();
-    initViewer();
-    initFilters();
-  });
+  document.addEventListener("astro:page-load", initWork);
 </script>
