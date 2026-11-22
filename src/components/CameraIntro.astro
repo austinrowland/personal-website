@@ -1,17 +1,25 @@
 ---
-/** Full-screen Polaroid Sun 600 intro for the Photos page. Skipped for reduced motion, Agent view, or ?intro=off. */
+/** Full-screen Polaroid 600 intro for the Photos page. Skipped for reduced motion, Agent view, or ?intro=off. */
+const MODEL = "/models/polaroid-600.glb";
 ---
 
-<div class="camera-intro" data-camera-intro aria-hidden="true">
-  <script is:inline>
+<div class="camera-intro" data-camera-intro data-model={MODEL} aria-hidden="true">
+  <script is:inline define:vars={{ MODEL }}>
     (() => {
       const d = document.documentElement;
       const play =
         !matchMedia("(prefers-reduced-motion: reduce)").matches &&
         d.dataset.reader !== "agent" &&
         !/[?&]intro=off\b/.test(location.search);
-      if (play) d.dataset.intro = "play";
-      else delete d.dataset.intro;
+      if (play) {
+        d.dataset.intro = "play";
+        const link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "fetch";
+        link.crossOrigin = "anonymous";
+        link.href = MODEL;
+        document.head.append(link);
+      } else delete d.dataset.intro;
     })();
   </script>
   <canvas></canvas>
@@ -26,7 +34,6 @@
     position: fixed;
     inset: 0;
     z-index: 60;
-    background: radial-gradient(ellipse at 50% 45%, var(--paper), var(--surface) 75%);
     transition: opacity 0.9s ease;
   }
   :global(html[data-intro="play"]) .camera-intro,
@@ -37,12 +44,28 @@
     opacity: 0;
     pointer-events: none;
   }
-  /* After the flash, only the white fades, so the desk appears out of it. */
-  .camera-intro.is-leaving:has(.flash.is-on) {
-    background: transparent;
+  /* As the view pulls back, the backdrop fades so the 3D print lands on the real desk. */
+  .camera-intro::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 45%, var(--paper), var(--surface) 75%);
+    transition: opacity 1.4s ease;
   }
-  .camera-intro.is-leaving:has(.flash.is-on) > :not(.flash) {
+  .camera-intro.is-revealing {
+    pointer-events: none;
+  }
+  .camera-intro.is-revealing::before {
+    opacity: 0;
+  }
+  .camera-intro.is-revealing .cheese {
     visibility: hidden;
+  }
+  .skip {
+    pointer-events: auto;
+  }
+  canvas {
+    position: relative;
   }
   canvas {
     width: 100%;
@@ -57,7 +80,7 @@
     text-align: center;
     color: var(--muted);
     opacity: 0;
-    animation: cheese 0.6s ease 1.2s forwards;
+    animation: cheese 0.6s ease 0.6s forwards;
   }
   .skip {
     position: absolute;
@@ -76,7 +99,7 @@
     pointer-events: none;
   }
   .flash.is-on {
-    animation: flash 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+    animation: flash 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
   }
   @keyframes cheese {
     to {
@@ -87,8 +110,8 @@
     0% {
       opacity: 0;
     }
-    7% {
-      opacity: 1;
+    8% {
+      opacity: 0.92;
     }
     100% {
       opacity: 0;
@@ -97,6 +120,30 @@
 </style>
 
 <script>
+  import type { Landing } from "../lib/polaroid600";
+
+  /** The face-down print on the desk that the 3D print lands on, scrolled into view if needed. */
+  function landing(): Landing | null {
+    const el = document.querySelector<HTMLElement>("[data-soon]");
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      x: r.left + r.width / 2,
+      y: r.top + r.height / 2,
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      tilt: Number(el.dataset.tilt ?? 0),
+    };
+  }
+
+  function bringDeskIntoView() {
+    const el = document.querySelector<HTMLElement>("[data-soon]");
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const overflow = r.bottom + 32 - innerHeight;
+    if (overflow > 0) scrollBy({ top: Math.min(overflow, r.top - 24), behavior: "instant" });
+  }
+
   document.addEventListener("astro:page-load", async () => {
     const root = document.querySelector<HTMLElement>("[data-camera-intro]");
     const doc = document.documentElement;
@@ -117,25 +164,31 @@
       setTimeout(() => {
         stop?.();
         root.remove();
-      }, 1100);
+      }, 900);
     };
     skip.addEventListener("click", finish);
-    setTimeout(finish, 6000);
+    // Gives up if the model takes too long to arrive; the whole sequence runs about 5.5 seconds once loaded.
+    const safety = setTimeout(finish, 12000);
     document.addEventListener(
       "astro:before-swap",
       () => {
+        clearTimeout(safety);
         stop?.();
         delete doc.dataset.intro;
       },
       { once: true },
     );
 
+    bringDeskIntoView();
     try {
-      const { playSun600 } = await import("../lib/sun600");
+      const { playPolaroid600 } = await import("../lib/polaroid600");
       if (finished) return;
-      stop = playSun600(root.querySelector("canvas")!, {
+      stop = playPolaroid600(root.querySelector("canvas")!, root.dataset.model!, {
+        landing,
         onFlash: () => flash.classList.add("is-on"),
-        onDone: finish,
+        onReveal: () => root.classList.add("is-revealing"),
+        onLand: finish,
+        onError: finish,
       });
     } catch {
       finish();
