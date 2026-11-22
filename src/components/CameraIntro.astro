@@ -69,7 +69,8 @@ const MODEL = "/models/polaroid-600.glb";
     height: 100%;
   }
   .backdrop {
-    background: radial-gradient(ellipse at 50% 40%, var(--paper), var(--surface) 80%);
+    /* Same color as the page, so the site header above it reads as one surface. */
+    background: var(--paper);
     /* Fades as the view pulls back, so the 3D print lands on the real desk rising underneath. */
     opacity: clamp(0, calc((0.92 - var(--p)) * 5), 1);
   }
