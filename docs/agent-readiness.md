@@ -8,9 +8,9 @@ and [Cloudflare](https://developers.cloudflare.com/fundamentals/reference/markdo
 
 | Capability | Where | Pattern from |
 | --- | --- | --- |
-| `/llms.txt` index of every page with descriptions | `src/pages/llms.txt.ts` | llmstxt.org, Mintlify, Fern |
-| `/llms-full.txt`, the whole site in one file (~3k tokens) | `src/pages/llms-full.txt.ts` | Mintlify |
-| Markdown twin of every page (`/work.md`, `/index.md`, `/writing/<post>.md`) | `src/pages/[...path].md.ts`, `src/lib/markdown.ts` | Mintlify, Fern |
+| `/llms.txt` index of every page with descriptions | `src/integrations/markdown-twins.ts` | llmstxt.org, Mintlify, Fern |
+| `/llms-full.txt`, the whole site in one file (~3k tokens) | `src/integrations/markdown-twins.ts` | Mintlify |
+| Markdown twin of every page (`/work.md`, `/index.md`, `/writing/<post>.md`) | `src/integrations/markdown-twins.ts`, `src/lib/compile-markdown.ts` | Mintlify, Fern |
 | `Accept: text/markdown` content negotiation, `Vary: Accept` | `scripts/agent-http.ts` | Cloudflare, Mintlify |
 | `Link` headers (`llms-txt`, `alternate` Markdown, `sitemap`) and `X-Llms-Txt` | `scripts/agent-http.ts` | Mintlify |
 | `X-Markdown-Tokens` estimate on Markdown responses | `scripts/agent-http.ts` | Cloudflare |
@@ -21,8 +21,13 @@ and [Cloudflare](https://developers.cloudflare.com/fundamentals/reference/markdo
 | schema.org JSON-LD (`WebSite` + `Person`, `ProfilePage`, `BlogPosting`) | `src/lib/structured-data.ts` | search engines and answer engines |
 | Sitemap, RSS, Open Graph image | `@astrojs/sitemap`, `src/pages/rss.xml.ts`, `public/og.png` | standard SEO |
 
-Markdown is generated from the same data the HTML uses (`src/data/*`, the writing collection), so the two
-cannot drift. Markdown responses carry `X-Robots-Tag: noindex` and a canonical `Link` to the HTML page so
+Markdown is compiled from the built HTML pages after each build (`src/integrations/markdown-twins.ts`), so
+whatever a page shows ends up in its twin. The compiler (`src/lib/compile-markdown.ts`) leaves out controls,
+SVG, `aria-hidden` and `data-md-skip` elements, keeps `data-md-keep` content (the back of a flipping print),
+and puts an `<hgroup>`'s heading first so a label above a heading (a role's dates) stays in that heading's
+section. Visually split pieces are grouped by their markup: each Work role's panel carries its role and org
+heading, so the card and panel read as one section. `npm test` fails if any visible line, image, Work role or
+Memory is missing from its twin. In `astro dev`, `.md` requests are compiled from the dev server's page. Markdown responses carry `X-Robots-Tag: noindex` and a canonical `Link` to the HTML page so
 search engines index one copy.
 
 ## Hosting

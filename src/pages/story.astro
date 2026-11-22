@@ -27,7 +27,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
   </svg>
 
   <section class="story-hero mx-auto flex max-w-6xl flex-col justify-center px-6 pt-12 pb-16 md:pt-20">
-    <p class="label text-muted" data-reveal>story</p>
+    <p class="label text-muted" data-reveal data-md-skip>story</p>
     <h1 class="mt-4 font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl" data-reveal style="--i:1">
       {pages.story.headline}<br />
       <span class="text-muted">{pages.story.headlineAside}</span>
@@ -47,12 +47,14 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
             <span class="hanko" data-hanko aria-hidden="true">{seals[i]}</span>
           </div>
           <div class="chapter-text">
-            <p class="label text-muted" data-line>
-              {String(i + 1).padStart(2, "0")} · {c.place}
-            </p>
-            <h2 id={`chapter-${i}`} class="mt-3 font-display text-4xl leading-tight sm:text-5xl" data-line>
-              {c.title}
-            </h2>
+            <hgroup>
+              <p class="label text-muted" data-line>
+                {String(i + 1).padStart(2, "0")} · {c.place}
+              </p>
+              <h2 id={`chapter-${i}`} class="mt-3 font-display text-4xl leading-tight sm:text-5xl" data-line>
+                {c.title}
+              </h2>
+            </hgroup>
             {c.paragraphs.map((p) => (
               <p class="story-p mt-6" data-line>
                 {p}

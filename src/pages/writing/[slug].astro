@@ -32,10 +32,12 @@ const date = new Intl.DateTimeFormat("en-US", {
   >
   </div>
   <article class="mx-auto max-w-2xl px-6 pt-12 pb-28 md:pt-20">
-    <time class="label text-muted" datetime={post.data.date.toISOString().slice(0, 10)}>{date}</time>
-    <h1 class="mt-4 font-display text-5xl leading-[1.05] tracking-tight">
-      {post.data.title}
-    </h1>
+    <hgroup>
+      <p class="label text-muted"><time datetime={post.data.date.toISOString().slice(0, 10)}>{date}</time></p>
+      <h1 class="mt-4 font-display text-5xl leading-[1.05] tracking-tight">
+        {post.data.title}
+      </h1>
+    </hgroup>
     {
       original && (
         <p class="mt-5 text-muted">
