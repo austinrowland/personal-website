@@ -294,17 +294,19 @@ const POSTER = poster.src;
       const shift = (desk?.getBoundingClientRect().top ?? 0) - before;
       if (desk && before < innerHeight && shift) scrollBy({ top: shift, behavior: "instant" });
     };
-    let live = false;
-    /** The live camera failed or lost its GPU context: the still takes over where the sequence is. */
+    const stillBroken = () => poster.complete && !poster.naturalWidth;
+    // Whether the live camera is out (unsupported, failed to load, or lost its GPU context).
+    let liveFailed = !("live3d" in doc.dataset);
+    /** The live camera failed: the still takes over where the sequence is. */
     const toStill = () => {
-      live = false;
+      liveFailed = true;
       stop?.();
       stop = undefined;
       delete stage.dataset.live;
-      if (poster.complete && !poster.naturalWidth) giveUp();
+      if (stillBroken()) giveUp();
     };
-    poster.addEventListener("error", () => !live && giveUp());
-    if (poster.complete && !poster.naturalWidth) return giveUp();
+    poster.addEventListener("error", () => liveFailed && giveUp());
+    if (liveFailed && stillBroken()) return giveUp();
 
     // Scroll drives the page from the first frame, whether or not the 3D camera has loaded.
     let p = progress();
@@ -357,10 +359,7 @@ const POSTER = poster.src;
       stop = mountPolaroid600(root.querySelector("canvas")!, model, {
         progress: () => p,
         landing,
-        onReady: () => {
-          live = true;
-          stage.dataset.live = "";
-        },
+        onReady: () => (stage.dataset.live = ""),
         onError: toStill,
       });
     } catch {
