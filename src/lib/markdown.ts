@@ -173,7 +173,9 @@ export async function markdownPages(): Promise<MarkdownPage[]> {
 /** Pairs a page's metadata with its body, led by the same headline the HTML page shows. */
 const page = (meta: PageMeta, body: string): MarkdownPage => ({
   ...meta,
-  content: meta.headline ? `${fullHeadline(meta)}\n\n${body}` : body,
+  content: meta.headline
+      ? [fullHeadline(meta), meta.lede, body].filter(Boolean).join("\n\n")
+      : body,
 });
 
 export function renderMarkdown(page: MarkdownPage): string {

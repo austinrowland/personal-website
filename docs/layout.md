@@ -46,8 +46,8 @@
 
 ## `/work`
 
-1. **Intro.** One serif line, such as "building where the product meets
-   real people."
+1. **Intro.** One serif line, "Building Where the Product Meets Real People",
+   with a short lede under it.
 2. **Experience → Highlights** (one pinned scroll sequence, Aditya Dave-style
    exploded view, "Orbit" look: faint circuit-board traces and a dashed orbit ring).
    - Starts as a stack of role cards with company logos. Clicking a card, the

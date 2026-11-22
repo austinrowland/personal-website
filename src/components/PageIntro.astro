@@ -4,8 +4,9 @@ import type { HTMLAttributes } from "astro/types";
 interface Props extends HTMLAttributes<"header"> {
   eyebrow: string;
   title: string;
+  lede?: string;
 }
-const { eyebrow, title, ...rest } = Astro.props;
+const { eyebrow, title, lede, ...rest } = Astro.props;
 ---
 
 <header class="mx-auto flex max-w-6xl flex-col gap-4 px-6 pt-12 pb-14 md:pt-20" {...rest}>
@@ -17,5 +18,12 @@ const { eyebrow, title, ...rest } = Astro.props;
   >
     {title}
   </h1>
+  {
+    lede && (
+      <p class="max-w-2xl text-lg leading-relaxed text-pretty text-muted" data-reveal style="--i:2">
+        {lede}
+      </p>
+    )
+  }
   <slot />
 </header>
