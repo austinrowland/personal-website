@@ -206,6 +206,7 @@ const MODEL = "/models/polaroid-600.glb";
       "astro:before-swap",
       () => {
         stop?.();
+        removeEventListener("resize", offset);
         delete doc.dataset.intro;
         delete doc.dataset.landed;
       },
