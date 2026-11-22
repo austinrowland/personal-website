@@ -16,7 +16,7 @@ const photoAssets: Record<string, ImageMetadata> = Object.fromEntries(
 /** Where to keep the subject when a photo is cropped to another aspect ratio. */
 const photoFocus: Record<string, string> = {
   "tedx-gt": "42% 58%",
-  "spread-the-love": "50% 30%",
+  "spread-the-love": "50% 38%",
   "tom-build-day": "55% 45%",
   "georgia-tech-graduation": "42% 45%",
   "graduation-interview": "50% 40%",
