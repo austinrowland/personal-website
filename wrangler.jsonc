@@ -14,13 +14,22 @@
   "observability": { "enabled": true },
   // Launch switch: austinrowland.com serves a "coming soon" page until this is "true".
   "vars": { "SITE_LIVE": "false" },
-  // Adding routes turns these off by default; keep the workers.dev site and Preview URLs.
-  "workers_dev": true,
+  // Production lives only on the custom domains; staging (below) owns the workers.dev site.
+  "workers_dev": false,
   "preview_urls": true,
   "routes": [
     { "pattern": "austinrowland.com", "custom_domain": true },
     { "pattern": "www.austinrowland.com", "custom_domain": true }
   ],
   // Previews (one per branch/PR) need no separate settings: the site has no bindings besides ASSETS.
-  "previews": {}
+  "previews": {},
+  "env": {
+    // Workers Builds deploys main here (austinrowland-com-staging on workers.dev); the Deploy
+    // action promotes main to production. Routes and vars aren't inherited from the top level.
+    "staging": {
+      "workers_dev": true,
+      "routes": [],
+      "vars": { "SITE_LIVE": "false" }
+    }
+  }
 }

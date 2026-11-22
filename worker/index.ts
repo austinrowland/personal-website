@@ -2,8 +2,8 @@
 // binding) with the same agent-facing behavior as scripts/serve.ts.
 import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest, redirectFor, redirectHeaders } from "../scripts/agent-http.ts";
 
-// austinrowland.com shows a placeholder until SITE_LIVE is "true" in wrangler.jsonc; workers.dev
-// and Preview URLs always serve the full site.
+// austinrowland.com shows a placeholder until SITE_LIVE is "true" in wrangler.jsonc; staging on
+// workers.dev and Preview URLs always serve the full site.
 const LAUNCH_HOSTS = new Set(["austinrowland.com", "www.austinrowland.com"]);
 
 const PLACEHOLDER = `<!doctype html>

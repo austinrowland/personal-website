@@ -1,0 +1,21 @@
+name: Deploy
+
+# Promotes main to austinrowland.com: Workers Builds deploys whatever lands on the production branch.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - run: git push origin HEAD:refs/heads/production
+      - run: echo "Promoted $(git rev-parse --short HEAD) to production; Workers Builds deploys it to austinrowland.com." >> "$GITHUB_STEP_SUMMARY"
