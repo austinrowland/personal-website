@@ -45,7 +45,7 @@ function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D)
   return t;
 }
 
-/** A Polaroid 600 print: white frame with an undeveloped image on the front, "coming soon" in marker on the back. */
+/** A Polaroid 600 print: white frame with an undeveloped image on the front, "developing now…" in marker on the back. */
 function buildPrint(aspect: number) {
   const W = 1.15;
   const L = W * aspect;
@@ -74,11 +74,11 @@ function buildPrint(aspect: number) {
     g.textAlign = "center";
     g.textBaseline = "middle";
     g.fillStyle = "#f2eee6";
-    g.font = `${px * 0.15}px "Permanent Marker", "Marker Felt", cursive`;
-    g.fillText("coming soon", 0, 0);
+    g.font = `${px * 0.11}px "Permanent Marker", "Marker Felt", cursive`;
+    g.fillText("developing now…", 0, 0);
     g.fillStyle = "rgba(242,238,230,0.7)";
     g.font = `500 ${px * 0.085}px Caveat, "Bradley Hand", cursive`;
-    g.fillText("more memories developing", 0, px * 0.14);
+    g.fillText("more memories on the way", 0, px * 0.13);
     g.restore();
   });
   // The back faces the desk until the print flips, so its texture is drawn upside down.
