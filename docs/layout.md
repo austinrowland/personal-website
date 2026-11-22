@@ -67,11 +67,13 @@
 
 ## `/writing` and `/writing/[slug]`
 
-- A plain dated list with tags, with AI-Ready APIs pinned as the featured
-  piece. Each entry is either a local MDX post or a link to an external
-  source (the Postman blog, the LinkedIn TEDx reflection).
-- Post pages use a narrow reading column with a mono date line and a
-  progress hairline at the top.
+- A minimal list, newest first: each row is only the title and the publish
+  date. No descriptions, tags or outbound links; every piece lives on the site.
+- Post pages: mono date, title, a woodblock cover image (see
+  `docs/writing-covers.md`), then a narrow reading column with a progress
+  hairline at the top. Pieces first published elsewhere carry an
+  "Originally published on …" line linking the original and its publisher,
+  and their canonical URL points at the original.
 
 ## `/about`
 
