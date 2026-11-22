@@ -118,7 +118,7 @@
   transform: none;
 }
 
-/* Signature hero: characters print in sequence after a blinking marker. */
+/* Signature hero: characters print in sequence, ending on a blinking text cursor. */
 .type-char {
   opacity: 0;
   animation: type-in 0.01s linear forwards;
@@ -130,7 +130,13 @@
   }
 }
 .caret {
-  animation: blink 1s steps(1) infinite;
+  display: inline-block;
+  width: 0.06em;
+  height: 0.82em;
+  margin-left: 0.08em;
+  vertical-align: -0.04em;
+  background: currentColor;
+  animation: blink 1.06s steps(1) infinite;
 }
 @keyframes blink {
   50% {
