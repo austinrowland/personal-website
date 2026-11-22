@@ -16,11 +16,7 @@ const typeDone = 700 + chars.length * 55;
     class="mx-auto grid min-h-[calc(100svh-10rem)] max-w-6xl items-end gap-12 px-6 pt-12 pb-24 md:grid-cols-[1.25fr_1fr] md:items-center"
   >
     <div class="flex flex-col gap-8">
-      <h1
-        aria-label={greeting}
-        class="flex items-baseline gap-3 font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl"
-      >
-        <span aria-hidden="true" class="caret text-[0.45em] text-accent">▶</span>
+      <h1 aria-label={greeting} class="font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl">
         <span aria-hidden="true">
           {chars.map((c, i) => <span class="type-char" style={`--d:${i}`}>{c}</span>)}
         </span>

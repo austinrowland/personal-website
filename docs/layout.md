@@ -28,8 +28,9 @@
 
 ## `/` Home (minimal)
 
-1. **Hero, with the signature animation.** A ▶ marker blinks, then
-   "hi, i'm austin rowland." types out in the serif. A short lowercase bio
+1. **Hero, with the signature animation.** "Hi, I'm Austin Rowland." types
+   out in the serif, with a text cursor riding the last typed letter; it
+   blinks at the end once the line is done. A short lowercase bio
    fades in below, with inline links to Postman, the AI-Ready APIs post,
    and TEDx.
 2. **Film-strip nav.** Four stacked image bars, each showing one of your

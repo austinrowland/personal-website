@@ -118,8 +118,9 @@
   transform: none;
 }
 
-/* Signature hero: characters print in sequence after a blinking marker. */
+/* Signature hero: characters print in sequence with a text cursor riding the last typed one. */
 .type-char {
+  position: relative;
   opacity: 0;
   animation: type-in 0.01s linear forwards;
   animation-delay: calc(700ms + var(--d) * 55ms);
@@ -129,11 +130,34 @@
     opacity: 1;
   }
 }
-.caret {
-  animation: blink 1s steps(1) infinite;
+.type-char::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 0.14em;
+  width: 0.06em;
+  height: 0.82em;
+  margin-left: 0.04em;
+  background: currentColor;
+  opacity: 0;
+  animation: caret-pass 55ms steps(1) calc(700ms + var(--d) * 55ms);
+}
+.type-char:last-child::after {
+  animation: blink 1.06s steps(1) calc(700ms + var(--d) * 55ms) infinite;
+}
+@keyframes caret-pass {
+  from,
+  to {
+    opacity: 1;
+  }
 }
 @keyframes blink {
+  0%,
   50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
     opacity: 0;
   }
 }
@@ -161,6 +185,7 @@
     transition: none !important;
   }
   .type-char,
+  .type-char:last-child::after,
   .fade-after-type,
   .js [data-reveal] {
     opacity: 1;

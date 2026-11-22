@@ -1,6 +1,7 @@
 ---
 import { nav, socials } from "../data/site";
 import Icon from "./Icon.astro";
+import Logo from "./Logo.astro";
 
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
@@ -10,7 +11,7 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
   class="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-5 sm:px-6"
 >
   <a href="/" class="flex items-center gap-2.5" aria-label="Austin Rowland, home">
-    <span class="font-display text-2xl leading-none">ar<span class="text-accent">.</span></span>
+    <Logo class="size-8" />
     <span class="hidden text-sm font-medium text-ink/80 md:inline">Austin Rowland</span>
   </a>
   <div class="flex min-w-0 items-center gap-4">
