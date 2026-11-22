@@ -77,6 +77,8 @@ export function agentHeaders(plan, status) {
     "X-Llms-Txt": "/llms.txt",
   };
   const links = ['</llms.txt>; rel="llms-txt"', '</llms-full.txt>; rel="llms-full-txt"'];
+  // Vite fingerprints everything under /_astro/ (scripts, styles, fonts, the 3D model), so a URL never changes content.
+  if (status === 200 && plan.pathname.startsWith("/_astro/")) headers["Cache-Control"] = "public, max-age=31536000, immutable";
   if (plan.isPage) {
     headers.Vary = "Accept";
     links.push(`<${encodeURI(markdownPathFor(plan.pathname))}>; rel="alternate"; type="text/markdown"`);
