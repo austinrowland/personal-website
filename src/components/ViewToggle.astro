@@ -52,7 +52,7 @@ const footer = [
     display: block;
     transition: opacity 0.2s;
   }
-  .view-switch.is-tucked {
+  .view-switch.is-tucked:not(:focus-within) {
     opacity: 0;
     pointer-events: none;
   }
@@ -251,7 +251,7 @@ const footer = [
   }
   document.addEventListener("astro:page-load", init);
 
-  /** Embeds marked data-tuck-switch scroll internally, so the switch hides while one sits under it. */
+  /** Embeds marked data-tuck-switch scroll internally, so the switch hides while one sits under it (unless it has keyboard focus). */
   function tuck() {
     const sw = document.querySelector<HTMLElement>(".view-switch");
     if (!sw) return;
