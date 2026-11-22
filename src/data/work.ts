@@ -118,7 +118,7 @@ export const projects: Project[] = [
   {
     title: "Spread the Love",
     kind: "project",
-    years: "2023–2024",
+    years: "2023–2025",
     summary:
       "Free cookies and handwritten notes on the Georgia Tech lawn: 500, then 1,000, then 4,000+ in total.",
     photo: "spread-the-love",
