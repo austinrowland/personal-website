@@ -2,6 +2,8 @@
 /**
  * Scroll-driven Polaroid 600 intro for the Photos page: a pinned stage above the desk. The slot holds the hero text.
  * Without JS, with reduced motion, in Agent view, or with ?intro=off, it collapses to a plain page header.
+ * Scroll drives the sequence from the start, with a still of the camera; the live 3D camera fades in over the still
+ * once it has drawn, and if it can't load (no WebGL2, slow network, lost GPU context) the still plays the sequence.
  */
 // Gzipped on disk: meshopt-compressed GLB still shrinks by half, and hosts don't compress model files themselves.
 import MODEL from "../assets/models/polaroid-600.glb.gz?url";
@@ -17,22 +19,24 @@ const POSTER = poster.src;
       const play =
         !matchMedia("(prefers-reduced-motion: reduce)").matches &&
         d.dataset.reader !== "agent" &&
-        !/[?&]intro=off\b/.test(location.search) &&
-        "DecompressionStream" in window &&
-        !!document.createElement("canvas").getContext("webgl2");
+        !/[?&]intro=off\b/.test(location.search);
       if (play) {
         d.dataset.intro = "play";
-        const link = document.createElement("link");
-        link.rel = "preload";
-        link.as = "fetch";
-        link.crossOrigin = "anonymous";
-        link.href = MODEL;
         const still = document.createElement("link");
         still.rel = "preload";
         still.as = "image";
         still.fetchPriority = "high";
         still.href = POSTER;
-        document.head.append(link, still);
+        document.head.append(still);
+        if ("DecompressionStream" in window && document.createElement("canvas").getContext("webgl2")) {
+          d.dataset.live3d = "";
+          const link = document.createElement("link");
+          link.rel = "preload";
+          link.as = "fetch";
+          link.crossOrigin = "anonymous";
+          link.href = MODEL;
+          document.head.append(link);
+        } else delete d.dataset.live3d;
       } else delete d.dataset.intro;
     })();
   </script>
@@ -89,20 +93,25 @@ const POSTER = poster.src;
   }
   :global(html[data-intro="play"]) .stage {
     container-type: size;
+    /* The 3D view fits the stage height on wide screens and the width on narrow ones (below a 0.778 aspect). */
+    --u: min(100cqh, 128.6cqw);
   }
   /*
-    Same place and size as the camera on the canvas. The 3D view fits the stage height on wide screens and the width
-    on narrow ones (below a 0.778 aspect), so its size scales with --u. Its height on screen stays roughly fixed, so
-    part of the offset from the stage center follows the stage height instead.
+    Same place and size as the camera on the canvas at rest: its size scales with --u, and its height on screen stays
+    roughly fixed, so part of the offset from the stage center follows the stage height instead. Until the live camera
+    draws, the still stands in for it through the sequence: it moves in, flashes, then shrinks and fades as the desk
+    rises.
   */
   :global(html[data-intro="play"]) .poster {
-    --u: min(100cqh, 128.6cqw);
     display: block;
     position: absolute;
     left: calc(50% - 0.184 * var(--u));
     top: calc(50% - 13cqh - 0.163 * var(--u));
     width: calc(0.368 * var(--u));
     height: auto;
+    opacity: var(--camera, 1);
+    transform: scale(calc((1 + var(--approach, 0) * 0.8) * (1 - var(--zoom, 0) * 0.5)));
+    transform-origin: 50% 70%;
     transition:
       opacity 0.4s ease,
       visibility 0s 0.4s;
@@ -138,8 +147,9 @@ const POSTER = poster.src;
     transform: scale(calc(1 + var(--p) * 1.2));
     transform-origin: 50% 0;
   }
+  /* Gone before the camera starts moving in (TIMELINE.approach), so the two never overlap. */
   :global(html[data-intro="play"]) .hero :global([data-beat="2"]) {
-    opacity: clamp(0, min(calc((var(--p) - 0.11) * 12), calc((0.32 - var(--p)) * 12)), 1);
+    opacity: clamp(0, min(calc((var(--p) - 0.1) * 16), calc((0.28 - var(--p)) * 16)), 1);
     transform: translateY(calc((0.2 - var(--p)) * 60px));
   }
   :global(html[data-intro="play"]) .hero :global([data-beat]) {
@@ -189,18 +199,21 @@ const POSTER = poster.src;
     :global(html[data-intro="play"]) .cue {
       bottom: calc(5.5rem + var(--offset, 0px));
     }
+    /* On phones the paragraph is long: start it just under the camera (whose bottom is at 37cqh + 0.171u) and size it to end above the skip link. */
     :global(html[data-intro="play"]) .hero :global([data-beat="2"] p) {
-      font-size: 1rem;
+      font-size: clamp(0.8125rem, 2.1cqh, 1rem);
+      line-height: 1.45;
     }
     :global(html[data-intro="play"]) .hero :global([data-beat="2"]) {
-      inset-block-start: -12svh;
       position: relative;
+      inset-block-start: calc(0.171 * var(--u) - 17cqh + 0.75rem);
     }
   }
 </style>
 
 <script>
   import type { Landing } from "../lib/polaroid600";
+  import { TIMELINE, easeInOut, flashAt, span } from "../lib/cameraTimeline";
 
   let engine: Promise<typeof import("../lib/polaroid600")> | undefined;
   const loadEngine = () => (engine ??= import("../lib/polaroid600"));
@@ -228,7 +241,7 @@ const POSTER = poster.src;
   }
 
   // Start both downloads as soon as this module runs, instead of after the page has finished loading.
-  if (document.documentElement.dataset.intro === "play") {
+  if (document.documentElement.dataset.intro === "play" && "live3d" in document.documentElement.dataset) {
     const url = document.querySelector<HTMLElement>("[data-scrolly]")?.dataset.model;
     if (url) {
       loadEngine().catch(() => {});
@@ -258,7 +271,9 @@ const POSTER = poster.src;
     const stage = root.querySelector<HTMLElement>("[data-stage]")!;
     const flash = root.querySelector<HTMLElement>("[data-flash]")!;
     const desk = document.querySelector<HTMLElement>("[data-desk]");
+    const poster = root.querySelector<HTMLImageElement>(".poster")!;
     let stop: (() => void) | undefined;
+    let raf = 0;
 
     const offset = () => stage.style.setProperty("--offset", `${root.offsetTop}px`);
     offset();
@@ -267,8 +282,11 @@ const POSTER = poster.src;
       const length = root.offsetHeight - innerHeight;
       return Math.min(Math.max(-root.getBoundingClientRect().top / length, 0), 1);
     };
+    /** Collapses the intro to a plain header. Only when neither camera can show, so there's nothing to scroll through. */
     const giveUp = () => {
       stop?.();
+      cancelAnimationFrame(raf);
+      removeEventListener("resize", offset);
       // Keep whatever was on screen in place as the pinned stage collapses, anchored on the desk.
       const before = desk?.getBoundingClientRect().top ?? 0;
       delete doc.dataset.intro;
@@ -276,14 +294,54 @@ const POSTER = poster.src;
       const shift = (desk?.getBoundingClientRect().top ?? 0) - before;
       if (desk && before < innerHeight && shift) scrollBy({ top: shift, behavior: "instant" });
     };
+    let live = false;
+    /** The live camera failed or lost its GPU context: the still takes over where the sequence is. */
+    const toStill = () => {
+      live = false;
+      stop?.();
+      stop = undefined;
+      delete stage.dataset.live;
+      if (poster.complete && !poster.naturalWidth) giveUp();
+    };
+    poster.addEventListener("error", () => !live && giveUp());
+    if (poster.complete && !poster.naturalWidth) return giveUp();
+
+    // Scroll drives the page from the first frame, whether or not the 3D camera has loaded.
+    let p = progress();
+    let shown = -1;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.1);
+      last = now;
+      // Ease toward the scroll position so scrubbing feels smooth without taking over the page's scrolling.
+      const target = progress();
+      p += (target - p) * (1 - Math.exp(-dt * 10));
+      if (Math.abs(target - p) < 0.0005) p = target;
+      if (p !== shown) {
+        shown = p;
+        stage.style.setProperty("--p", p.toFixed(4));
+        stage.style.setProperty("--approach", easeInOut(span(p, TIMELINE.approach)).toFixed(4));
+        stage.style.setProperty("--zoom", easeInOut(span(p, TIMELINE.zoom)).toFixed(4));
+        stage.style.setProperty("--camera", (1 - span(p, TIMELINE.fadeCamera)).toFixed(4));
+        flash.style.opacity = String(0.92 * Math.min(flashAt(p) * 1.4, 1));
+        desk?.style.setProperty("--develop", span(p, [0.85, 1]).toFixed(3));
+        if (p >= 0.985) doc.dataset.landed = "";
+        else delete doc.dataset.landed;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
 
     root.querySelector("[data-skip]")!.addEventListener("click", () => {
       scrollTo({ top: root.offsetTop + root.offsetHeight - innerHeight, behavior: "smooth" });
     });
+    let left = false;
     document.addEventListener(
       "astro:before-swap",
       () => {
+        left = true;
         stop?.();
+        cancelAnimationFrame(raf);
         removeEventListener("resize", offset);
         delete doc.dataset.intro;
         delete doc.dataset.landed;
@@ -291,24 +349,22 @@ const POSTER = poster.src;
       { once: true },
     );
 
+    if (!("live3d" in doc.dataset)) return;
     try {
       const model = loadModel(root.dataset.model!);
-      const { mountPolaroid600, span, TIMELINE } = await loadEngine();
+      const { mountPolaroid600 } = await loadEngine();
+      if (left || doc.dataset.intro !== "play") return;
       stop = mountPolaroid600(root.querySelector("canvas")!, model, {
-        progress,
+        progress: () => p,
         landing,
-        onReady: () => (stage.dataset.live = ""),
-        onError: giveUp,
-        onFrame: (p, f) => {
-          stage.style.setProperty("--p", p.toFixed(4));
-          flash.style.opacity = String(0.92 * Math.min(f * 1.4, 1));
-          desk?.style.setProperty("--develop", span(p, [0.85, 1]).toFixed(3));
-          if (p >= 0.985) doc.dataset.landed = "";
-          else delete doc.dataset.landed;
+        onReady: () => {
+          live = true;
+          stage.dataset.live = "";
         },
+        onError: toStill,
       });
     } catch {
-      giveUp();
+      toStill();
     }
   });
 </script>

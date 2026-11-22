@@ -2,17 +2,16 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { TIMELINE, clamp01, easeInOut, easeOut, flashAt, span } from "./cameraTimeline";
 
 /** Where the face-down print should end up, in CSS pixels of the viewport. */
 export type Landing = { x: number; y: number; width: number; height: number; tilt: number };
 
 type Hooks = {
-  /** Scroll progress through the intro, 0 at the top of the page and 1 once the print is on the desk. */
+  /** Smoothed scroll progress through the intro, 0 at the top of the page and 1 once the print is on the desk. */
   progress: () => number;
   /** Live position of the face-down print on the page; measured every frame because the desk scrolls. */
   landing: () => Landing | null;
-  /** Called every frame with the smoothed progress and the flash strength (0–1). */
-  onFrame: (p: number, flash: number) => void;
   /** Called once the first frame is on screen. */
   onReady: () => void;
   onError: () => void;
@@ -22,21 +21,6 @@ type Hooks = {
 const SLOT = new THREE.Vector3(0.076, -0.8, 0.9);
 const FLASH_AT = new THREE.Vector3(0.45, 0.73, 0.9);
 const BASE = 0.948;
-
-// Timeline, as fractions of the intro's scroll length. Every frame is a pure function of progress, so scrolling back up rewinds it.
-export const TIMELINE = {
-  hover: [0.04, 0.24],
-  approach: [0.22, 0.38],
-  flash: [0.4, 0.47],
-  eject: [0.44, 0.6],
-  zoom: [0.62, 0.98],
-  fadeCamera: [0.7, 0.86],
-} as const;
-
-const clamp01 = (t: number) => Math.min(Math.max(t, 0), 1);
-export const span = (t: number, [a, b]: readonly [number, number]) => clamp01((t - a) / (b - a));
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
 function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) {
   const c = document.createElement("canvas");
@@ -168,6 +152,13 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
 
   let raf = 0;
   let stopped = false;
+  // A GPU reset or a backgrounded mobile tab can drop the context; the page falls back to the still camera.
+  const onLost = () => {
+    if (stopped) return;
+    cancelAnimationFrame(raf);
+    hooks.onError();
+  };
+  canvas.addEventListener("webglcontextlost", onLost);
 
   (async () => {
     const fonts = Promise.all([
@@ -267,7 +258,6 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
     };
 
     const tmpV = new THREE.Vector3();
-    let p = hooks.progress();
     let last = performance.now();
     let lastDrawn = -1;
     // Compile every shader off the main thread where supported, so the first frame doesn't stall.
@@ -277,18 +267,14 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
     const frame = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
-      // Ease toward the scroll position so scrubbing feels smooth without taking over the page's scrolling.
-      const target = hooks.progress();
-      p += (target - p) * (1 - Math.exp(-dt * 10));
-      if (Math.abs(target - p) < 0.0005) p = target;
+      const p = hooks.progress();
       pointer.sx += (pointer.x - pointer.sx) * (1 - Math.exp(-dt * 4));
       pointer.sy += (pointer.y - pointer.sy) * (1 - Math.exp(-dt * 4));
 
       const T = TIMELINE;
       const hover = 1 - span(p, T.hover);
       const approach = easeInOut(span(p, T.approach));
-      const flash = p >= T.flash[0] ? 1 - span(p, T.flash) : 0;
-      hooks.onFrame(p, flash);
+      const flash = flashAt(p);
 
       // 1. At rest the camera floats and follows the cursor; scrolling turns it to face the visitor and moves in.
       camera.position.set(0, BASE + Math.sin(now / 900) * 0.05 * hover, 0);
@@ -338,7 +324,7 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
       camera.visible = shadow.visible = fade > 0.01;
 
       // Once the print has landed and nothing is moving, stop drawing.
-      const settled = p >= 1 && target >= 1;
+      const settled = p >= 1;
       if (!settled || lastDrawn !== 1) renderer.render(scene, view);
       if (lastDrawn === -1) hooks.onReady();
       lastDrawn = settled ? 1 : p;
@@ -354,6 +340,7 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
     cancelAnimationFrame(raf);
     removeEventListener("resize", resize);
     removeEventListener("pointermove", onPointer);
+    canvas.removeEventListener("webglcontextlost", onLost);
     scene.traverse((o) => {
       if (o instanceof THREE.Mesh) {
         o.geometry.dispose();
