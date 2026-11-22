@@ -18,7 +18,7 @@ const typeDone = 700 + chars.length * 55;
     <div class="flex flex-col gap-8">
       <h1 aria-label={greeting} class="font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl">
         <span aria-hidden="true">
-          {chars.map((c, i) => <span class="type-char" style={`--d:${i}`}>{c}</span>)}<span class="caret" />
+          {chars.map((c, i) => <span class="type-char" style={`--d:${i}`}>{c}</span>)}
         </span>
       </h1>
       <div
