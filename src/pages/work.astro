@@ -9,6 +9,7 @@ import postmanLogo from "../assets/logos/postman.png";
 import ciscoLogo from "../assets/logos/cisco.svg";
 import panLogo from "../assets/logos/palo-alto-networks.svg";
 import gtriLogo from "../assets/logos/gtri.png";
+import avovaLogo from "../assets/logos/avova-health.png";
 
 const kindLabel = Object.fromEntries(
   projectKinds.map((k) => [k.value, k.label.replace(/s$/, "")]),
@@ -21,7 +22,7 @@ type Logo = { src: string; width: number; height: number };
 const brand: Record<string, { bg: string; fg: string; logo?: Logo }> = {
   Postman: { bg: "#ff6c37", fg: "#fff8f3", logo: postmanLogo },
   "Palo Alto Networks": { bg: "#1f1d1b", fg: "#fa582d", logo: panLogo },
-  "Avova Health": { bg: "#0e5a4c", fg: "#e9f6f0" },
+  "Avova Health": { bg: "#d0616a", fg: "#fff7f7", logo: avovaLogo },
   "Cisco Systems": { bg: "#049fd9", fg: "#f2fbff", logo: ciscoLogo },
   "Georgia Tech Research Institute": { bg: "#003057", fg: "#d6c48f", logo: gtriLogo },
 };
