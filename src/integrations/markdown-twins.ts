@@ -16,11 +16,26 @@ function pagePaths(dir: string, root = dir): string[] {
   });
 }
 
+const corePaths = () => ["/", ...nav.map((n) => n.href)];
+/** Posts in the order the Writing page lists them. */
+const postPaths = (writingHtml: string) => [
+  ...new Set([...writingHtml.matchAll(/href="(\/writing\/[^"/]+)\/?"/g)].map((m) => m[1])),
+];
+
 const link = (label: string, url: string) => `[${label}](${url})`;
 const mdLink = (p: CompiledPage, path: string) => link(p.title, absoluteUrl(markdownPath(path)));
 
-function llmsTxt(pages: Map<string, CompiledPage>, posts: string[]): string {
-  const core = ["/", ...nav.map((n) => n.href)].filter((p) => pages.has(p));
+type Site = { pages: Map<string, CompiledPage>; core: string[]; posts: string[]; rest: string[] };
+
+function siteOf(pages: Map<string, CompiledPage>, writingHtml: string): Site {
+  const core = corePaths().filter((p) => pages.has(p));
+  const posts = postPaths(writingHtml).filter((p) => pages.has(p));
+  const rest = [...pages.keys()].filter((p) => !core.includes(p) && !posts.includes(p));
+  return { pages, core, posts, rest };
+}
+
+function llmsTxt({ pages, core, posts }: Site): string {
+  const entry = (p: string) => `- ${mdLink(pages.get(p)!, p)}: ${pages.get(p)!.description}`;
   return `# ${site.name}
 
 > ${site.description}
@@ -29,11 +44,11 @@ This is the personal site of ${site.name}: work history, projects, writing, stor
 
 ## Pages
 
-${core.map((p) => `- ${mdLink(pages.get(p)!, p)}: ${pages.get(p)!.description}`).join("\n")}
+${core.map(entry).join("\n")}
 
 ## Writing
 
-${posts.map((p) => `- ${mdLink(pages.get(p)!, p)}: ${pages.get(p)!.description}`).join("\n")}
+${posts.map(entry).join("\n")}
 
 ## Elsewhere
 
@@ -47,12 +62,12 @@ ${socials.map((s) => `- ${link(s.label, s.href)}`).join("\n")}
 `;
 }
 
-function llmsFullTxt(pages: Map<string, CompiledPage>, order: string[]): string {
+function llmsFullTxt({ pages, core, posts, rest }: Site): string {
   return `# ${site.name}
 
 > ${site.description}
 
-${order.map((p) => `---\n\nSource: ${pages.get(p)!.url}\n\n${pages.get(p)!.content}`).join("\n\n")}
+${[...core, ...posts, ...rest].map((p) => `---\n\nSource: ${pages.get(p)!.url}\n\n${pages.get(p)!.content}`).join("\n\n")}
 `;
 }
 
@@ -73,30 +88,41 @@ export default function markdownTwins(): AstroIntegration {
           const notFound = compilePage(readFileSync(join(out, "404.html"), "utf8"), "/404");
           writeFileSync(join(out, "404.md"), renderMarkdown(notFound));
         }
-
-        // Posts in the order the Writing page lists them.
-        const writing = readFileSync(join(out, "writing", "index.html"), "utf8");
-        const posts = [...new Set([...writing.matchAll(/href="(\/writing\/[^"/]+)\/?"/g)].map((m) => m[1]))].filter((p) =>
-          pages.has(p),
-        );
-        const core = ["/", ...nav.map((n) => n.href)].filter((p) => pages.has(p));
-        const rest = [...pages.keys()].filter((p) => !core.includes(p) && !posts.includes(p));
-        writeFileSync(join(out, "llms.txt"), llmsTxt(pages, posts));
-        writeFileSync(join(out, "llms-full.txt"), llmsFullTxt(pages, [...core, ...posts, ...rest]));
+        const all = siteOf(pages, readFileSync(join(out, "writing", "index.html"), "utf8"));
+        writeFileSync(join(out, "llms.txt"), llmsTxt(all));
+        writeFileSync(join(out, "llms-full.txt"), llmsFullTxt(all));
         logger.info(`compiled ${pages.size} Markdown twins, llms.txt and llms-full.txt`);
       },
 
-      // In dev, compile each .md request from the page the dev server renders.
+      // In dev, compile .md and the llms files from the pages the dev server renders.
       "astro:server:setup": ({ server }) => {
         server.middlewares.use(async (req, res, next) => {
           const url = new URL(req.url ?? "/", "http://localhost");
-          if (!url.pathname.endsWith(".md") || url.pathname.startsWith("/src/")) return next();
+          const llms = ["/llms.txt", "/llms-full.txt", "/.well-known/llms.txt"].includes(url.pathname);
+          if (!llms && (!url.pathname.endsWith(".md") || url.pathname.startsWith("/src/"))) return next();
+
+          const html = async (path: string) => {
+            const page = await fetch(`http://${req.headers.host}${path === "/" ? "/" : `${path}/`}`, {
+              headers: { Accept: "text/html" },
+            });
+            return page.ok ? page.text() : undefined;
+          };
+          if (llms) {
+            const writing = (await html("/writing")) ?? "";
+            const pages = new Map<string, CompiledPage>();
+            for (const path of [...corePaths(), ...postPaths(writing)]) {
+              const page = await html(path);
+              if (page) pages.set(path, compilePage(page, path));
+            }
+            const all = siteOf(pages, writing);
+            res.setHeader("Content-Type", "text/plain; charset=utf-8");
+            return res.end(url.pathname === "/llms-full.txt" ? llmsFullTxt(all) : llmsTxt(all));
+          }
           const path = url.pathname === "/index.md" ? "/" : url.pathname.slice(0, -".md".length);
-          const origin = `http://${req.headers.host}`;
-          const page = await fetch(origin + (path === "/" ? "/" : `${path}/`), { headers: { Accept: "text/html" } });
-          if (!page.ok) return next();
+          const page = await html(path);
+          if (!page) return next();
           res.setHeader("Content-Type", "text/markdown; charset=utf-8");
-          res.end(renderMarkdown(compilePage(await page.text(), path)));
+          res.end(renderMarkdown(compilePage(page, path)));
         });
       },
     },
