@@ -96,6 +96,8 @@ describe("content negotiation", () => {
       const res = await get(from, {}, { redirect: "manual" });
       assert.equal(res.status, 301, from);
       assert.equal(res.headers.get("location"), to, from);
+      assert.match(header(res, "content-signal"), /ai-input=yes/, from);
+      assert.match(header(res, "link"), /<\/llms\.txt>; rel="llms-txt"/, from);
     }
     assert.equal((await get("/story/")).status, 200);
     assert.equal((await get("/memories.md")).status, 200);

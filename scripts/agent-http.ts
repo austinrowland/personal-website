@@ -116,5 +116,11 @@ export function agentHeaders(plan: Plan, status: number): Record<string, string>
   return headers;
 }
 
+/** A 301 to a renamed page's new path, with the same discovery headers as every other response. */
+export function redirectHeaders(location: string): Record<string, string> {
+  const plan: Plan = { pathname: location, isPage: false, wantsMarkdown: false, wantPath: location };
+  return { ...agentHeaders(plan, 301), Location: location };
+}
+
 /** Rough estimate (4 characters per token), like Cloudflare's x-markdown-tokens. */
 export const markdownTokens = (text: string) => Math.ceil(text.length / 4);

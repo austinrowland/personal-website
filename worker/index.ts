@@ -1,6 +1,6 @@
 // Cloudflare Worker for austinrowland.com: serves the static Astro build (dist/, via the ASSETS
 // binding) with the same agent-facing behavior as scripts/serve.ts.
-import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest, redirectFor } from "../scripts/agent-http.ts";
+import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest, redirectFor, redirectHeaders } from "../scripts/agent-http.ts";
 
 // austinrowland.com shows a placeholder until SITE_LIVE is "true" in wrangler.jsonc; workers.dev
 // and Preview URLs always serve the full site.
@@ -37,7 +37,7 @@ export default {
     if (LAUNCH_HOSTS.has(new URL(request.url).hostname) && env.SITE_LIVE !== "true") return placeholder(request);
     const url = new URL(request.url);
     const moved = redirectFor(decodePath(request.url));
-    if (moved) return Response.redirect(new URL(moved + url.search, url).toString(), 301);
+    if (moved) return new Response(null, { status: 301, headers: redirectHeaders(moved + url.search) });
     const plan = planRequest(decodePath(request.url), request.headers.get("accept") ?? "");
     // Markdown is read to estimate tokens, so fetch it with GET even for HEAD requests. The 404
     // fallback drops conditional headers: a 304 for 404.md would leave the error without a body.
