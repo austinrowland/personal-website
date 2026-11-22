@@ -5,6 +5,10 @@ import PageIntro from "../components/PageIntro.astro";
 import Photo from "../components/Photo.astro";
 import { experience, projects, projectKinds } from "../data/work";
 import { photoAlt } from "../data/photos";
+import postmanLogo from "../assets/logos/postman.svg";
+import ciscoLogo from "../assets/logos/cisco.svg";
+import panLogo from "../assets/logos/palo-alto-networks.svg";
+import gtriLogo from "../assets/logos/gtri.png";
 
 const kindLabel = Object.fromEntries(
   projectKinds.map((k) => [k.value, k.label.replace(/s$/, "")]),
@@ -13,11 +17,14 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const external = (href: string) =>
   href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {};
 
-const brand: Record<string, { bg: string; fg: string }> = {
-  Postman: { bg: "#ff6c37", fg: "#fff8f3" },
-  "Palo Alto Networks": { bg: "#1f1d1b", fg: "#fa582d" },
-  "Cisco Systems": { bg: "#049fd9", fg: "#f2fbff" },
-  "Georgia Tech Research Institute": { bg: "#003057", fg: "#d6c48f" },
+type Logo = { src: string; width: number; height: number };
+/** `named` logos already spell out the company, so the card skips the text wordmark. */
+const brand: Record<string, { bg: string; fg: string; logo?: Logo; named?: boolean }> = {
+  Postman: { bg: "#ff6c37", fg: "#fff8f3", logo: postmanLogo },
+  "Palo Alto Networks": { bg: "#1f1d1b", fg: "#fa582d", logo: panLogo, named: true },
+  "Avova Health": { bg: "#0e5a4c", fg: "#e9f6f0" },
+  "Cisco Systems": { bg: "#049fd9", fg: "#f2fbff", logo: ciscoLogo },
+  "Georgia Tech Research Institute": { bg: "#003057", fg: "#d6c48f", logo: gtriLogo, named: true },
 };
 const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
 ---
@@ -53,7 +60,15 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
               <span class="label opacity-75">
                 {job.start} — {job.end}
               </span>
-              <span class="font-display text-4xl leading-[0.95] sm:text-5xl">{job.org}</span>
+              <span class="deck-brand">
+                {b.logo && (
+                  <span
+                    class:list={["deck-logo", { "is-named": b.named }]}
+                    style={`--logo:url(${b.logo.src});--ratio:${b.logo.width / b.logo.height}`}
+                  />
+                )}
+                {!b.named && <span class="font-display text-4xl leading-[0.95] sm:text-5xl">{job.org}</span>}
+              </span>
               <span class="label opacity-75">{job.role}</span>
             </button>
           );
@@ -229,6 +244,23 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
     box-shadow:
       0 1px 0 rgb(255 255 255 / 0.12) inset,
       0 30px 60px -30px rgb(28 25 23 / 0.55);
+  }
+  .deck-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  /* Logos are masks, so each one renders in its card's foreground color. */
+  .deck-logo {
+    flex: none;
+    height: clamp(2.5rem, 6vw, 3.25rem);
+    aspect-ratio: var(--ratio);
+    background: currentColor;
+    mask: var(--logo) center / contain no-repeat;
+  }
+  .deck-logo.is-named {
+    height: auto;
+    width: min(100%, 19rem);
   }
   :global(.js) .deck-stage {
     display: block;

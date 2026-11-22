@@ -38,6 +38,18 @@ export const experience: Experience[] = [
     ],
   },
   {
+    start: "Jan 2024",
+    end: "Jul 2024",
+    role: "Founder",
+    org: "Avova Health",
+    take: "found a real need, and learned that a real need and a working business are two different problems.",
+    points: [
+      "Built an AI health companion that pulled each patient's records from every provider into one profile, on React, Node, and AWS.",
+      "Shaped the product through patient interviews, then worked through HIPAA, messy medical data, and keeping the AI's answers grounded.",
+      "Pitched Avova to investors and, as a finalist in Mayo Clinic's 2024 startup competition, on stage to a room of doctors at Mayo Clinic.",
+    ],
+  },
+  {
     start: "May 2023",
     end: "Dec 2023",
     role: "Software Engineer Intern",
@@ -102,7 +114,7 @@ export const projects: Project[] = [
     kind: "venture",
     years: "2024",
     summary:
-      "An AI health companion that pulled each patient's records from every provider into one profile. Shaped by 100+ patient interviews; finalist in Mayo Clinic's 2024 startup competition.",
+      "Our finalist pitch at Mayo Clinic's 2024 startup competition. On stage in front of a room of doctors, I told the story we kept hearing in patient interviews: records scattered across every provider they'd ever seen. Then I showed how Avova's AI health companion pulled them into one profile, and why prevention starts with seeing the whole picture.",
     photo: "avova-health",
   },
   {
