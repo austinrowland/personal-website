@@ -81,10 +81,7 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
             <span class="label text-muted">
               {job.start} — {job.end}
             </span>
-            <h3 class="font-display text-3xl leading-tight">
-              {job.org}
-              <span class="text-muted"> · {job.role}</span>
-            </h3>
+            <h3 class="sr-only">{job.role}, {job.org}</h3>
             <p class="mt-2 text-lg text-ink/75">{job.take}</p>
             <ul class="mt-5 flex flex-col gap-2 text-ink/80">
               {job.points.map((p) => (
