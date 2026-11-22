@@ -17,6 +17,7 @@ export const gallery: GalleryPhoto[] = [
   { name: "georgia-tech-graduation", alt: "Austin smiling among graduates at Georgia Tech commencement", caption: "georgia tech commencement · 2024", story: "Commencement, 2024. A few years earlier I was calling home almost every day, sure I'd fail out. Here I was walking with the people I used to compare myself to." },
   { name: "graduation-interview", alt: "Austin being interviewed with a microphone at Georgia Tech commencement", caption: "commencement interview · 2024", story: "Someone stopped me with a microphone on the way out of commencement. I was still taking in the fact that I'd made it." },
   { name: "guatemala-summit", alt: "Austin on a summit in Guatemala with a smoking volcano behind him", caption: "guatemala · 2026", story: 'On a summit in Guatemala with a volcano smoking behind me. The longer story is still to be written.' },
+  { name: "fishbowl", alt: "The Fishbowl band and friends gathered on a string-lit backyard stage at night", caption: "fishbowl", story: "The band and the backyard concerts we hosted under the name Fishbowl: string lights, borrowed speakers and a yard full of friends." },
   { name: "ultramarathon", alt: "Austin biting his finisher medal on the Embarcadero after a 2025 race", caption: "ultramarathon · 2025", story: 'Biting my finisher medal on the Embarcadero after a 2025 ultramarathon. Training was the first habit I ever kept.' },
 ];
 

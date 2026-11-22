@@ -147,7 +147,8 @@ field reports — one operating pattern with different props.
   graduation-interview (interviewed on mic at commencement),
   guatemala-summit (volcano summit, active volcano in the background),
   postman-ai-ready-apis (with the "Are your APIs ready for AI agents?"
-  billboard in SF)
+  billboard in SF), fishbowl (the Fishbowl band and friends on a
+  backyard stage at night)
 - **Reference photos** (not yet used, in `src/assets/reference/`):
   shaky-fins (group photo at a "Shaky Fins" show)
 - **Public contact email:** austinrowland2002@gmail.com
