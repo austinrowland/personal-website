@@ -57,9 +57,6 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
               aria-label={`${job.org}, ${job.role}, ${job.start} to ${job.end}`}
               style={`--bg:${b.bg};--fg:${b.fg};--o:${i};--a:${i}`}
             >
-              <span class="label opacity-75">
-                {job.start} — {job.end}
-              </span>
               <span class="deck-brand">
                 {b.logo ? (
                   <span
@@ -247,6 +244,7 @@ const fallback = { bg: "var(--surface)", fg: "var(--ink)" };
       0 30px 60px -30px rgb(28 25 23 / 0.55);
   }
   .deck-brand {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: 0.9rem;
