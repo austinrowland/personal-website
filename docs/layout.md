@@ -49,7 +49,7 @@
 1. **Intro.** One serif line, such as "building where the product meets
    real people."
 2. **Experience → Highlights** (one pinned scroll sequence, Aditya Dave-style
-   exploded view, "Orbit" look: dot grid and a dashed orbit ring).
+   exploded view, "Orbit" look: faint circuit-board traces and a dashed orbit ring).
    - Starts as a stack of role cards with company logos. Clicking a card, the
      arrows, a swipe or the arrow keys rotates through roles; the details sit
      beside the stack on desktop and under it on phones.

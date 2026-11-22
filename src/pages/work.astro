@@ -350,12 +350,14 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: radial-gradient(
-      color-mix(in oklab, var(--ink) 16%, transparent) 1px,
-      transparent 1.2px
-    );
-    background-size: 22px 22px;
     mask: radial-gradient(ellipse 70% 60% at 50% 50%, #000 30%, transparent 75%);
+  }
+  .backdrop::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, var(--ink) 17%, transparent);
+    mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' fill='none' stroke='%23000' stroke-width='1.2'><path d='M0 40H60L80 60H150M150 60V120L170 140H220M40 220V170L60 150H110M110 150V100M190 0V30L210 50V90M0 120H30L50 100'/><g stroke-width='1.4'><circle cx='150' cy='60' r='3'/><circle cx='110' cy='100' r='3'/><circle cx='30' cy='120' r='3'/><circle cx='210' cy='90' r='3'/><circle cx='60' cy='150' r='3'/></g></svg>") 0 0 / 220px 220px;
   }
   .orbit {
     position: absolute;
