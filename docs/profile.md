@@ -30,7 +30,7 @@ field reports — one operating pattern with different props.
 | Aug–Dec 2023 | Product Engineer | Passive Haptic Rehab Gloves Lab (GT) | Full-stack app + computer vision (OpenCV, Mediapipe) tracking stroke patients' motor recovery |
 | 2023 | TEDxGeorgiaTech speaker | — | "Ambition Might Be Your Achilles Heel" — first talk, no prior public-speaking experience |
 | 2023–2024 | Spread the Love (co-founder) | Georgia Tech | Free cookies + handwritten notes: 500 (2023), 1,000 (2024), 4,000+ cumulative |
-| Jan–Jul 2024 | Founder | Avova Health | Preventative health platform (React/Node/AWS); 100+ patient interviews; Mayo Clinic 2024 startup competition finalist (one of nine) |
+| Jan–Aug 2024 | Founder | Avova Health | Preventative health platform (React/Node/AWS); 100+ patient interviews; Mayo Clinic 2024 startup competition finalist (one of nine) |
 | Aug 2024–Oct 2025 | Software Engineer | Palo Alto Networks | Firewall OS for 100K+ businesses (Python/C/Linux); IKE/IPSec daemon for GlobalProtect VPN; pair-programmer + E2E testing agents (Claude Code, Gemini, MCP) |
 | Oct 2025–present | Founding Forward Deployed Engineer | Postman (San Francisco) | CTO's frontier team (~12); Build-Operate-Scale model; AI-Ready APIs assessment; agent building; playbook scaled to ~400 sellers |
 
