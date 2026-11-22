@@ -161,7 +161,7 @@ Subscribe: ${link("RSS feed", absoluteUrl("/rss.xml"))}`;
 function post(entry: CollectionEntry<"writing">): string {
   const { original } = entry.data;
   const origin = original
-    ? `\n\nOriginally published on the ${link(original.publication, original.url)} · ${link(original.publisher, original.publisherUrl)}`
+    ? `\n\nOriginally published on the ${link(original.publication, original.url)} · Try it at ${link(original.site, original.siteUrl)}`
     : "";
   const body = (entry.body?.trim() ?? "").replace(
     /\]\((\/[^)\s]+)\)/g,

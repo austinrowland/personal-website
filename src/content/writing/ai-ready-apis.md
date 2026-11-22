@@ -8,8 +8,8 @@ coverAlt: "Woodblock print of an orange torii gate on a small island at sunrise,
 original:
   publication: Postman Blog
   url: https://blog.postman.com/ai-ready-apis-agents-are-the-new-audience/
-  publisher: Postman
-  publisherUrl: https://www.postman.com/
+  site: postman.com/ai/ai-ready-apis
+  siteUrl: https://www.postman.com/ai/ai-ready-apis
 ---
 
 For the past six months my team has worked inside some of the largest API programs anywhere, the companies that both produce and consume the most APIs in the world. We got a close look at how they’re building for agents, and one thing became obvious fast. The audience for an API used to be engineers. Now the biggest consumer is a coding agent, and most programs haven’t caught up to that.

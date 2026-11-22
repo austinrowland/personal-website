@@ -18,8 +18,9 @@ const writing = defineCollection({
         .object({
           publication: z.string(),
           url: z.url(),
-          publisher: z.string(),
-          publisherUrl: z.url(),
+          /** The product or site the piece is about, linked beside the original. */
+          site: z.string(),
+          siteUrl: z.url(),
         })
         .optional(),
     }),

@@ -72,7 +72,7 @@
 - Post pages: mono date, title, a woodblock cover image (see
   `docs/writing-covers.md`), then a narrow reading column with a progress
   hairline at the top. Pieces first published elsewhere carry an
-  "Originally published on …" line linking the original and its publisher,
+  "Originally published on …" line linking the original and the site it is about,
   and their canonical URL points at the original.
 
 ## `/about`
