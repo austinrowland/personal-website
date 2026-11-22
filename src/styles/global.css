@@ -13,6 +13,7 @@
   --line: #e7e1d8;
   --surface: #f2ede5;
   --accent: #b45309;
+  --sun: #d97706;
   color-scheme: light;
 }
 
@@ -23,6 +24,7 @@
   --line: #2a2724;
   --surface: #181614;
   --accent: #f59e0b;
+  --sun: #fbbf24;
   color-scheme: dark;
 }
 
