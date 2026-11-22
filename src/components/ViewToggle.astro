@@ -176,6 +176,12 @@ const footer = [
       const href = hrefFor(url.replace(/&amp;/g, "&"));
       const external = /^https?:/.test(href) ? ' target="_blank" rel="noopener noreferrer"' : "";
       return `${bang}<a href="${href}"${external}>[${label}]</a><span class="md-url">(${url})</span>`;
+    }).replace(/&lt;([^\s<>]+?)&gt;/g, (raw, target: string) => {
+      const url = target.replace(/&amp;/g, "&");
+      const href = /^[a-z][a-z0-9+.-]*:/i.test(url) ? hrefFor(url) : url.includes("@") ? `mailto:${url}` : "";
+      if (!href) return raw;
+      const external = /^https?:/.test(href) ? ' target="_blank" rel="noopener noreferrer"' : "";
+      return `&lt;<a href="${href}"${external}>${target}</a>&gt;`;
     });
   }
 
