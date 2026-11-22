@@ -52,7 +52,7 @@ const footer = [
     display: block;
     transition: opacity 0.2s;
   }
-  .view-switch.is-tucked:not(:focus-within) {
+  .view-switch.is-tucked:not(:has(:focus-visible)) {
     opacity: 0;
     pointer-events: none;
   }
