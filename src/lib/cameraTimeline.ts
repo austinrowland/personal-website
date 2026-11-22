@@ -1,12 +1,12 @@
 // Timeline, as fractions of the intro's scroll length. Every frame is a pure function of progress, so scrolling back up rewinds it.
 // Kept apart from the 3D engine so the page can drive the still camera and the overlays before three.js has loaded.
 export const TIMELINE = {
-  hover: [0.04, 0.24],
-  approach: [0.26, 0.4],
-  flash: [0.4, 0.47],
-  eject: [0.44, 0.6],
-  zoom: [0.62, 0.98],
-  fadeCamera: [0.7, 0.86],
+  hover: [0.032, 0.387],
+  approach: [0.403, 0.516],
+  flash: [0.516, 0.573],
+  eject: [0.548, 0.677],
+  zoom: [0.694, 0.984],
+  fadeCamera: [0.758, 0.887],
 } as const;
 
 export const clamp01 = (t: number) => Math.min(Math.max(t, 0), 1);
