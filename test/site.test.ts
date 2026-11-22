@@ -1,22 +1,24 @@
-// Checks the built site (run `npm run build` first) and the agent-facing behavior of scripts/serve.mjs.
+// Checks the built site (run `npm run build` first) and the agent-facing behavior of scripts/serve.ts.
 import { after, before, describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { createSiteServer, markdownPathFor, prefersMarkdown } from "../scripts/serve.mjs";
+import type { AddressInfo, Server } from "node:net";
+import { createSiteServer, markdownPathFor, prefersMarkdown } from "../scripts/serve.ts";
 
 const SITE = "https://austinrowland.com";
-let base;
-let server;
+let base: string;
+let server: Server | undefined;
 
 before(async () => {
   assert.ok(existsSync("dist/index.html"), "dist/ is missing: run `npm run build` first");
-  server = createSiteServer({ root: "dist" });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  base = `http://127.0.0.1:${server.address().port}`;
+  const site = (server = createSiteServer({ root: "dist" }));
+  await new Promise<void>((resolve) => site.listen(0, "127.0.0.1", resolve));
+  base = `http://127.0.0.1:${(site.address() as AddressInfo).port}`;
 });
 after(() => server?.close());
 
-const get = (path, headers = {}) => fetch(base + path, { headers });
+const get = (path: string, headers: Record<string, string> = {}) => fetch(base + path, { headers });
+const header = (res: Response, name: string) => res.headers.get(name) ?? "";
 
 function sitemapPaths() {
   const index = readFileSync("dist/sitemap-index.xml", "utf8");
@@ -48,11 +50,11 @@ describe("content negotiation", () => {
   test("browsers get HTML with discovery headers", async () => {
     const res = await get("/work/", { Accept: "text/html" });
     assert.equal(res.status, 200);
-    assert.match(res.headers.get("content-type"), /text\/html/);
+    assert.match(header(res, "content-type"), /text\/html/);
     assert.equal(res.headers.get("vary"), "Accept");
-    assert.match(res.headers.get("link"), /<\/work\.md>; rel="alternate"; type="text\/markdown"/);
-    assert.match(res.headers.get("link"), /<\/llms\.txt>; rel="llms-txt"/);
-    assert.match(res.headers.get("content-signal"), /ai-input=yes/);
+    assert.match(header(res, "link"), /<\/work\.md>; rel="alternate"; type="text\/markdown"/);
+    assert.match(header(res, "link"), /<\/llms\.txt>; rel="llms-txt"/);
+    assert.match(header(res, "content-signal"), /ai-input=yes/);
   });
 
   test("fingerprinted build assets are cached for a year; pages are not", async () => {
@@ -67,7 +69,7 @@ describe("content negotiation", () => {
   test("Accept: text/markdown returns the Markdown twin", async () => {
     const res = await get("/", { Accept: "text/markdown" });
     assert.equal(res.status, 200);
-    assert.match(res.headers.get("content-type"), /text\/markdown/);
+    assert.match(header(res, "content-type"), /text\/markdown/);
     assert.equal(res.headers.get("x-robots-tag"), "noindex");
     assert.ok(Number(res.headers.get("x-markdown-tokens")) > 0);
     const body = await res.text();
@@ -85,7 +87,7 @@ describe("content negotiation", () => {
   test("missing pages return 404 in the requested format", async () => {
     const html = await get("/nope");
     assert.equal(html.status, 404);
-    assert.match(html.headers.get("content-type"), /text\/html/);
+    assert.match(header(html, "content-type"), /text\/html/);
     const md = await get("/nope", { Accept: "text/markdown" });
     assert.equal(md.status, 404);
     assert.match(await md.text(), /# Page not found/);
@@ -94,16 +96,16 @@ describe("content negotiation", () => {
   test("encoded control characters in the path don't crash the server", async () => {
     const res = await get("/%0A");
     assert.equal(res.status, 404);
-    assert.match(res.headers.get("link"), /<\/%0A\.md>/);
+    assert.match(header(res, "link"), /<\/%0A\.md>/);
     assert.equal((await get("/")).status, 200);
   });
 });
 
 // Strips HTML or Markdown down to comparable words, so formatting differences don't count as drift.
-const words = (s) =>
+const words = (s: string) =>
   s
     .replace(/<[^>]+>/g, " ")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
     .replace(/&amp;/g, "&")
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
@@ -143,7 +145,7 @@ describe("agent files", () => {
       const md = markdownPathFor(path);
       const res = await get(md);
       assert.equal(res.status, 200, `${md} missing`);
-      assert.match(res.headers.get("content-type"), /text\/markdown/);
+      assert.match(header(res, "content-type"), /text\/markdown/);
       const listed = llms.includes(SITE + md) || full.includes(`Source: ${SITE}${path.replace(/\/$/, "") || "/"}`);
       assert.ok(listed, `${path} not referenced by llms.txt or llms-full.txt`);
     }
