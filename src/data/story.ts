@@ -59,7 +59,7 @@ export const chapters: Chapter[] = [
     title: "Live for today, build for tomorrow",
     scene: "trail",
     paragraphs: [
-      "My passions have changed shape more than direction. Now they're narrower and deeper: go where technology meets real people, watch where it fails, then build the fix. At Postman that means helping APIs work for the agents that use them.",
+      "My passions have changed shape more than direction. Now they're narrower and deeper: go where technology meets real people, watch where it fails, then build the fix. Currently, the world's most urgent problem to address is how humanity will responsibly apply AI to transform the lives of people all over the world and every industry, and I aim to be a part of that solution.",
       "And I try to be fully present for the days in between: ultramarathons, film photos, a coffee club, and being the friend who connects people. Building a better tomorrow only counts if I keep showing up for today.",
     ],
   },
