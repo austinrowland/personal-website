@@ -1,4 +1,6 @@
 ---
+import "@fontsource/permanent-marker/400.css";
+import "@fontsource/caveat/500.css";
 import Photo from "./Photo.astro";
 import type { GalleryPhoto } from "../data/photos";
 
@@ -98,18 +100,26 @@ const Tag = href ? "a" : "div";
       #f3eee2;
   }
   .caption {
-    font-family: var(--font-display, serif);
-    font-size: 1.15rem;
-    line-height: 1.2;
+    display: block;
+    font-family: "Permanent Marker", "Marker Felt", "Comic Sans MS", cursive;
+    font-size: 1.05rem;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
     text-align: center;
+    color: #24211e;
+    transform: rotate(-1.2deg);
   }
   .back .caption {
     text-align: left;
     color: #6b655c;
+    transform: none;
   }
   .story {
-    font-size: 0.95rem;
+    font-family: "Caveat", "Bradley Hand", cursive;
+    font-weight: 500;
+    font-size: 1.35rem;
     line-height: 1.7rem;
+    color: #2c2a26;
   }
   .hint {
     margin-top: auto;
