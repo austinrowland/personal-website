@@ -98,7 +98,7 @@ export const projects: Project[] = [
     summary:
       "An assessment that grades how well agents can discover, understand, and operate an API: 25 checks across five categories.",
     photo: "postman-ai-ready-apis",
-    href: "https://blog.postman.com/ai-ready-apis-agents-are-the-new-audience/",
+    href: "https://www.postman.com/ai/ai-ready-apis",
   },
   {
     title: "Customer insights agent",
