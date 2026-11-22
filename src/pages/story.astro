@@ -153,6 +153,17 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
   :global(.js) .chapter [data-hanko] {
     opacity: 0;
   }
+  @media print {
+    .chapter :global(.ink-s) {
+      stroke-dashoffset: 0 !important;
+    }
+    .chapter :global(.ink-w),
+    .chapter [data-line],
+    .chapter [data-hanko] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .hero-stroke path {
       animation: none;
