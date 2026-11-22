@@ -55,6 +55,15 @@ describe("content negotiation", () => {
     assert.match(res.headers.get("content-signal"), /ai-input=yes/);
   });
 
+  test("fingerprinted build assets are cached for a year; pages are not", async () => {
+    const html = await (await get("/photos/")).text();
+    const asset = html.match(/\/_astro\/[^"']+\.js/)?.[0];
+    assert.ok(asset, "no /_astro/ script on /photos/");
+    assert.equal((await get(asset)).headers.get("cache-control"), "public, max-age=31536000, immutable");
+    assert.equal((await get("/photos/")).headers.get("cache-control"), null);
+    assert.equal((await get("/_astro/missing.js")).headers.get("cache-control"), null);
+  });
+
   test("Accept: text/markdown returns the Markdown twin", async () => {
     const res = await get("/", { Accept: "text/markdown" });
     assert.equal(res.status, 200);

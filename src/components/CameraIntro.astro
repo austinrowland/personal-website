@@ -3,17 +3,22 @@
  * Scroll-driven Polaroid 600 intro for the Photos page: a pinned stage above the desk. The slot holds the hero text.
  * Without JS, with reduced motion, in Agent view, or with ?intro=off, it collapses to a plain page header.
  */
-const MODEL = "/models/polaroid-600.glb";
+// Gzipped on disk: meshopt-compressed GLB still shrinks by half, and hosts don't compress model files themselves.
+import MODEL from "../assets/models/polaroid-600.glb.gz?url";
+// A still of the first frame (rendered at a 778×1000 canvas), shown until the live camera has drawn.
+import poster from "../assets/models/polaroid-600-poster.webp";
+const POSTER = poster.src;
 ---
 
 <section class="scrolly" data-scrolly data-model={MODEL}>
-  <script is:inline define:vars={{ MODEL }}>
+  <script is:inline define:vars={{ MODEL, POSTER }}>
     (() => {
       const d = document.documentElement;
       const play =
         !matchMedia("(prefers-reduced-motion: reduce)").matches &&
         d.dataset.reader !== "agent" &&
         !/[?&]intro=off\b/.test(location.search) &&
+        "DecompressionStream" in window &&
         !!document.createElement("canvas").getContext("webgl2");
       if (play) {
         d.dataset.intro = "play";
@@ -22,12 +27,18 @@ const MODEL = "/models/polaroid-600.glb";
         link.as = "fetch";
         link.crossOrigin = "anonymous";
         link.href = MODEL;
-        document.head.append(link);
+        const still = document.createElement("link");
+        still.rel = "preload";
+        still.as = "image";
+        still.fetchPriority = "high";
+        still.href = POSTER;
+        document.head.append(link, still);
       } else delete d.dataset.intro;
     })();
   </script>
   <div class="stage" data-stage style="--p:0">
     <div class="backdrop" aria-hidden="true"></div>
+    <img class="poster" src={POSTER} alt="" aria-hidden="true" width={poster.width} height={poster.height} loading="lazy" />
     <canvas aria-hidden="true"></canvas>
     <div class="hero">
       <slot />
@@ -67,6 +78,38 @@ const MODEL = "/models/polaroid-600.glb";
   :global(html[data-intro="play"]) canvas {
     width: 100%;
     height: 100%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .stage[data-live] canvas {
+    opacity: 1;
+  }
+  .poster {
+    display: none;
+  }
+  :global(html[data-intro="play"]) .stage {
+    container-type: size;
+  }
+  /*
+    Same place and size as the camera on the canvas. The 3D view fits the stage height on wide screens and the width
+    on narrow ones (below a 0.778 aspect), so its size scales with --u. Its height on screen stays roughly fixed, so
+    part of the offset from the stage center follows the stage height instead.
+  */
+  :global(html[data-intro="play"]) .poster {
+    --u: min(100cqh, 128.6cqw);
+    display: block;
+    position: absolute;
+    left: calc(50% - 0.184 * var(--u));
+    top: calc(50% - 13cqh - 0.163 * var(--u));
+    width: calc(0.368 * var(--u));
+    height: auto;
+    transition:
+      opacity 0.4s ease,
+      visibility 0s 0.4s;
+  }
+  .stage[data-live] .poster {
+    opacity: 0;
+    visibility: hidden;
   }
   .backdrop {
     /* Same color as the page, so the site header above it reads as one surface. */
@@ -159,6 +202,40 @@ const MODEL = "/models/polaroid-600.glb";
 <script>
   import type { Landing } from "../lib/polaroid600";
 
+  let engine: Promise<typeof import("../lib/polaroid600")> | undefined;
+  const loadEngine = () => (engine ??= import("../lib/polaroid600"));
+  const models = new Map<string, Promise<ArrayBuffer>>();
+
+  /** Downloads and gunzips the model once per page session; repeat visits through the client router reuse it. */
+  function loadModel(url: string) {
+    let model = models.get(url);
+    if (!model) {
+      model = fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Model request failed: ${res.status}`);
+          return res.arrayBuffer();
+        })
+        .then((data) => {
+          const bytes = new Uint8Array(data);
+          // A server that already decoded the gzip (Content-Encoding) hands over the plain GLB.
+          if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) return data;
+          return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+        });
+      model.catch(() => models.delete(url));
+      models.set(url, model);
+    }
+    return model;
+  }
+
+  // Start both downloads as soon as this module runs, instead of after the page has finished loading.
+  if (document.documentElement.dataset.intro === "play") {
+    const url = document.querySelector<HTMLElement>("[data-scrolly]")?.dataset.model;
+    if (url) {
+      loadEngine().catch(() => {});
+      loadModel(url).catch(() => {});
+    }
+  }
+
   /** The face-down print on the desk that the 3D print lands on. */
   function landing(): Landing | null {
     const el = document.querySelector<HTMLElement>("[data-soon]");
@@ -215,11 +292,12 @@ const MODEL = "/models/polaroid-600.glb";
     );
 
     try {
-      const { mountPolaroid600, span, TIMELINE } = await import("../lib/polaroid600");
-      stop = mountPolaroid600(root.querySelector("canvas")!, root.dataset.model!, {
+      const model = loadModel(root.dataset.model!);
+      const { mountPolaroid600, span, TIMELINE } = await loadEngine();
+      stop = mountPolaroid600(root.querySelector("canvas")!, model, {
         progress,
         landing,
-        onReady: () => {},
+        onReady: () => (stage.dataset.live = ""),
         onError: giveUp,
         onFrame: (p, f) => {
           stage.style.setProperty("--p", p.toFixed(4));

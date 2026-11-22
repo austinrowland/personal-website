@@ -13,6 +13,7 @@ type Hooks = {
   landing: () => Landing | null;
   /** Called every frame with the smoothed progress and the flash strength (0–1). */
   onFrame: (p: number, flash: number) => void;
+  /** Called once the first frame is on screen. */
   onReady: () => void;
   onError: () => void;
 };
@@ -115,7 +116,7 @@ function shadowTexture() {
  * cursor; scrolling turns it toward the visitor, fires the flash, ejects a print, then pulls back to a top-down desk
  * where the print lands face down over `landing()`. Returns a cleanup function.
  */
-export function mountPolaroid600(canvas: HTMLCanvasElement, modelUrl: string, hooks: Hooks) {
+export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBuffer>, hooks: Hooks) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -169,11 +170,12 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, modelUrl: string, ho
   let stopped = false;
 
   (async () => {
-    await Promise.all([
+    const fonts = Promise.all([
       document.fonts?.load('64px "Permanent Marker"'),
       document.fonts?.load('500 32px "Caveat"'),
     ]).catch(() => {});
-    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(modelUrl);
+    const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+    const [gltf] = await Promise.all([glb.then((data) => loader.parseAsync(data, "")), fonts]);
     if (stopped) return;
 
     // Normalize the model: centered, longest side 2, resting on the desk at y = 0.
@@ -268,7 +270,9 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, modelUrl: string, ho
     let p = hooks.progress();
     let last = performance.now();
     let lastDrawn = -1;
-    hooks.onReady();
+    // Compile every shader off the main thread where supported, so the first frame doesn't stall.
+    await renderer.compileAsync(scene, view);
+    if (stopped) return;
 
     const frame = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.1);
@@ -336,6 +340,7 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, modelUrl: string, ho
       // Once the print has landed and nothing is moving, stop drawing.
       const settled = p >= 1 && target >= 1;
       if (!settled || lastDrawn !== 1) renderer.render(scene, view);
+      if (lastDrawn === -1) hooks.onReady();
       lastDrawn = settled ? 1 : p;
       if (!stopped) raf = requestAnimationFrame(frame);
     };
