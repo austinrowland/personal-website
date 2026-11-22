@@ -64,7 +64,7 @@ const POSTER = poster.src;
 
   :global(html[data-intro="play"]) .scrolly {
     /* One screen pinned, plus the scroll distance the sequence plays over. */
-    height: calc(100svh + 250svh);
+    height: calc(100svh + 310svh);
   }
   :global(html[data-intro="play"]) .stage {
     position: sticky;
@@ -124,7 +124,7 @@ const POSTER = poster.src;
     /* Same color as the page, so the site header above it reads as one surface. */
     background: var(--paper);
     /* Fades as the view pulls back, so the 3D print lands on the real desk rising underneath. */
-    opacity: clamp(0, calc((0.92 - var(--p)) * 5), 1);
+    opacity: clamp(0, calc((0.935 - var(--p)) * 6.2), 1);
   }
   :global(html[data-intro="play"][data-landed]) canvas {
     visibility: hidden;
@@ -143,14 +143,14 @@ const POSTER = poster.src;
     grid-area: 1 / 1;
   }
   :global(html[data-intro="play"]) .hero :global([data-beat="1"]) {
-    opacity: clamp(0, calc(1 - (var(--p) - 0.02) * 12), 1);
-    transform: scale(calc(1 + var(--p) * 1.2));
+    opacity: clamp(0, calc(1 - (var(--p) - 0.016) * 15), 1);
+    transform: scale(calc(1 + var(--p) * 1.5));
     transform-origin: 50% 0;
   }
-  /* Gone before the camera starts moving in (TIMELINE.approach), so the two never overlap. */
+  /* Held on screen for about 70svh of scrolling, and gone before the camera starts moving in (TIMELINE.approach). */
   :global(html[data-intro="play"]) .hero :global([data-beat="2"]) {
-    opacity: clamp(0, min(calc((var(--p) - 0.1) * 16), calc((0.28 - var(--p)) * 16)), 1);
-    transform: translateY(calc((0.2 - var(--p)) * 60px));
+    opacity: clamp(0, min(calc((var(--p) - 0.081) * 21), calc((0.403 - var(--p)) * 21)), 1);
+    transform: translateY(calc(max(0, 0.129 - var(--p)) * 300px));
   }
   :global(html[data-intro="play"]) .hero :global([data-beat]) {
     align-items: center;
@@ -166,7 +166,7 @@ const POSTER = poster.src;
     top: calc(var(--cue-top, 100svh - 6rem) + 1rem);
     text-align: center;
     color: var(--muted);
-    opacity: clamp(0, calc(1 - var(--p) * 25), 1);
+    opacity: clamp(0, calc(1 - var(--p) * 31), 1);
   }
   :global(html[data-intro="play"]) .cue[hidden] {
     display: none;
@@ -178,7 +178,7 @@ const POSTER = poster.src;
     bottom: 1.5rem;
     color: var(--muted);
     pointer-events: auto;
-    opacity: clamp(0, calc((0.9 - var(--p)) * 10), 1);
+    opacity: clamp(0, calc((0.92 - var(--p)) * 12), 1);
   }
   :global(html[data-intro="play"][data-landed]) .skip {
     visibility: hidden;
@@ -343,7 +343,7 @@ const POSTER = poster.src;
         stage.style.setProperty("--zoom", easeInOut(span(p, TIMELINE.zoom)).toFixed(4));
         stage.style.setProperty("--camera", (1 - span(p, TIMELINE.fadeCamera)).toFixed(4));
         flash.style.opacity = String(0.92 * Math.min(flashAt(p) * 1.4, 1));
-        desk?.style.setProperty("--develop", span(p, [0.85, 1]).toFixed(3));
+        desk?.style.setProperty("--develop", span(p, [0.879, 1]).toFixed(3));
         if (p >= 0.985) doc.dataset.landed = "";
         else delete doc.dataset.landed;
       }
