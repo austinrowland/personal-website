@@ -80,7 +80,7 @@ ${items
 
 ${jobs}
 
-## Projects
+## Highlights
 
 ${grouped}`;
 }

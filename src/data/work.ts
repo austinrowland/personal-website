@@ -73,7 +73,7 @@ export const experience: Experience[] = [
   },
 ];
 
-export type ProjectKind = "venture" | "community" | "research" | "agent" | "talk";
+export type ProjectKind = "project" | "venture" | "talk";
 
 export type Project = {
   title: string;
@@ -84,18 +84,16 @@ export type Project = {
   href?: string;
 };
 
-export const projectKinds: { value: ProjectKind; label: string }[] = [
-  { value: "venture", label: "Ventures" },
-  { value: "community", label: "Community" },
-  { value: "research", label: "Research" },
-  { value: "agent", label: "Agents" },
-  { value: "talk", label: "Talks" },
+export const projectKinds: { value: ProjectKind; label: string; one: string }[] = [
+  { value: "project", label: "Projects", one: "Project" },
+  { value: "venture", label: "Ventures", one: "Venture" },
+  { value: "talk", label: "Speaking", one: "Speaking" },
 ];
 
 export const projects: Project[] = [
   {
     title: "AI-Ready APIs",
-    kind: "agent",
+    kind: "project",
     years: "2026",
     summary:
       "An assessment that grades how well agents can discover, understand, and operate an API: 25 checks across five categories.",
@@ -104,7 +102,7 @@ export const projects: Project[] = [
   },
   {
     title: "Customer insights agent",
-    kind: "agent",
+    kind: "project",
     years: "2026",
     summary:
       "Runs on Postman's internal agent OS: compares Salesforce, Gong, and email signals against product knowledge to give sellers tailored use cases and positioning for each account.",
@@ -119,7 +117,7 @@ export const projects: Project[] = [
   },
   {
     title: "Spread the Love",
-    kind: "community",
+    kind: "project",
     years: "2023–2024",
     summary:
       "Free cookies and handwritten notes on the Georgia Tech lawn: 500, then 1,000, then 4,000+ in total.",
@@ -128,7 +126,7 @@ export const projects: Project[] = [
   },
   {
     title: "Tikkun Olam Makers",
-    kind: "community",
+    kind: "project",
     years: "2022–2024",
     summary:
       "Led 100+ student makers building assistive technology for 20+ families, with $45k+ raised and three makeathons.",
@@ -136,7 +134,7 @@ export const projects: Project[] = [
   },
   {
     title: "Passive haptic rehab gloves",
-    kind: "research",
+    kind: "project",
     years: "2023",
     summary:
       "A full-stack app with computer vision tracking to measure stroke patients' motor recovery.",
