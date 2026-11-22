@@ -4,7 +4,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest } from "./agent-http.ts";
+import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest, redirectFor } from "./agent-http.ts";
 
 export { CONTENT_SIGNAL, markdownPathFor, prefersMarkdown } from "./agent-http.ts";
 
@@ -50,6 +50,13 @@ export function createSiteServer({ root = "dist" }: { root?: string } = {}) {
 }
 
 async function handle(dist: string, req: IncomingMessage, res: ServerResponse) {
+  const moved = redirectFor(decodePath(req.url ?? "/"));
+  if (moved) {
+    const search = new URL(req.url ?? "/", "http://localhost").search;
+    res.writeHead(301, { Location: moved + search, "Content-Type": "text/plain; charset=utf-8" });
+    res.end(req.method === "HEAD" ? undefined : `Moved to ${moved}\n`);
+    return;
+  }
   const plan = planRequest(decodePath(req.url ?? "/"), req.headers.accept);
   let status = 200;
   let file = await resolveFile(dist, plan.wantPath);

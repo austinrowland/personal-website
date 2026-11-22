@@ -1,4 +1,4 @@
-/** The About page is one letter. Each paragraph renders on the page and in /about.md. */
+/** The Story page is one letter. Each paragraph renders on the page and in /story.md. */
 export const letter = {
   place: "San Francisco",
   date: "November 2026",

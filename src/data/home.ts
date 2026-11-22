@@ -15,7 +15,7 @@ export const homeIntro: Segment[][] = [
   ],
   [
     "I love building things that close the gap between what technology can do and what people actually need: assistive tech, a ",
-    { text: "health startup", href: "/about" },
+    { text: "health startup", href: "/story" },
     ", and now the infrastructure agents run on.",
   ],
 ];

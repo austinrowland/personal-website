@@ -8,15 +8,15 @@ import { profilePageJsonLd } from "../lib/structured-data";
 const ask = "write back";
 ---
 
-<Base title={pages.about.title} description={pages.about.description} jsonLd={profilePageJsonLd()}>
+<Base title={pages.story.title} description={pages.story.description} jsonLd={profilePageJsonLd()}>
   <section class="mx-auto max-w-3xl px-6 pt-12 pb-10 md:pt-20">
-    <p class="label text-muted" data-reveal>about</p>
+    <p class="label text-muted" data-reveal>story</p>
     <h1
       class="mt-4 font-display text-5xl leading-[1.05] tracking-tight sm:text-6xl"
       data-reveal
       style="--i:1"
     >
-      {pages.about.headline} <span class="text-muted">{pages.about.headlineAside}</span>
+      {pages.story.headline} <span class="text-muted">{pages.story.headlineAside}</span>
     </h1>
   </section>
 

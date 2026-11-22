@@ -42,7 +42,7 @@ function contactLines(): string {
 }
 
 function home(): string {
-  const sections = [pages.work, pages.writing, pages.about, pages.photos, pages.contact];
+  const sections = [pages.story, pages.work, pages.writing, pages.memories, pages.contact];
   return `${homeIntro.map(segments).join("\n\n")}
 
 ## On this site
@@ -161,8 +161,8 @@ export async function markdownPages(): Promise<MarkdownPage[]> {
         description: p.data.description,
         content: post(p),
       })),
-    page(pages.about, about()),
-    page(pages.photos, photos()),
+    page(pages.story, about()),
+    page(pages.memories, photos()),
     page(pages.contact, contact()),
   ];
 }
