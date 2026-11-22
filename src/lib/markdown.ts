@@ -1,5 +1,5 @@
 import { getCollection, type CollectionEntry } from "astro:content";
-import { letter, values } from "../data/about";
+import { chapters, closing, values, valuesTitle } from "../data/story";
 import { homeIntro, type Segment } from "../data/home";
 import { absoluteUrl, fullHeadline, markdownPath, pages, type PageMeta } from "../data/pages";
 import { gallery, galleryIntro } from "../data/photos";
@@ -85,19 +85,22 @@ ${jobs}
 ${grouped}`;
 }
 
-function about(): string {
-  return `${letter.place}, ${letter.date}
+function story(): string {
+  const body = chapters
+    .map((c) => `## ${c.title}
 
-${letter.greeting}
+*${c.place}*
 
-${letter.paragraphs.join("\n\n")}
+${c.paragraphs.join("\n\n")}`)
+    .join("\n\n");
+  return `${body}
 
-${letter.signoff}
-${letter.signature}
+## ${valuesTitle}
 
-${letter.postscript}
+${values.map((v) => `- ${v}`).join("\n")}
 
-${values.map((v) => `- ${v}`).join("\n")}`;
+${closing.text.replace(closing.ask, link(closing.ask, absoluteUrl("/contact")))}
+`;
 }
 
 function photos(): string {
@@ -161,7 +164,7 @@ export async function markdownPages(): Promise<MarkdownPage[]> {
         description: p.data.description,
         content: post(p),
       })),
-    page(pages.story, about()),
+    page(pages.story, story()),
     page(pages.memories, photos()),
     page(pages.contact, contact()),
   ];
