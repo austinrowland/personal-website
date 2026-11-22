@@ -22,21 +22,21 @@ const Tag = href ? "a" : "div";
       <button type="button" class="flip" aria-pressed="false" aria-label={`Flip the ${photo.caption} print`} />
     )
   }
-  <span class="inner">
-    <span class="face front">
+  <div class="inner">
+    <div class="face front">
       <Photo alt={photo.alt} name={photo.name} class="aspect-square" imgClass="film" sizes="(min-width: 768px) 22rem, 90vw" />
-      <span class="caption">{photo.caption}</span>
-    </span>
+      <p class="caption">{photo.caption}</p>
+    </div>
     {
       !href && (
-        <span class="face back" aria-hidden="true">
-          <span class="caption">{photo.caption}</span>
-          <span class="story">{photo.story}</span>
-          <span class="hint label">tap to flip back</span>
-        </span>
+        <div class="face back" aria-hidden="true">
+          <p class="caption" aria-hidden="true">{photo.caption}</p>
+          <p class="story" data-md-keep>{photo.story}</p>
+          <p class="hint label" aria-hidden="true">tap to flip back</p>
+        </div>
       )
     }
-  </span>
+  </div>
 </Tag>
 
 <style>

@@ -99,17 +99,19 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
           {
             experience.map((job, i) => (
               <article class:list={["panel", { "is-active": i === 0 }]} data-panel={i}>
-                <span class="label text-muted">
-                  {job.start} — {job.end}
-                </span>
-                <h3 class="sr-only">
-                  {job.role}, {job.org}
-                </h3>
+                <hgroup>
+                  <p class="label text-muted">
+                    {job.start} — {job.end}
+                  </p>
+                  <h3 class="sr-only">
+                    {job.role}, {job.org}
+                  </h3>
+                </hgroup>
                 <p class="take" data-type>{job.take}</p>
                 <ul class="mt-4 flex flex-col gap-2 text-ink/80">
                   {job.points.map((p) => (
                     <li class="flex gap-3">
-                      <span class="text-accent">—</span>
+                      <span class="text-accent" aria-hidden="true">—</span>
                       <span>{p}</span>
                     </li>
                   ))}
@@ -155,10 +157,12 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
           {
             highlights.map((p, i) => (
               <article class:list={["panel", { "is-active": i === 0 }]} data-panel={i}>
-                <span class="label text-muted">
-                  {kindLabel[p.kind]} · {p.years}
-                </span>
-                <h3 class="panel-title font-display">{p.title}</h3>
+                <hgroup>
+                  <p class="label text-muted">
+                    {kindLabel[p.kind]} · {p.years}
+                  </p>
+                  <h3 class="panel-title font-display">{p.title}</h3>
+                </hgroup>
                 <p class="take" data-type>{p.summary}</p>
                 {p.href && (
                   <a class="link label mt-4 inline-block" href={p.href} {...external(p.href)}>

@@ -3,6 +3,10 @@ import { after, before, describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import type { AddressInfo, Server } from "node:net";
+import type { Element, Root } from "hast";
+import { fromHtml } from "hast-util-from-html";
+import { select, selectAll } from "hast-util-select";
+import { toText } from "hast-util-to-text";
 import { createSiteServer, markdownPathFor, prefersMarkdown } from "../scripts/serve.ts";
 
 const SITE = "https://austinrowland.com";
@@ -75,7 +79,8 @@ describe("content negotiation", () => {
     assert.ok(Number(res.headers.get("x-markdown-tokens")) > 0);
     const body = await res.text();
     assert.match(body, /^---\ntitle:/);
-    assert.match(body, /^# Austin Rowland$/m);
+    assert.match(body, /^title: "Austin Rowland"$/m);
+    assert.match(body, /^# Hi, I'm Austin Rowland\.$/m);
     assert.doesNotMatch(body, /<(div|nav|script|span)\b/);
   });
 
@@ -109,7 +114,7 @@ describe("content negotiation", () => {
     assert.match(header(html, "content-type"), /text\/html/);
     const md = await get("/nope", { Accept: "text/markdown" });
     assert.equal(md.status, 404);
-    assert.match(await md.text(), /# Page not found/);
+    assert.match(await md.text(), /^title: "Page not found"$/m);
   });
 
   test("encoded control characters in the path don't crash the server", async () => {
@@ -123,6 +128,7 @@ describe("content negotiation", () => {
 // Strips HTML or Markdown down to comparable words, so formatting differences don't count as drift.
 const words = (s: string) =>
   s
+    .replace(/<([^<>\s]+(?:@|:\/\/)[^<>\s]+)>/g, " $1 ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
@@ -132,25 +138,92 @@ const words = (s: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+const CONTROLS = new Set(["script", "style", "svg", "template", "noscript", "button", "input", "select", "textarea", "iframe"]);
+
+/** What a reader sees in `el`: controls, decoration and `data-md-skip` removed, icon-only text replaced by its label. */
+function visible<T extends Element | Root>(el: T): T {
+  el.children = el.children.filter(
+    (c) =>
+      c.type !== "element" ||
+      !(
+        CONTROLS.has(c.tagName) ||
+        c.properties.dataMdSkip !== undefined ||
+        (c.properties.ariaHidden === "true" && !select("[data-md-keep]", c))
+      ),
+  ) as T["children"];
+  for (const c of el.children) if (c.type === "element") visible(c);
+  // Sibling elements (flex items, list rows) read as separate words.
+  el.children = el.children.flatMap((c, i) =>
+    i && c.type === "element" && el.children[i - 1].type === "element" ? [{ type: "text" as const, value: " " }, c] : [c],
+  ) as T["children"];
+  const label = el.type === "element" ? el.properties.ariaLabel : undefined;
+  if (typeof label === "string" && !toText(el).trim()) el.children = [{ type: "text", value: label }];
+  return el;
+}
+
+const lines = (el: Element) => toText(visible(el)).split("\n").map(words).filter(Boolean);
+const page = (path: string) => fromHtml(readFileSync(`dist${path}index.html`, "utf8"));
+
 describe("HTML and Markdown stay in sync", () => {
-  test("every headline and paragraph on a page appears in its Markdown twin", () => {
+  test("every line of visible text and every image on a page appears in its Markdown twin", () => {
     for (const path of sitemapPaths()) {
-      const html = readFileSync(`dist${path}index.html`, "utf8");
-      const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+      const main = select("main > [data-human-view]", page(path));
+      assert.ok(main, `${path}: no main content`);
       const md = words(readFileSync(`dist${markdownPathFor(path)}`, "utf8"));
-      const blocks = [
-        ...[...main.matchAll(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/g)].map(
-          ([, attrs, inner]) => attrs.match(/aria-label="([^"]*)"/)?.[1] ?? inner,
-        ),
-        ...[...main.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/g)]
-          .filter(([, attrs]) => !/class="[^"]*\blabel\b/.test(attrs))
-          .map(([, , inner]) => inner),
-      ];
-      for (const block of blocks) {
-        const text = words(block);
-        if (text) assert.ok(md.includes(text), `${path}: "${text.slice(0, 80)}" is missing from ${markdownPathFor(path)}`);
+      for (const line of lines(main)) {
+        assert.ok(md.includes(line), `${path}: "${line.slice(0, 80)}" is missing from ${markdownPathFor(path)}`);
+      }
+      for (const img of selectAll("img[alt]", main)) {
+        const alt = words(String(img.properties.alt));
+        if (alt) assert.ok(md.includes(alt), `${path}: image "${alt.slice(0, 80)}" is missing`);
       }
     }
+  });
+
+  test("each Work card and its panel compile to one section", () => {
+    const md = readFileSync("dist/work.md", "utf8");
+    const sections = new Map(
+      md
+        .split(/^(?=#{2,3} )/m)
+        .filter((s) => s.startsWith("### "))
+        .map((s) => [s.slice(4, s.indexOf("\n")), words(s)]),
+    );
+    const groups = selectAll("[data-group]", page("/work/"));
+    assert.ok(groups.length >= 2);
+    for (const group of groups) {
+      const cards = selectAll("[data-card]", group);
+      const panels = selectAll("[data-panel]", group);
+      assert.equal(cards.length, panels.length);
+      cards.forEach((card, i) => {
+        const heading = toText(select("h3", panels[i])!).replace(/\s+/g, " ").trim();
+        const section = sections.get(heading);
+        assert.ok(section, `work.md has no "### ${heading}" section`);
+        const name = words(String(card.properties.ariaLabel).split(", ")[0]);
+        assert.ok(words(heading).includes(name), `"${heading}" doesn't name its card "${name}"`);
+        for (const line of lines(panels[i])) assert.ok(section.includes(line), `"${heading}" is missing "${line.slice(0, 80)}"`);
+      });
+    }
+  });
+
+  test("each Memory compiles to one list item with its caption and the story from the back of the print", () => {
+    const items = readFileSync("dist/memories.md", "utf8").split(/^- /m).map(words);
+    const prints = selectAll("[data-polaroid]", page("/memories/"));
+    assert.ok(prints.length > 0);
+    for (const print of prints) {
+      const caption = words(toText(select(".front .caption", print)!));
+      const story = words(toText(select(".story", print)!));
+      const item = items.find((i) => i.includes(caption));
+      assert.ok(item, `memories.md has no item for "${caption}"`);
+      assert.ok(item.includes(story), `"${caption}" is missing its story`);
+    }
+  });
+
+  test("Markdown leaves out controls and the old site description", () => {
+    const full = readFileSync("dist/llms-full.txt", "utf8");
+    for (const text of ["tap to flip back", "developing now", "Flip the", "scroll ↓", "building agents and agent infrastructure"]) {
+      assert.ok(!full.includes(text), `llms-full.txt includes "${text}"`);
+    }
+    assert.doesNotMatch(full, /^copy$/m);
   });
 });
 

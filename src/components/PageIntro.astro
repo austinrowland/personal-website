@@ -10,7 +10,7 @@ const { eyebrow, title, lede, ...rest } = Astro.props;
 ---
 
 <header class="mx-auto flex max-w-6xl flex-col gap-4 px-6 pt-12 pb-14 md:pt-20" {...rest}>
-  <p class="label text-muted" data-reveal>{eyebrow}</p>
+  <p class="label text-muted" data-reveal data-md-skip>{eyebrow}</p>
   <h1
     class="max-w-3xl text-balance font-display text-5xl leading-[1.05] tracking-tight sm:text-6xl"
     data-reveal
