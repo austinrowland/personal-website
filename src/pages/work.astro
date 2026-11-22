@@ -686,6 +686,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       raf = requestAnimationFrame(frame);
     };
     const start = () => {
+      measure();
       if (!raf) raf = requestAnimationFrame(frame);
     };
     const stop = () => {
