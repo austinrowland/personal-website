@@ -14,13 +14,14 @@ const soonTilt = -4;
 ---
 
 <Base title={pages.photos.title} description={pages.photos.description}>
-  <PageIntro eyebrow="photos" title={pages.photos.headline}>
-    <p class="max-w-2xl text-lg leading-relaxed text-ink/80" data-reveal style="--i:2">
-      {galleryIntro}
-    </p>
-  </PageIntro>
+  <CameraIntro>
+    <PageIntro eyebrow="photos" title={pages.photos.headline} data-beat="1" />
+    <div class="mx-auto flex max-w-6xl px-6" data-beat="2">
+      <p class="max-w-2xl text-lg leading-relaxed text-ink/80" data-reveal style="--i:2">{galleryIntro}</p>
+    </div>
+  </CameraIntro>
 
-  <section class="desk" aria-label="Prints on the desk">
+  <section class="desk" aria-label="Prints on the desk" data-desk>
     <ul class="mx-auto grid max-w-6xl grid-cols-1 gap-x-8 gap-y-12 px-8 py-20 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <li class="soon-slot">
         <div
@@ -52,7 +53,6 @@ const soonTilt = -4;
     <a class="link" href="https://sketchfab.com/Grecha">Grecha</a>,
     <a class="link" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
   </p>
-  <CameraIntro />
 </Base>
 
 <style>
@@ -137,24 +137,16 @@ const soonTilt = -4;
     opacity: 0.7;
   }
 
-  /* After the flash, prints land on the desk and develop. */
-  :global(html[data-intro="play"]) .desk li {
-    opacity: 0;
+  /* The pinned intro overlaps the top of the desk, so the desk rises into view as the camera pulls back. */
+  :global(html[data-intro="play"]) .desk {
+    margin-top: -100svh;
   }
-  :global(html[data-intro="done"]) .desk li:not(.soon-slot) {
-    animation: land 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d) backwards;
-  }
-  @keyframes land {
-    from {
-      opacity: 0;
-      transform: translate(var(--x), calc(var(--y) - 40px)) scale(1.12);
-    }
+  /* The new print stays hidden until the 3D one lands on top of it; the others develop from dark. */
+  :global(html[data-intro="play"]:not([data-landed])) .soon {
+    visibility: hidden;
   }
   :global(html[data-intro="play"]) .desk :global(.front img) {
-    filter: brightness(0.3) sepia(0.6) saturate(0.5);
-  }
-  :global(html[data-intro="done"]) .desk :global(.front img) {
-    transition: filter 3s ease calc(var(--d) + 0.4s);
+    filter: brightness(calc(0.3 + 0.7 * var(--develop, 1))) sepia(calc(0.6 - 0.6 * var(--develop, 1)));
   }
   @media (max-width: 639px) {
     .desk li {

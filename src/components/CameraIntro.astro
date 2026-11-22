@@ -1,16 +1,20 @@
 ---
-/** Full-screen Polaroid 600 intro for the Photos page. Skipped for reduced motion, Agent view, or ?intro=off. */
+/**
+ * Scroll-driven Polaroid 600 intro for the Photos page: a pinned stage above the desk. The slot holds the hero text.
+ * Without JS, with reduced motion, in Agent view, or with ?intro=off, it collapses to a plain page header.
+ */
 const MODEL = "/models/polaroid-600.glb";
 ---
 
-<div class="camera-intro" data-camera-intro data-model={MODEL} aria-hidden="true">
+<section class="scrolly" data-scrolly data-model={MODEL}>
   <script is:inline define:vars={{ MODEL }}>
     (() => {
       const d = document.documentElement;
       const play =
         !matchMedia("(prefers-reduced-motion: reduce)").matches &&
         d.dataset.reader !== "agent" &&
-        !/[?&]intro=off\b/.test(location.search);
+        !/[?&]intro=off\b/.test(location.search) &&
+        !!document.createElement("canvas").getContext("webgl2");
       if (play) {
         d.dataset.intro = "play";
         const link = document.createElement("link");
@@ -22,99 +26,131 @@ const MODEL = "/models/polaroid-600.glb";
       } else delete d.dataset.intro;
     })();
   </script>
-  <canvas></canvas>
-  <p class="cheese label">say cheese</p>
-  <button type="button" class="skip label" data-skip tabindex="-1">skip intro</button>
-  <div class="flash" data-flash></div>
-</div>
+  <div class="stage" data-stage style="--p:0">
+    <div class="backdrop" aria-hidden="true"></div>
+    <canvas aria-hidden="true"></canvas>
+    <div class="hero">
+      <slot />
+    </div>
+    <p class="cue label" aria-hidden="true">scroll to take the photo ↓</p>
+    <button type="button" class="skip label" data-skip>skip to the photos</button>
+    <div class="flash" data-flash aria-hidden="true"></div>
+  </div>
+</section>
 
 <style>
-  .camera-intro {
+  .backdrop,
+  canvas,
+  .cue,
+  .skip,
+  .flash {
     display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    transition: opacity 0.9s ease;
   }
-  :global(html[data-intro="play"]) .camera-intro,
-  .camera-intro.is-leaving {
-    display: block;
+
+  :global(html[data-intro="play"]) .scrolly {
+    /* One screen pinned, plus the scroll distance the sequence plays over. */
+    height: calc(100svh + 250svh);
   }
-  .camera-intro.is-leaving {
-    opacity: 0;
+  :global(html[data-intro="play"]) .stage {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: 100svh;
+    overflow: hidden;
     pointer-events: none;
   }
-  /* As the view pulls back, the backdrop fades so the 3D print lands on the real desk. */
-  .camera-intro::before {
-    content: "";
+  :global(html[data-intro="play"]) :is(.backdrop, canvas, .flash) {
+    display: block;
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 50% 45%, var(--paper), var(--surface) 75%);
-    transition: opacity 1.4s ease;
   }
-  .camera-intro.is-revealing {
-    pointer-events: none;
-  }
-  .camera-intro.is-revealing::before {
-    opacity: 0;
-  }
-  .camera-intro.is-revealing .cheese {
-    visibility: hidden;
-  }
-  .skip {
-    pointer-events: auto;
-  }
-  canvas {
-    position: relative;
-  }
-  canvas {
+  :global(html[data-intro="play"]) canvas {
     width: 100%;
     height: 100%;
-    display: block;
   }
-  .cheese {
+  .backdrop {
+    background: radial-gradient(ellipse at 50% 40%, var(--paper), var(--surface) 80%);
+    /* Fades as the view pulls back, so the 3D print lands on the real desk rising underneath. */
+    opacity: clamp(0, calc((0.92 - var(--p)) * 5), 1);
+  }
+  :global(html[data-intro="play"][data-landed]) canvas {
+    visibility: hidden;
+  }
+
+  /* The headline sits under the floating camera, then grows and fades as you scroll, like the hero on ascendstudio.so. */
+  :global(html[data-intro="play"]) .hero {
+    position: absolute;
+    inset: 58svh 0 auto;
+    display: grid;
+    justify-items: center;
+    padding-inline: 1.5rem;
+    text-align: center;
+  }
+  :global(html[data-intro="play"]) .hero :global(> *) {
+    grid-area: 1 / 1;
+  }
+  :global(html[data-intro="play"]) .hero :global([data-beat="1"]) {
+    opacity: clamp(0, calc(1 - (var(--p) - 0.02) * 12), 1);
+    transform: scale(calc(1 + var(--p) * 1.2));
+    transform-origin: 50% 0;
+  }
+  :global(html[data-intro="play"]) .hero :global([data-beat="2"]) {
+    opacity: clamp(0, min(calc((var(--p) - 0.11) * 12), calc((0.32 - var(--p)) * 12)), 1);
+    transform: translateY(calc((0.2 - var(--p)) * 60px));
+  }
+  :global(html[data-intro="play"]) .hero :global([data-beat]) {
+    align-items: center;
+    padding-block: 0;
+  }
+
+  :global(html[data-intro="play"]) .cue {
+    display: block;
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(50% + clamp(4.5rem, 24vw, 14rem));
+    /* Above the Human/Agent pill, on the first screen, which starts below the site header. */
+    bottom: calc(5rem + var(--offset, 0px));
     text-align: center;
     color: var(--muted);
-    opacity: 0;
-    animation: cheese 0.6s ease 0.6s forwards;
+    opacity: clamp(0, calc(1 - var(--p) * 25), 1);
   }
-  .skip {
+  :global(html[data-intro="play"]) .skip {
+    display: block;
     position: absolute;
     right: 1.5rem;
     bottom: 1.5rem;
     color: var(--muted);
+    pointer-events: auto;
+    opacity: clamp(0, calc((0.9 - var(--p)) * 10), 1);
+  }
+  :global(html[data-intro="play"][data-landed]) .skip {
+    visibility: hidden;
   }
   .skip:hover {
     color: var(--ink);
   }
   .flash {
-    position: absolute;
-    inset: 0;
     background: #fff;
     opacity: 0;
-    pointer-events: none;
   }
-  .flash.is-on {
-    animation: flash 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-  }
-  @keyframes cheese {
-    to {
-      opacity: 1;
+  @media (max-width: 639px) {
+    :global(html[data-intro="play"]) .hero {
+      inset-block-start: 54svh;
     }
-  }
-  @keyframes flash {
-    0% {
-      opacity: 0;
+    :global(html[data-intro="play"]) .skip {
+      right: 0;
+      left: 0;
+      bottom: 3.75rem;
     }
-    8% {
-      opacity: 0.92;
+    :global(html[data-intro="play"]) .cue {
+      bottom: calc(5.5rem + var(--offset, 0px));
     }
-    100% {
-      opacity: 0;
+    :global(html[data-intro="play"]) .hero :global([data-beat="2"] p) {
+      font-size: 1rem;
+    }
+    :global(html[data-intro="play"]) .hero :global([data-beat="2"]) {
+      inset-block-start: -12svh;
+      position: relative;
     }
   }
 </style>
@@ -122,7 +158,7 @@ const MODEL = "/models/polaroid-600.glb";
 <script>
   import type { Landing } from "../lib/polaroid600";
 
-  /** The face-down print on the desk that the 3D print lands on, scrolled into view if needed. */
+  /** The face-down print on the desk that the 3D print lands on. */
   function landing(): Landing | null {
     const el = document.querySelector<HTMLElement>("[data-soon]");
     if (!el) return null;
@@ -136,62 +172,64 @@ const MODEL = "/models/polaroid-600.glb";
     };
   }
 
-  function bringDeskIntoView() {
-    const el = document.querySelector<HTMLElement>("[data-soon]");
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const overflow = r.bottom + 32 - innerHeight;
-    if (overflow > 0) scrollBy({ top: Math.min(overflow, r.top - 24), behavior: "instant" });
-  }
-
   document.addEventListener("astro:page-load", async () => {
-    const root = document.querySelector<HTMLElement>("[data-camera-intro]");
+    const root = document.querySelector<HTMLElement>("[data-scrolly]");
     const doc = document.documentElement;
     if (!root || doc.dataset.intro !== "play" || root.dataset.bound) return;
     root.dataset.bound = "true";
-    root.setAttribute("aria-hidden", "false");
-    const skip = root.querySelector<HTMLButtonElement>("[data-skip]")!;
-    skip.tabIndex = 0;
+    const stage = root.querySelector<HTMLElement>("[data-stage]")!;
     const flash = root.querySelector<HTMLElement>("[data-flash]")!;
+    const desk = document.querySelector<HTMLElement>("[data-desk]");
     let stop: (() => void) | undefined;
-    let finished = false;
 
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      doc.dataset.intro = "done";
-      root.classList.add("is-leaving");
-      setTimeout(() => {
-        stop?.();
-        root.remove();
-      }, 900);
+    const offset = () => stage.style.setProperty("--offset", `${root.offsetTop}px`);
+    offset();
+    addEventListener("resize", offset);
+    const progress = () => {
+      const length = root.offsetHeight - innerHeight;
+      return Math.min(Math.max(-root.getBoundingClientRect().top / length, 0), 1);
     };
-    skip.addEventListener("click", finish);
-    // Gives up if the model takes too long to arrive; the whole sequence runs about 5.5 seconds once loaded.
-    const safety = setTimeout(finish, 12000);
+    const giveUp = () => {
+      stop?.();
+      // Keep whatever was on screen in place as the pinned stage collapses, anchored on the desk.
+      const before = desk?.getBoundingClientRect().top ?? 0;
+      delete doc.dataset.intro;
+      delete doc.dataset.landed;
+      const shift = (desk?.getBoundingClientRect().top ?? 0) - before;
+      if (desk && before < innerHeight && shift) scrollBy({ top: shift, behavior: "instant" });
+    };
+
+    root.querySelector("[data-skip]")!.addEventListener("click", () => {
+      scrollTo({ top: root.offsetTop + root.offsetHeight - innerHeight, behavior: "smooth" });
+    });
     document.addEventListener(
       "astro:before-swap",
       () => {
-        clearTimeout(safety);
         stop?.();
+        removeEventListener("resize", offset);
         delete doc.dataset.intro;
+        delete doc.dataset.landed;
       },
       { once: true },
     );
 
-    bringDeskIntoView();
     try {
-      const { playPolaroid600 } = await import("../lib/polaroid600");
-      if (finished) return;
-      stop = playPolaroid600(root.querySelector("canvas")!, root.dataset.model!, {
+      const { mountPolaroid600, span, TIMELINE } = await import("../lib/polaroid600");
+      stop = mountPolaroid600(root.querySelector("canvas")!, root.dataset.model!, {
+        progress,
         landing,
-        onFlash: () => flash.classList.add("is-on"),
-        onReveal: () => root.classList.add("is-revealing"),
-        onLand: finish,
-        onError: finish,
+        onReady: () => {},
+        onError: giveUp,
+        onFrame: (p, f) => {
+          stage.style.setProperty("--p", p.toFixed(4));
+          flash.style.opacity = String(0.92 * Math.min(f * 1.4, 1));
+          desk?.style.setProperty("--develop", span(p, [0.85, 1]).toFixed(3));
+          if (p >= 0.985) doc.dataset.landed = "";
+          else delete doc.dataset.landed;
+        },
       });
     } catch {
-      finish();
+      giveUp();
     }
   });
 </script>
