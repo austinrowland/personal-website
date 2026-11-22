@@ -1,8 +1,10 @@
 ---
 title: "Ambition Might Be Your Achilles Heel"
 description: "My TEDxGeorgiaTech talk: three lessons on how ambition held me back, and the question that keeps it in check."
-date: 2023-11-27
+date: 2023-11-10
 tags: [talks, reflection]
+cover: ../../assets/writing/ambition-might-be-your-achilles-heel.jpg
+coverAlt: "Woodblock print of a traveler in an orange robe looking up a steep mountain path that zigzags to a summit under an orange sun."
 ---
 
 I gave this talk at TEDxGeorgiaTech in November 2023, in my fourth year at Georgia Tech, with no public speaking behind me. This is the final draft, lightly edited for reading.

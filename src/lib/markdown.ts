@@ -1,7 +1,13 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import { chapters, closing, values, valuesTitle } from "../data/story";
 import { homeIntro, type Segment } from "../data/home";
-import { absoluteUrl, fullHeadline, markdownPath, pages, type PageMeta } from "../data/pages";
+import {
+  absoluteUrl,
+  fullHeadline,
+  markdownPath,
+  pages,
+  type PageMeta,
+} from "../data/pages";
 import { gallery, galleryIntro } from "../data/photos";
 import { site, socials } from "../data/site";
 import { experience, projectKinds, projects } from "../data/work";
@@ -13,14 +19,23 @@ export type MarkdownPage = PageMeta & {
 };
 
 const link = (label: string, href: string) => `[${label}](${href})`;
-const mdLink = (page: PageMeta) => link(page.title, absoluteUrl(markdownPath(page.path)));
+const mdLink = (page: PageMeta) =>
+  link(page.title, absoluteUrl(markdownPath(page.path)));
 const segments = (parts: Segment[]) =>
   parts
     .map((s) =>
-      typeof s === "string" ? s : link(s.text, s.href.startsWith("/") ? absoluteUrl(markdownPath(s.href)) : s.href),
+      typeof s === "string"
+        ? s
+        : link(
+            s.text,
+            s.href.startsWith("/") ? absoluteUrl(markdownPath(s.href)) : s.href,
+          ),
     )
     .join("");
-const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeZone: "UTC" });
+const dateFmt = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "long",
+  timeZone: "UTC",
+});
 
 async function writingEntries() {
   return (await getCollection("writing")).sort(
@@ -29,19 +44,28 @@ async function writingEntries() {
 }
 
 export function postUrl(post: CollectionEntry<"writing">): string {
-  return post.data.externalUrl ?? absoluteUrl(markdownPath(`/writing/${post.id}`));
+  return absoluteUrl(markdownPath(`/writing/${post.id}`));
 }
 
 function contactLines(): string {
   return [
     `- Email: ${link(site.email, `mailto:${site.email}`)}`,
     `- Book a 30-minute call: ${link("cal.com", site.calUrl)}`,
-    ...socials.map((s) => `- ${s.label}: ${link(s.href.replace(/^https:\/\/(www\.)?/, ""), s.href)}`),
+    ...socials.map(
+      (s) =>
+        `- ${s.label}: ${link(s.href.replace(/^https:\/\/(www\.)?/, ""), s.href)}`,
+    ),
   ].join("\n");
 }
 
 function home(): string {
-  const sections = [pages.story, pages.work, pages.writing, pages.memories, pages.contact];
+  const sections = [
+    pages.story,
+    pages.work,
+    pages.writing,
+    pages.memories,
+    pages.contact,
+  ];
   return `${homeIntro.map(segments).join("\n\n")}
 
 ## On this site
@@ -70,7 +94,10 @@ ${job.points.map((p) => `- ${p}`).join("\n")}`,
       return `### ${kind.label}
 
 ${items
-  .map((p) => `- **${p.href ? link(p.title, p.href) : p.title}** (${p.years}): ${p.summary}`)
+  .map(
+    (p) =>
+      `- **${p.href ? link(p.title, p.href) : p.title}** (${p.years}): ${p.summary}`,
+  )
   .join("\n")}`;
     })
     .filter(Boolean)
@@ -86,11 +113,13 @@ ${grouped}`;
 
 function story(): string {
   const body = chapters
-    .map((c) => `## ${c.title}
+    .map(
+      (c) => `## ${c.title}
 
 *${c.place}*
 
-${c.paragraphs.join("\n\n")}`)
+${c.paragraphs.join("\n\n")}`,
+    )
     .join("\n\n");
   return `${body}
 
@@ -124,21 +153,23 @@ function contact(): string {
 }
 
 function writingIndex(posts: CollectionEntry<"writing">[]): string {
-  return `${posts
-  .map((p) => {
-    const where = p.data.publication ? `, ${p.data.publication}` : "";
-    return `- ${link(p.data.title, postUrl(p))} (${dateFmt.format(p.data.date)}${where}): ${p.data.description}`;
-  })
-  .join("\n")}
+  return `${posts.map((p) => `- ${link(p.data.title, postUrl(p))} (${dateFmt.format(p.data.date)})`).join("\n")}
 
 Subscribe: ${link("RSS feed", absoluteUrl("/rss.xml"))}`;
 }
 
 function post(entry: CollectionEntry<"writing">): string {
-  const tags = entry.data.tags.length ? ` · ${entry.data.tags.join(", ")}` : "";
-  return `By ${site.name} · ${dateFmt.format(entry.data.date)}${tags}
+  const { original } = entry.data;
+  const origin = original
+    ? `\n\nOriginally published on the ${link(original.publication, original.url)} · Try it at ${link(original.site, original.siteUrl)}`
+    : "";
+  const body = (entry.body?.trim() ?? "").replace(
+    /\]\((\/[^)\s]+)\)/g,
+    (_, path: string) => `](${absoluteUrl(path)})`,
+  );
+  return `By ${site.name} · ${dateFmt.format(entry.data.date)}${origin}
 
-${entry.body?.trim() ?? ""}`;
+${body}`;
 }
 
 export const notFound: MarkdownPage = {
@@ -155,14 +186,12 @@ export async function markdownPages(): Promise<MarkdownPage[]> {
     page(pages.home, home()),
     page(pages.work, work()),
     page(pages.writing, writingIndex(posts)),
-    ...posts
-      .filter((p) => !p.data.externalUrl)
-      .map((p) => ({
-        path: `/writing/${p.id}`,
-        title: p.data.title,
-        description: p.data.description,
-        content: post(p),
-      })),
+    ...posts.map((p) => ({
+      path: `/writing/${p.id}`,
+      title: p.data.title,
+      description: p.data.description,
+      content: post(p),
+    })),
     page(pages.story, story()),
     page(pages.memories, photos()),
     page(pages.contact, contact()),
@@ -173,8 +202,8 @@ export async function markdownPages(): Promise<MarkdownPage[]> {
 const page = (meta: PageMeta, body: string): MarkdownPage => ({
   ...meta,
   content: meta.headline
-      ? [fullHeadline(meta), meta.lede, body].filter(Boolean).join("\n\n")
-      : body,
+    ? [fullHeadline(meta), meta.lede, body].filter(Boolean).join("\n\n")
+    : body,
 });
 
 export function renderMarkdown(page: MarkdownPage): string {
@@ -231,7 +260,10 @@ export async function llmsFullTxt(): Promise<string> {
 > ${site.description}
 
 ${all
-  .map((p) => `---\n\n# ${p.path === "/" ? site.name : p.title}\n\nSource: ${absoluteUrl(p.path)}\n\n${p.content}`)
+  .map(
+    (p) =>
+      `---\n\n# ${p.path === "/" ? site.name : p.title}\n\nSource: ${absoluteUrl(p.path)}\n\n${p.content}`,
+  )
   .join("\n\n")}
 `;
 }
