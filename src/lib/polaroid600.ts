@@ -5,13 +5,21 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { TIMELINE, clamp01, easeInOut, easeOut, flashAt, span } from "./cameraTimeline";
 
 /** Where the face-down print should end up, in CSS pixels of the viewport. */
-export type Landing = { x: number; y: number; width: number; height: number; tilt: number };
+export type Landing = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  tilt: number;
+};
 
 type Hooks = {
   /** Smoothed scroll progress through the intro, 0 at the top of the page and 1 once the print is on the desk. */
   progress: () => number;
   /** Live position of the face-down print on the page; measured every frame because the desk scrolls. */
   landing: () => Landing | null;
+  /** The desk on the page (with `data-wood` and the other prints on it), drawn in 3D until the print lands. */
+  desk?: () => HTMLElement | null;
   /** Called once the first frame is on screen. */
   onReady: () => void;
   onError: () => void;
@@ -72,7 +80,10 @@ function buildPrint(aspect: number) {
   // The back faces the desk until the print flips, so its texture is drawn upside down.
   back.center.set(0.5, 0.5);
   back.rotation = Math.PI;
-  const edge = new THREE.MeshStandardMaterial({ color: 0xefe9dd, roughness: 0.8 });
+  const edge = new THREE.MeshStandardMaterial({
+    color: 0xefe9dd,
+    roughness: 0.8,
+  });
   const print = new THREE.Mesh(new THREE.BoxGeometry(W, 0.012, L), [
     edge,
     edge,
@@ -83,6 +94,71 @@ function buildPrint(aspect: number) {
     edge,
   ]);
   return { print, W, L };
+}
+
+/** A print already lying on the desk, drawn from its card on the page: frame, photo (cropped like the page) and caption. */
+async function laidPrint(card: HTMLElement) {
+  const w = card.offsetWidth;
+  const h = card.offsetHeight;
+  const s = 512 / w;
+  const img = card.querySelector<HTMLImageElement>(".front img");
+  if (img) {
+    img.loading = "eager";
+    await Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 4000))]);
+  }
+  const cs = img ? getComputedStyle(img) : null;
+  const tex = canvasTexture(512, Math.round(h * s), (g) => {
+    g.fillStyle = "#f7f3ea";
+    g.fillRect(0, 0, 512, h * s);
+    const pad = 12.8 * s;
+    const side = 512 - 2 * pad;
+    g.fillStyle = "#3a342e";
+    g.fillRect(pad, pad, side, side);
+    if (img?.naturalWidth) {
+      const [px, py] = (cs!.objectPosition || "50% 50%").split(" ").map((v) => (parseFloat(v) || 50) / 100);
+      const k = Math.max(side / img.naturalWidth, side / img.naturalHeight);
+      const sw = side / k;
+      const sh = side / k;
+      g.filter = "sepia(0.14) saturate(0.9) contrast(1.04)";
+      g.drawImage(
+        img,
+        (img.naturalWidth - sw) * px,
+        (img.naturalHeight - sh) * (py ?? 0.5),
+        sw,
+        sh,
+        pad,
+        pad,
+        side,
+        side,
+      );
+      g.filter = "none";
+    }
+    const cap = card.querySelector(".front .caption");
+    const ccs = cap ? getComputedStyle(cap) : null;
+    const size = (ccs ? parseFloat(ccs.fontSize) : 16.8) * s;
+    g.font = `${size}px "Permanent Marker", "Marker Felt", cursive`;
+    g.fillStyle = "#24211e";
+    g.textAlign = "center";
+    g.textBaseline = "top";
+    const words = (cap?.textContent ?? "").trim().split(/\s+/);
+    const lines: string[] = [];
+    for (const word of words) {
+      const line = lines.length ? `${lines[lines.length - 1]} ${word}` : word;
+      if (lines.length && g.measureText(line).width <= side) lines[lines.length - 1] = line;
+      else lines.push(word);
+    }
+    g.save();
+    g.translate(256, pad + side + 14.4 * s);
+    g.rotate(THREE.MathUtils.degToRad(-1.2));
+    lines.forEach((l, i) => g.fillText(l, 0, i * size * 1.25));
+    g.restore();
+  });
+  const edge = new THREE.MeshStandardMaterial({
+    color: 0xefe9dd,
+    roughness: 0.8,
+  });
+  const face = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });
+  return new THREE.Mesh(new THREE.BoxGeometry(1, 0.01, 1), [edge, edge, face, edge, edge, edge]);
 }
 
 function shadowTexture() {
@@ -101,7 +177,11 @@ function shadowTexture() {
  * where the print lands face down over `landing()`. Returns a cleanup function.
  */
 export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBuffer>, hooks: Hooks) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: true,
+  });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -166,7 +246,12 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
       document.fonts?.load('500 32px "Caveat"'),
     ]).catch(() => {});
     const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-    const [gltf] = await Promise.all([glb.then((data) => loader.parseAsync(data, "")), fonts]);
+    const deskEl = hooks.desk?.() ?? null;
+    const [gltf, wood] = await Promise.all([
+      glb.then((data) => loader.parseAsync(data, "")),
+      deskEl?.dataset.wood ? new THREE.TextureLoader().loadAsync(deskEl.dataset.wood).catch(() => null) : null,
+      fonts,
+    ]);
     if (stopped) return;
 
     // Normalize the model: centered, longest side 2, resting on the desk at y = 0.
@@ -199,11 +284,68 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
     flashLight.position.copy(FLASH_AT).add(new THREE.Vector3(0, 0, 0.4));
     camera.add(flashLight);
 
-    const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTexture(), transparent: true, depthWrite: false });
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTexture(),
+      transparent: true,
+      depthWrite: false,
+    });
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), shadowMat);
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = 0.001;
     scene.add(shadow);
+
+    // The desk: a wooden slab with edges, the same tile as the page's desk on top, the other prints already on it.
+    const fadeIns: THREE.Material[] = [];
+    const deskGroup = new THREE.Group();
+    deskGroup.visible = false;
+    scene.add(deskGroup);
+    let deskTop: THREE.MeshBasicMaterial | undefined;
+    let deskSlab: THREE.Mesh | undefined;
+    let deskShadow: THREE.Mesh | undefined;
+    const laid: { card: HTMLElement; mesh: THREE.Mesh; shade: THREE.Mesh }[] = [];
+    const shadowMats = new Set<THREE.Material>();
+    const blobMat = () => {
+      const m = new THREE.MeshBasicMaterial({
+        map: shadowTexture(),
+        transparent: true,
+        depthWrite: false,
+      });
+      shadowMats.add(m);
+      return m;
+    };
+    const blob = (mat: THREE.Material) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+      m.rotation.x = -Math.PI / 2;
+      return m;
+    };
+    if (deskEl && wood) {
+      wood.colorSpace = THREE.SRGBColorSpace;
+      wood.wrapS = wood.wrapT = THREE.RepeatWrapping;
+      wood.anisotropy = 8;
+      deskTop = new THREE.MeshBasicMaterial({ map: wood, toneMapped: false });
+      const side = new THREE.MeshStandardMaterial({
+        color: 0x4f3119,
+        roughness: 0.65,
+      });
+      deskSlab = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [side, side, deskTop, side, side, side]);
+      const ds = blobMat();
+      deskShadow = blob(ds);
+      deskGroup.add(deskShadow, deskSlab);
+      fadeIns.push(deskTop, side, ds);
+      for (const card of deskEl.querySelectorAll<HTMLElement>("li:not(.soon-slot) .polaroid")) {
+        const mesh = await laidPrint(card);
+        if (stopped) return;
+        const sm = blobMat();
+        const shade = blob(sm);
+        deskGroup.add(shade, mesh);
+        fadeIns.push(...(mesh.material as THREE.Material[]), sm);
+        laid.push({ card, mesh, shade });
+      }
+    }
+    const printShadowMat = blobMat();
+    const printShadow = blob(printShadowMat);
+    printShadow.visible = false;
+    scene.add(printShadow);
 
     const spot = hooks.landing();
     const { print, W, L } = buildPrint(spot ? spot.height / spot.width : 1.2);
@@ -255,7 +397,42 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
         new THREE.Matrix4().lookAt(toPos, new THREE.Vector3(viewX, 0, viewZ), new THREE.Vector3(0, 0, -1)),
       );
       quatTo.setFromAxisAngle(yAxis, -THREE.MathUtils.degToRad(target?.tilt ?? -3)).multiply(flip);
+
+      // Lay the desk and its prints under where they sit on the page, at this final view's scale.
+      if (!deskSlab || !deskEl || !deskTop) return;
+      const k = (2 * halfW) / vw;
+      const at = (x: number, y: number, out: THREE.Vector3) => {
+        const n = ndc(x, y);
+        return out.set(viewX + n.x * halfW, 0, viewZ - n.y * halfH);
+      };
+      const r = deskEl.getBoundingClientRect();
+      const T = 26 * k;
+      at(r.left + r.width / 2, r.top + r.height / 2, deskSlab.position).setY(-T / 2);
+      deskSlab.scale.set(r.width * k, T, r.height * k);
+      deskShadow!.position.copy(deskSlab.position).setY(-T - 0.002);
+      deskShadow!.position.z += 24 * k;
+      deskShadow!.scale.set(r.width * k * 1.25, r.height * k * 1.2, 1);
+      const rx = r.width / 512;
+      const ry = r.height / 512;
+      wood!.repeat.set(rx, ry);
+      wood!.offset.set(0, Math.ceil(ry) - ry);
+      for (const { card, mesh, shade } of laid) {
+        const b = card.getBoundingClientRect();
+        at(b.left + b.width / 2, b.top + b.height / 2, mesh.position).setY(0.006);
+        mesh.scale.set(card.offsetWidth * k, 1, card.offsetHeight * k);
+        const tilt = parseFloat(getComputedStyle(card).getPropertyValue("--tilt")) || 0;
+        mesh.rotation.y = -THREE.MathUtils.degToRad(tilt);
+        shade.position.set(mesh.position.x, 0.003, mesh.position.z + 8 * k);
+        shade.scale.set(card.offsetWidth * k * 1.3, card.offsetHeight * k * 1.25, 1);
+      }
     };
+    const land = new THREE.Vector3();
+    const fromNow = new THREE.Vector3();
+    const dir = new THREE.Vector3();
+    const qLand = new THREE.Quaternion();
+    const qTmp = new THREE.Quaternion();
+    const xAxis = new THREE.Vector3(1, 0, 0);
+    const restY = (size.y / Math.max(size.x, size.y, size.z)) * 1 + 0.004;
 
     const tmpV = new THREE.Vector3();
     let last = performance.now();
@@ -277,7 +454,9 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
       const flash = flashAt(p);
 
       // 1. At rest the camera floats and follows the cursor; scrolling turns it to face the visitor and moves in.
-      camera.position.set(0, BASE + Math.sin(now / 900) * 0.05 * hover, 0);
+      // Once the view starts pulling back, the camera settles onto the desk.
+      const settle = easeInOut(span(p, [T.zoom[0], T.zoom[0] + 0.1]));
+      camera.position.set(0, BASE + Math.sin(now / 900) * 0.05 * hover + (restY - BASE) * settle, 0);
       camera.rotation.set(
         pointer.sy * 0.18 * hover,
         TURN_FROM + (TURN_TO - TURN_FROM) * approach + pointer.sx * 0.55 * hover,
@@ -310,10 +489,48 @@ export function mountPolaroid600(canvas: HTMLCanvasElement, glb: Promise<ArrayBu
         view.position.lerpVectors(nearPos, toPos, k);
         view.position.y += Math.sin(k * Math.PI) * 1.2;
         view.quaternion.slerpQuaternions(nearQuat, toQuat, k);
-        const pk = easeInOut(span(p, [T.zoom[0] + 0.02, T.zoom[1]]));
-        print.position.lerpVectors(printFrom, printTo, pk);
-        print.position.y += Math.sin(pk * Math.PI) * 1.1;
-        print.quaternion.slerpQuaternions(quatFrom, quatTo, easeInOut(clamp01(pk * 1.25)));
+        // The print pops out of the slot, arcs over with a flutter, touches down short of its spot and slides in.
+        const pk = span(p, [T.zoom[0] + 0.02, T.zoom[1]]);
+        camera.updateMatrixWorld(true);
+        fromNow.copy(ejectEnd).applyMatrix4(camera.matrixWorld);
+        dir.subVectors(printTo, fromNow).setY(0);
+        const dist = dir.length();
+        dir.normalize();
+        land
+          .copy(printTo)
+          .addScaledVector(dir, -Math.min(0.45 * W, dist * 0.2))
+          .setY(printTo.y);
+        qLand.setFromAxisAngle(yAxis, 0.45).multiply(quatTo);
+        const FLY = 0.78;
+        if (pk < FLY) {
+          const u = easeOut(pk / FLY) * 0.35 + (pk / FLY) * 0.65;
+          print.position.lerpVectors(fromNow, land, u);
+          print.position.y += 4 * (0.75 + dist * 0.08) * u * (1 - u);
+          print.quaternion.slerpQuaternions(camera.quaternion, qLand, easeInOut(clamp01(u * 1.15)));
+          print.quaternion.multiply(qTmp.setFromAxisAngle(xAxis, 0.32 * Math.sin(u * Math.PI * 3) * (1 - u)));
+        } else {
+          const v = (pk - FLY) / (1 - FLY);
+          const e = easeOut(v);
+          print.position.lerpVectors(land, printTo, e);
+          print.position.y += 0.03 * Math.sin(clamp01(v * 3) * Math.PI) * (1 - v);
+          print.quaternion.slerpQuaternions(qLand, quatTo, e);
+        }
+        const lift = Math.max(print.position.y, 0);
+        printShadow.visible = true;
+        printShadow.position.set(print.position.x, 0.004, print.position.z + lift * 0.25);
+        printShadow.scale.set(W * (1.25 + lift * 0.8), L * (1.2 + lift * 0.8), 1);
+        printShadowMat.opacity = clamp01(0.85 - lift * 0.35);
+      } else printShadow.visible = false;
+
+      // The desk fades in as the view starts pulling back; dark mode dims its top like the page's desk.
+      deskGroup.visible = z > 0;
+      if (z > 0 && deskTop) {
+        const a = clamp01(z / 0.12);
+        fadeIns.forEach((m) => {
+          m.transparent = a < 1 || shadowMats.has(m);
+          m.opacity = a;
+        });
+        deskTop.color.setScalar(document.documentElement.dataset.theme === "dark" ? 0.55 : 1);
       }
       const fade = 1 - span(p, T.fadeCamera);
       materials.forEach((m) => {

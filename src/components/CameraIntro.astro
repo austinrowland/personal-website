@@ -376,6 +376,7 @@ const POSTER = poster.src;
       stop = mountPolaroid600(root.querySelector("canvas")!, model, {
         progress: () => p,
         landing,
+        desk: () => document.querySelector<HTMLElement>('[data-desk][data-layout="desk"] [data-desk-top]'),
         onReady: () => (stage.dataset.live = ""),
         onError: toStill,
       });
