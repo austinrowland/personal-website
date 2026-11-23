@@ -35,7 +35,7 @@ void main(){
   vec2 L=uLight-vPx;float fall=exp(-dot(L,L)/(vW*vW*.5));
   float spec=clamp(dot(-gr,normalize(L+1e-4))*6.,-.25,.35)*fall*vis*edge;
   vec3 col=uPaper*(r+spec*.22);
-  if(uDark>.5){float obj=texture2D(uMask,base).r*vis*edge;col=mix(uPaper,vec3(clamp(.56+(s-1.)*1.2,0.,1.)),obj)+spec*.4*obj;}
+  if(uDark>.5){float obj=texture2D(uMask,base).r*vis*edge;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);col=mix(uPaper,vec3(clamp(.2+(s-1.)*.45+key,0.,1.)),obj)+spec*.22*obj;}
   gl_FragColor=vec4(col,1.);
 }`;
 
