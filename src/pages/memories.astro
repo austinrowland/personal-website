@@ -25,7 +25,7 @@ const soonTilt = -4;
   </CameraIntro>
 
   <section class="desk" aria-label="Prints on the desk" data-desk data-layout="desk">
-    <script is:inline>
+    <script is:inline data-astro-rerun>
       // Lab: a 3D desk by default; ?desk=toss tosses the prints onto the page, ?desk=wood is the full-width desk.
       const m = location.search.match(/[?&]desk=(wood|toss)\b/);
       if (m) document.currentScript.parentElement.dataset.layout = m[1];
@@ -207,17 +207,16 @@ const soonTilt = -4;
     grid-auto-flow: dense;
   }
   /* Where the camera is set down; only the intro puts it there. */
-  :global(html[data-intro="play"]) .desk[data-layout="desk"] .camera-slot {
+  :global(html[data-intro="play"]:not([data-still])) .desk[data-layout="desk"] .camera-slot {
     display: block;
     z-index: 5;
-    aspect-ratio: 5 / 6;
+    min-height: 15rem;
     pointer-events: none;
     container-type: inline-size;
   }
   @media (min-width: 640px) {
-    :global(html[data-intro="play"]) .desk[data-layout="desk"] .camera-slot {
+    :global(html[data-intro="play"]:not([data-still])) .desk[data-layout="desk"] .camera-slot {
       grid-column: span 2;
-      aspect-ratio: 5 / 3;
     }
   }
   .camera-slot img {
@@ -231,7 +230,7 @@ const soonTilt = -4;
   .camera-slot img:not([src]) {
     visibility: hidden;
   }
-  :global(html[data-intro="play"]:not([data-landed])) .desk[data-layout="desk"] .desk-top {
+  :global(html[data-intro="play"]:not([data-landed], [data-still])) .desk[data-layout="desk"] .desk-top {
     visibility: hidden;
   }
   :global(html[data-intro="play"]) .desk[data-layout="desk"] :global(.front img) {
@@ -283,9 +282,11 @@ const soonTilt = -4;
   :global(html[data-intro="play"]:not([data-landed])) .desk[data-layout="toss"] li:not(.soon-slot) {
     transform: translate(var(--fx, 0px), var(--fy, -90vh)) rotate(var(--spin)) scale(1.14);
     opacity: 0;
+    visibility: hidden;
     transition:
       transform 0.45s cubic-bezier(0.5, 0, 0.75, 0),
-      opacity 0.1s linear 0.35s;
+      opacity 0.1s linear 0.35s,
+      visibility 0s linear 0.45s;
   }
   :global(html[data-intro="play"]:not([data-landed])) .desk[data-layout="toss"] li:not(.soon-slot) :global(.face) {
     box-shadow: 0 60px 60px -20px rgb(0 0 0 / 0.18);
