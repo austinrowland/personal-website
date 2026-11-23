@@ -41,23 +41,25 @@ const at = closing.text.indexOf(closing.ask);
     {
       chapters.map((c, i) => (
         <section class:list={["chapter", { flip: i % 2 === 1 }]} data-chapter aria-labelledby={`chapter-${i}`}>
-          <div class="chapter-art">
-            <Relief scene={c.scene} class="w-full" />
-          </div>
-          <div class="chapter-text">
-            <hgroup>
-              <p class="label text-muted" data-line>
-                {String(i + 1).padStart(2, "0")} · {c.place}
-              </p>
-              <h2 id={`chapter-${i}`} class="mt-3 font-display text-4xl leading-tight sm:text-5xl" data-line>
-                {c.title}
-              </h2>
-            </hgroup>
-            {c.paragraphs.map((p) => (
-              <p class="story-p mt-6" data-line>
-                {p}
-              </p>
-            ))}
+          <div class="chapter-pin">
+            <div class="chapter-art">
+              <Relief scene={c.scene} class="w-full" />
+            </div>
+            <div class="chapter-text">
+              <hgroup>
+                <p class="label text-muted" data-line>
+                  {String(i + 1).padStart(2, "0")} · {c.place}
+                </p>
+                <h2 id={`chapter-${i}`} class="mt-3 font-display text-4xl leading-tight sm:text-5xl" data-line>
+                  {c.title}
+                </h2>
+              </hgroup>
+              {c.paragraphs.map((p) => (
+                <p class="story-p mt-6" data-line>
+                  {p}
+                </p>
+              ))}
+            </div>
           </div>
         </section>
       ))
@@ -84,21 +86,23 @@ const at = closing.text.indexOf(closing.ask);
     }
   }
   .chapter {
+    padding-block: 3.5rem;
+  }
+  .chapter-pin {
     display: grid;
     gap: 2rem;
     align-items: start;
-    padding-block: 3.5rem;
   }
   .chapter-art {
     position: relative;
     width: min(100%, 24rem);
     margin-inline: auto;
   }
-  /* Sticky art is its own stacking context, so the relief's blend has to happen here to reach the page. */
-  .chapter-art {
+  /* Sticky boxes are their own stacking contexts, so the relief's blend has to happen at the outermost one to reach the page. */
+  .chapter-pin {
     mix-blend-mode: multiply;
   }
-  :global([data-theme="dark"]) .chapter-art {
+  :global([data-theme="dark"]) .chapter-pin {
     mix-blend-mode: screen;
   }
   .story-p {
@@ -109,10 +113,12 @@ const at = closing.text.indexOf(closing.ask);
   }
   @media (min-width: 768px) {
     .chapter {
-      grid-template-columns: 1fr 1fr;
-      gap: 5rem;
       min-height: 125vh;
       padding-block: 0;
+    }
+    .chapter-pin {
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
     }
     .chapter-art {
       position: sticky;
@@ -124,6 +130,25 @@ const at = closing.text.indexOf(closing.ask);
     }
     .flip .chapter-art {
       order: 2;
+    }
+  }
+  /* Desktop: each chapter pins its sculpture and text side by side for a beat of scrolling before moving on. */
+  @media (min-width: 768px) and (min-height: 700px) {
+    .chapter {
+      height: 170vh;
+    }
+    .chapter-pin {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      align-items: center;
+    }
+    .chapter-art {
+      position: relative;
+      top: auto;
+    }
+    .chapter-text {
+      padding-block: 0;
     }
   }
   .hero-stroke path {
