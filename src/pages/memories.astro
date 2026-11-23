@@ -10,6 +10,8 @@ import { pages } from "../data/pages";
 let seed = 7;
 const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
 const scatter = gallery.map(() => ({ x: rand() * 18, y: rand() * 22, r: rand() * 7 }));
+// Lab: the looser layout for prints tossed onto the page, and how far each one spins in flight.
+const toss = gallery.map(() => ({ x: rand() * 34, y: rand() * 26, r: rand() * 10, spin: rand() * 40 }));
 const soonTilt = -4;
 ---
 
@@ -21,7 +23,11 @@ const soonTilt = -4;
     </div>
   </CameraIntro>
 
-  <section class="desk" aria-label="Prints on the desk" data-desk>
+  <section class="desk" aria-label="Prints on the desk" data-desk data-layout="toss">
+    <script is:inline>
+      // Lab: prints tossed onto the page by default; ?desk=wood shows the wooden desk.
+      if (/[?&]desk=wood\b/.test(location.search)) document.currentScript.parentElement.dataset.layout = "wood";
+    </script>
     <ul class="mx-auto grid max-w-6xl grid-cols-1 gap-x-8 gap-y-12 px-8 py-20 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <li class="soon-slot" data-md-skip>
         <div
@@ -40,7 +46,9 @@ const soonTilt = -4;
       </li>
       {
         gallery.map((p, i) => (
-          <li style={`--x:${scatter[i].x}px;--y:${scatter[i].y}px;--d:${i * 90}ms`}>
+          <li
+            style={`--x:${scatter[i].x}px;--y:${scatter[i].y}px;--d:${i * 90}ms;--tx:${toss[i].x}px;--ty:${toss[i].y}px;--tr:${toss[i].r}deg;--spin:${toss[i].spin}deg;--td:${120 + i * 110}ms`}
+          >
             <Polaroid photo={p} tilt={scatter[i].r} />
           </li>
         ))
@@ -56,7 +64,7 @@ const soonTilt = -4;
 </Base>
 
 <style>
-  .desk {
+  .desk[data-layout="wood"] {
     --shade: transparent;
     position: relative;
     overflow: hidden;
@@ -67,7 +75,7 @@ const soonTilt = -4;
       linear-gradient(90deg, #7a4d2c, #94633d 30%, #845532 55%, #9a6941 80%, #7d502f);
     box-shadow: inset 0 40px 60px -40px rgb(0 0 0 / 0.55);
   }
-  :global([data-theme="dark"]) .desk {
+  :global([data-theme="dark"]) .desk[data-layout="wood"] {
     --shade: rgb(10 8 6 / 0.45);
   }
   .desk li {
@@ -152,6 +160,66 @@ const soonTilt = -4;
     .desk li {
       --x: 0px !important;
     }
+    .desk[data-layout="toss"] li {
+      --tx: 0px !important;
+    }
+  }
+
+  /*
+    Lab, tossed prints: no desk, just the page. Once the 3D print lands, the others are thrown in one by one from where
+    the camera was, spinning, high (big soft shadow) and slightly larger, and settle flat; scrolling back throws them back.
+  */
+  .desk[data-layout="toss"] {
+    position: relative;
+    overflow: hidden;
+  }
+  .desk[data-layout="toss"] ul {
+    column-gap: 3rem;
+    row-gap: 4rem;
+  }
+  .desk[data-layout="toss"] li {
+    --x: var(--tx);
+    --y: var(--ty);
+    transition:
+      transform 0.95s cubic-bezier(0.12, 0.8, 0.22, 1) var(--td),
+      opacity 0.12s linear var(--td);
+  }
+  .desk[data-layout="toss"] li :global(.polaroid) {
+    --tilt: var(--tr) !important;
+  }
+  .desk[data-layout="toss"] :global(.polaroid .face) {
+    box-shadow:
+      0 1px 1px rgb(0 0 0 / 0.14),
+      0 3px 6px -2px rgb(0 0 0 / 0.12),
+      0 16px 28px -14px rgb(0 0 0 / 0.32);
+    transition:
+      box-shadow 0.95s cubic-bezier(0.12, 0.8, 0.22, 1) var(--td),
+      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .desk[data-layout="toss"] li:hover :global(.polaroid .face) {
+    box-shadow:
+      0 2px 3px rgb(0 0 0 / 0.12),
+      0 26px 40px -18px rgb(0 0 0 / 0.38);
+    transition-delay: 0s;
+  }
+  :global([data-theme="dark"]) .desk[data-layout="toss"] :global(.polaroid .face) {
+    box-shadow:
+      0 1px 1px rgb(0 0 0 / 0.5),
+      0 18px 30px -12px rgb(0 0 0 / 0.75);
+  }
+  :global(html[data-intro="play"]:not([data-landed])) .desk[data-layout="toss"] li:not(.soon-slot) {
+    transform: translate(var(--fx, 0px), var(--fy, -90vh)) rotate(var(--spin)) scale(1.14);
+    opacity: 0;
+    transition:
+      transform 0.45s cubic-bezier(0.5, 0, 0.75, 0),
+      opacity 0.1s linear 0.35s;
+  }
+  :global(html[data-intro="play"]:not([data-landed])) .desk[data-layout="toss"] li:not(.soon-slot) :global(.face) {
+    box-shadow: 0 60px 60px -20px rgb(0 0 0 / 0.18);
+    transition: box-shadow 0.45s ease;
+  }
+  :global(html[data-intro="play"]) .desk[data-layout="toss"] :global(.front img) {
+    filter: none;
   }
 </style>
 
@@ -173,4 +241,36 @@ const soonTilt = -4;
     });
   }
   document.addEventListener("astro:page-load", initPolaroids);
+
+  /** Lab: aims each tossed print's flight from where the 3D camera leaves the screen (opposite the face-down print). */
+  function aimToss() {
+    const desk = document.querySelector<HTMLElement>('[data-desk][data-layout="toss"]');
+    const soon = document.querySelector<HTMLElement>("[data-soon]");
+    if (!desk || !soon || document.documentElement.dataset.intro !== "play") return;
+    const aim = () => {
+      if ("landed" in document.documentElement.dataset) return;
+      const d = desk.getBoundingClientRect();
+      const s = soon.getBoundingClientRect();
+      const fromX = s.left + s.width / 2 < innerWidth / 2 ? innerWidth * 0.72 : innerWidth * 0.28;
+      const fromY = innerHeight * 0.3;
+      desk.querySelectorAll<HTMLElement>("li:not(.soon-slot)").forEach((li) => {
+        const cx = d.left + li.offsetLeft + li.offsetWidth / 2;
+        const cy = d.top + li.offsetTop + li.offsetHeight / 2;
+        li.style.setProperty("--fx", `${Math.round(fromX - cx)}px`);
+        li.style.setProperty("--fy", `${Math.round(fromY - cy)}px`);
+      });
+    };
+    aim();
+    addEventListener("scroll", aim, { passive: true });
+    addEventListener("resize", aim);
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        removeEventListener("scroll", aim);
+        removeEventListener("resize", aim);
+      },
+      { once: true },
+    );
+  }
+  document.addEventListener("astro:page-load", aimToss);
 </script>
