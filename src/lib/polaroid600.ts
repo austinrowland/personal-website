@@ -423,6 +423,7 @@ export function mountPolaroid600(
     );
     const TURN_FROM = -0.6;
     const TURN_TO = -0.22;
+    const CAMERA_PRINTS = 1.4;
 
     const restPose = new THREE.Object3D();
     restPose.position.set(0, BASE, 0);
@@ -431,17 +432,12 @@ export function mountPolaroid600(
     const printFrom = ejectEnd.clone().applyMatrix4(restPose.matrixWorld);
     const quatFrom = restPose.quaternion.clone();
 
-    // The camera's footprint on the desk at rest, to size it to its spot there (narrow screens shrink it a little).
-    // Its resting pose: laid on its back, lens up, at a slight angle, so from above it reads as a Polaroid 600.
-    const qBack = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(-Math.PI / 2, 0.14, 0, "YXZ"),
-    );
-    camera.quaternion.copy(qBack);
+    // The camera's footprint standing on the desk, to size it next to the prints like a real Polaroid 600.
+    camera.rotation.set(0, TURN_TO, 0);
     camera.updateMatrixWorld(true);
     const foot = new THREE.Box3()
       .setFromObject(body)
       .getSize(new THREE.Vector3());
-    const backY = foot.y / 2 + 0.004;
     camera.rotation.set(0, 0, 0);
     const qUpright = new THREE.Quaternion();
     const euler = new THREE.Euler();
@@ -477,13 +473,9 @@ export function mountPolaroid600(
         ? ndc(sr.left + sr.width / 2, sr.top + sr.height / 2)
         : ndc(tx < vw / 2 ? vw * 0.72 : vw * 0.28, vh * 0.42);
       const kk = (2 * halfW) / vw;
-      camFit = sr?.width
-        ? Math.min(
-            1,
-            (sr.width * kk * 0.94) / foot.x,
-            (sr.height * kk * 0.94) / foot.z,
-          )
-        : 1;
+      // A real camera is about 1.4 prints wide; narrow screens fit it to its spot.
+      camFit = (CAMERA_PRINTS * W) / foot.x;
+      if (sr?.width) camFit = Math.min(camFit, (sr.width * kk) / foot.x);
       const printNdc = ndc(tx, ty);
       // Screen-up is -z. Choose the view so the camera model lands at camNdc.
       const viewX = -camNdc.x * halfW;
@@ -650,11 +642,9 @@ export function mountPolaroid600(
       const flash = flashAt(p);
 
       // 1. At rest the camera floats and follows the cursor; scrolling turns it to face the visitor and moves in.
-      // As the view pulls back it's set down on the desk, and once its print is out, picked up and laid on its back.
+      // As the view pulls back it's set down upright on the desk, and stays there.
       const z = span(p, T.zoom);
       const lower = easeInOut(span(z, [0.02, 0.26]));
-      const tk = easeInOut(span(z, [0.56, 0.86]));
-      const rockT = span(z, [0.84, 0.98]);
       qUpright.setFromEuler(
         euler.set(
           pointer.sy * 0.18 * hover,
@@ -664,18 +654,10 @@ export function mountPolaroid600(
           0,
         ),
       );
-      camera.quaternion.slerpQuaternions(qUpright, qBack, tk);
-      camera.quaternion.multiply(
-        qTmp.setFromAxisAngle(
-          xAxis,
-          0.035 * Math.sin(rockT * Math.PI * 2) * (1 - rockT),
-        ),
-      );
-      const upY =
-        BASE + Math.sin(now / 900) * 0.05 * hover + (restY - BASE) * lower;
+      camera.quaternion.copy(qUpright);
       camera.position.set(
         0,
-        upY + (backY - upY) * tk + 0.3 * Math.sin(Math.PI * tk),
+        BASE + Math.sin(now / 900) * 0.05 * hover + (restY - BASE) * lower,
         0,
       );
       view.position.lerpVectors(farPos, nearPos, approach);
