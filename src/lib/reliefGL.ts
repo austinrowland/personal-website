@@ -7,12 +7,35 @@
 const VERT = `attribute vec2 p;varying vec2 vUv;varying vec2 vPx;varying float vW;uniform vec4 uRect;uniform vec2 uRes;
 void main(){vUv=p;vec2 px=uRect.xy+p*uRect.zw;vPx=px;vW=uRect.z;vec2 c=px/uRes*2.-1.;gl_Position=vec4(c.x,-c.y,0.,1.);}`;
 
-const FRAG = `precision mediump float;varying vec2 vUv;varying vec2 vPx;varying float vW;uniform sampler2D uTex,uMask;
-uniform float uVel,uTime,uSolid,uDark;uniform vec3 uPaper;uniform vec2 uLight;
+const FRAG = `#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 vUv;varying vec2 vPx;varying float vW;uniform sampler2D uTex,uMask,uPlaster;
+uniform float uVel,uTime,uSolid,uDark,uFx,uBg,uScroll,uPress;uniform vec3 uPaper;uniform vec2 uLight;uniform float uVw;
 float S(vec2 uv){return texture2D(uTex,uv).r/.8;}
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+1.),f.x),f.y);}
+float H(vec2 w,vec2 px){
+  float d=length(px-uLight);
+  return texture2D(uPlaster,w/512.).r*.75+texture2D(uPlaster,w/1400.+.37).r*.25-uPress*exp(-d*d/2600.)*.9;
+}
+vec3 surface(vec2 px){
+  if(uFx<.5)return uPaper;
+  vec2 w=vec2(px.x,px.y+uScroll);
+  w.x+=uVel*14.*sin(w.y*.018-uTime*2.2);
+  w.y+=uVel*22.*sin(w.x*.006+uTime*.7);
+  float c=H(w,px),gx=H(w+vec2(2.,0.),px+vec2(2.,0.))-c,gy=H(w+vec2(0.,2.),px+vec2(0.,2.))-c;
+  vec2 L=uLight-px;float fall=exp(-dot(L,L)/(uVw*uVw*.12));
+  float shade=clamp(dot(-vec2(gx,gy),normalize(L+1e-4))*40.,-1.,1.)*(.35+.65*fall)+dot(-vec2(gx,gy),vec2(.6,.8))*12.;
+  float grain=h(floor(w/1.25))-.5;
+  float fleck=step(.993,h(floor(w/3.)+11.))*n(w/2.);
+  float k=uDark>.5?.6:1.;
+  return uPaper*(1.+(shade*.035+grain*.025-fleck*.05-(1.-fall)*.012)*k)+(uDark>.5?vec3(shade*.012+grain*.012):vec3(0.));
+}
 void main(){
+  if(uBg>.5){gl_FragColor=vec4(surface(vPx),1.);return;}
   vec2 uv=vUv;float v=uVel;
   float bend=(uv.x-.5)*(uv.x-.5)*4.;
   uv.y+=v*.07*bend;
@@ -34,8 +57,8 @@ void main(){
   vec2 gr=vec2(S(base+e.xy)-S(base-e.xy),S(base+e.yx)-S(base-e.yx));
   vec2 L=uLight-vPx;float fall=exp(-dot(L,L)/(vW*vW*.5));
   float spec=clamp(dot(-gr,normalize(L+1e-4))*6.,-.25,.35)*fall*vis*edge;
-  vec3 col=uPaper*(r+spec*.22);
-  if(uDark>.5){float obj=texture2D(uMask,base).r*vis*edge;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);col=mix(uPaper,vec3(clamp(.2+(s-1.)*.45+key,0.,1.)),obj)+spec*.22*obj;}
+  vec3 P=surface(vPx);vec3 col=P*(r+spec*.22);
+  if(uDark>.5){float obj=texture2D(uMask,base).r*vis*edge;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);col=mix(P,vec3(clamp(.2+(s-1.)*.45+key,0.,1.)),obj)+spec*.22*obj;}
   gl_FragColor=vec4(col,1.);
 }`;
 
@@ -63,6 +86,42 @@ const solidity = (c: DOMRect, vh: number) =>
   );
 
 const MASK = 128;
+const PLASTER = 512;
+
+/** A tileable plaster height map (periodic value noise), baked once so the page surface costs a few texture reads. */
+function plasterMap(): Uint8Array {
+  const out = new Float32Array(PLASTER * PLASTER);
+  const hash = (x: number, y: number) => {
+    const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  for (const [cells, weight] of [
+    [2, 0.4],
+    [4, 0.28],
+    [8, 0.17],
+    [32, 0.1],
+    [64, 0.05],
+  ]) {
+    const size = PLASTER / cells;
+    for (let y = 0; y < PLASTER; y++)
+      for (let x = 0; x < PLASTER; x++) {
+        const fx = x / size,
+          fy = y / size;
+        const ix = Math.floor(fx),
+          iy = Math.floor(fy);
+        let tx = fx - ix,
+          ty = fy - iy;
+        tx = tx * tx * (3 - 2 * tx);
+        ty = ty * ty * (3 - 2 * ty);
+        const g = (a: number, b: number) =>
+          hash((ix + a) % cells, ((iy + b) % cells) + cells * 7);
+        const top = g(0, 0) + (g(1, 0) - g(0, 0)) * tx;
+        const bot = g(0, 1) + (g(1, 1) - g(0, 1)) * tx;
+        out[y * PLASTER + x] += (top + (bot - top) * ty) * weight;
+      }
+  }
+  return Uint8Array.from(out, (v) => Math.min(255, v * 255));
+}
 
 /**
  * Where the sculpture is, as opposed to the flat wall behind it (which the assets normalize to 80% grey).
@@ -112,7 +171,11 @@ function sculptureMask(img: HTMLImageElement): Uint8Array {
   return Uint8Array.from(m, (v) => Math.min(255, v * 255));
 }
 
-export function mountReliefs(root: HTMLElement): (() => void) | undefined {
+/** `texture: true` also lays a living plaster surface across the whole page (the comparison lab mode). */
+export function mountReliefs(
+  root: HTMLElement,
+  { texture = false } = {},
+): (() => void) | undefined {
   const els = [...root.querySelectorAll<HTMLElement>("[data-relief]")];
   if (!els.length || matchMedia("(prefers-reduced-motion: reduce)").matches)
     return;
@@ -141,6 +204,7 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
   gl.useProgram(prog);
   gl.uniform1i(gl.getUniformLocation(prog, "uTex"), 0);
   gl.uniform1i(gl.getUniformLocation(prog, "uMask"), 1);
+  gl.uniform1i(gl.getUniformLocation(prog, "uPlaster"), 2);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(
     gl.ARRAY_BUFFER,
@@ -160,6 +224,11 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     dark: U("uDark"),
     paper: U("uPaper"),
     light: U("uLight"),
+    fx: U("uFx"),
+    bg: U("uBg"),
+    scroll: U("uScroll"),
+    press: U("uPress"),
+    vw: U("uVw"),
   };
 
   const reliefs: Relief[] = els.map((el) => ({
@@ -169,7 +238,7 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     tex: null,
     mask: null,
   }));
-  const texture = (
+  const makeTexture = (
     unit: number,
     w: number,
     h: number,
@@ -206,9 +275,14 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     return t;
   };
+  if (texture) {
+    makeTexture(2, PLASTER, PLASTER, plasterMap());
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  }
   const upload = (r: Relief) => {
-    r.tex = texture(0, 0, 0, r.img);
-    r.mask = texture(1, MASK, MASK, sculptureMask(r.img));
+    r.tex = makeTexture(0, 0, 0, r.img);
+    r.mask = makeTexture(1, MASK, MASK, sculptureMask(r.img));
   };
   Promise.all(
     reliefs.map((r) =>
@@ -221,6 +295,7 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     if (!alive) return;
     document.body.prepend(canvas);
     document.documentElement.classList.add("relief-gl");
+    if (texture) document.documentElement.classList.add("fx-texture");
   });
 
   let paper = [1, 1, 1];
@@ -264,6 +339,9 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
   };
   addEventListener("pointermove", onPointer, { passive: true });
 
+  let press = 0;
+  let slow = 0;
+  let prevT = 0;
   let lastY = scrollY;
   let vel = 0;
   let alive = true;
@@ -290,6 +368,30 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     gl.uniform1f(u.dark, dark);
     gl.uniform3f(u.paper, paper[0], paper[1], paper[2]);
     gl.uniform2f(u.light, light.x, light.y);
+    gl.uniform1f(u.fx, texture ? 1 : 0);
+    // Slow devices drop the page surface after a few seconds and keep just the reliefs.
+    if (texture && prevT) {
+      slow += (t - prevT - slow) * 0.05;
+      if (t > 4000 && slow > 45) {
+        texture = false;
+        document.documentElement.classList.remove("fx-texture");
+      }
+    }
+    prevT = t;
+    if (texture) {
+      press += ((t - lastPointer < 1500 ? 1 : 0) - press) * 0.06;
+      gl.uniform1f(u.scroll, scrollY);
+      gl.uniform1f(u.press, press);
+      gl.uniform1f(u.vw, innerWidth);
+      gl.uniform1f(u.bg, 1);
+      gl.uniform4f(u.rect, 0, 0, innerWidth, innerHeight);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      gl.uniform1f(u.bg, 0);
+      const de = document.documentElement.style;
+      de.setProperty("--sv", vel.toFixed(3));
+      de.setProperty("--lx", ((light.x / innerWidth - 0.5) * 2).toFixed(2));
+      de.setProperty("--ly", ((light.y / innerHeight - 0.5) * 2).toFixed(2));
+    }
     const vh = innerHeight;
     for (const r of reliefs) {
       if (!r.tex) continue;
@@ -323,7 +425,9 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     removeEventListener("pointermove", onPointer);
     themeObs.disconnect();
     canvas.remove();
-    document.documentElement.classList.remove("relief-gl");
+    document.documentElement.classList.remove("relief-gl", "fx-texture");
+    for (const v of ["--sv", "--lx", "--ly"])
+      document.documentElement.style.removeProperty(v);
     gl.getExtension("WEBGL_lose_context")?.loseContext();
   };
 }

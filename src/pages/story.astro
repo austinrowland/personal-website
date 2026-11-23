@@ -27,7 +27,7 @@ const at = closing.text.indexOf(closing.ask);
 
   <section class="story-hero mx-auto flex max-w-6xl flex-col justify-center px-6 pt-12 pb-16 md:pt-20">
     <p class="label text-muted" data-reveal data-md-skip>story</p>
-    <h1 class="mt-4 font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl" data-reveal style="--i:1">
+    <h1 class="hero-title mt-4 font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl" data-reveal style="--i:1">
       {pages.story.headline}<br />
       <span class="text-muted">{pages.story.headlineAside}</span>
     </h1>
@@ -169,6 +169,22 @@ const at = closing.text.indexOf(closing.ask);
   :global(.js) .chapter [data-line] {
     opacity: 0;
   }
+  /* Lab: ?fx=texture. Text leans with scroll speed and its letterpress shadow follows the light. */
+  :global(.fx-texture) .chapter-text {
+    transform: skewY(calc(var(--sv, 0) * -0.6deg)) translateY(calc(var(--sv, 0) * -6px));
+  }
+  :global(.fx-texture) .chapter h2,
+  :global(.fx-texture) .hero-title {
+    text-shadow:
+      calc(var(--lx, 0) * -1px) calc(var(--ly, 0) * -1px) 0 rgb(255 255 255 / 0.85),
+      calc(var(--lx, 0) * 0.8px) calc(var(--ly, 0) * 0.8px) 1px rgb(0 0 0 / 0.14);
+  }
+  :global([data-theme="dark"].fx-texture) .chapter h2,
+  :global([data-theme="dark"].fx-texture) .hero-title {
+    text-shadow:
+      calc(var(--lx, 0) * -1px) calc(var(--ly, 0) * -1px) 0 rgb(255 255 255 / 0.08),
+      calc(var(--lx, 0) * 1px) calc(var(--ly, 0) * 1px) 1px rgb(0 0 0 / 0.6);
+  }
   @media print {
     .chapter :global(.ink-s) {
       stroke-dashoffset: 0 !important;
@@ -200,7 +216,8 @@ const at = closing.text.indexOf(closing.ask);
   const ease = (t: number) => t * t * (3 - 2 * t);
 
   function initStory() {
-    const unmount = mountReliefs(document.querySelector("main") ?? document.body);
+    const texture = new URLSearchParams(location.search).get("fx") === "texture";
+    const unmount = mountReliefs(document.querySelector("main") ?? document.body, { texture });
     if (unmount) document.addEventListener("astro:before-swap", unmount, { once: true });
     const chapters = [...document.querySelectorAll<HTMLElement>("[data-chapter]")];
     if (!chapters.length || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
