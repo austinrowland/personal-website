@@ -239,7 +239,11 @@ export function mountPolaroid600(
   rim.position.set(-4, 3, -3);
   scene.add(rim);
 
-  const view = new THREE.PerspectiveCamera(30, 1, 0.05, 100);
+  /** The top-down desk view uses a long lens so the camera, standing on it, is seen from above rather than leaning. */
+  const VIEW_FOV = 30;
+  const DESK_FOV = 13;
+  const deskTan = Math.tan(THREE.MathUtils.degToRad(DESK_FOV / 2));
+  const view = new THREE.PerspectiveCamera(VIEW_FOV, 1, 0.05, 400);
   const tan = Math.tan(THREE.MathUtils.degToRad(view.fov / 2));
   const nearPos = new THREE.Vector3();
   const nearQuat = new THREE.Quaternion();
@@ -424,6 +428,7 @@ export function mountPolaroid600(
     const TURN_FROM = -0.6;
     const TURN_TO = -0.22;
     const CAMERA_PRINTS = 1.4;
+    const SLOT_PAD = 24;
 
     const restPose = new THREE.Object3D();
     restPose.position.set(0, BASE, 0);
@@ -441,6 +446,7 @@ export function mountPolaroid600(
     const foot = footBox.getSize(new THREE.Vector3());
     camera.rotation.set(0, 0, 0);
     const corner3 = new THREE.Vector3();
+    let slotNeed = 0;
     const qUpright = new THREE.Quaternion();
     const euler = new THREE.Euler();
     let camFit = 1;
@@ -462,9 +468,9 @@ export function mountPolaroid600(
       const vw = canvas.clientWidth;
       const vh = canvas.clientHeight;
       const pw = target?.width ?? Math.min(vw * 0.6, 280);
-      const H = W / ((pw / vw) * 2 * tan * view.aspect);
-      const halfW = H * tan * view.aspect;
-      const halfH = H * tan;
+      const H = W / ((pw / vw) * 2 * deskTan * view.aspect);
+      const halfW = H * deskTan * view.aspect;
+      const halfH = H * deskTan;
       const tx = target ? target.x : vw / 2;
       const ty = target ? target.y : vh / 2;
       const ndc = (x: number, y: number) =>
@@ -478,54 +484,36 @@ export function mountPolaroid600(
       // Screen-up is -z. Choose the view so the camera model lands at camNdc.
       const viewX = -camNdc.x * halfW;
       const viewZ = camNdc.y * halfH;
-      // A real camera is about 1.4 prints wide. Where its spot is smaller (one or two columns), shrink it until all
-      // of it, its top included, which looms larger from above, stays inside the spot and off the prints.
+      // A real camera is about 1.4 prints wide; narrow screens fit it to its spot.
+      const kk = (2 * halfW) / vw;
       camFit = (CAMERA_PRINTS * W) / foot.x;
-      const fits = (sc: number) => {
+      if (sr?.width) camFit = Math.min(camFit, (sr.width * kk) / foot.x);
+      // Seen from above its top looms larger than its base, so make its spot tall enough for all of it, pushing the
+      // prints after it down rather than letting the camera cover them. Measured as if straight below the lens, so the
+      // spot doesn't change size as the page scrolls.
+      if (camSlot && sr?.width) {
+        let reach = 0;
         for (let i = 0; i < 8; i++) {
           corner3.set(
             i & 1 ? footBox.max.x : footBox.min.x,
             i & 2 ? footBox.max.y : footBox.min.y,
             i & 4 ? footBox.max.z : footBox.min.z,
           );
-          const d = H - sc * (restY + corner3.y);
-          const x =
-            vw / 2 +
-            ((sc * corner3.x - viewX) / (d * tan * view.aspect)) * (vw / 2);
-          const y = vh / 2 + ((sc * corner3.z - viewZ) / (d * tan)) * (vh / 2);
-          if (
-            x < box!.left ||
-            x > box!.right ||
-            y < box!.top ||
-            y > box!.bottom
-          )
-            return false;
+          const d = H - camFit * (restY + corner3.y);
+          reach = Math.max(
+            reach,
+            Math.abs((camFit * corner3.z) / (d * deskTan)) * (vh / 2),
+          );
         }
-        return true;
-      };
-      // The spot plus the empty gutters around it.
-      const gaps = camSlot?.parentElement
-        ? getComputedStyle(camSlot.parentElement)
-        : null;
-      const gx = parseFloat(gaps?.columnGap ?? "") || 0;
-      const gy = parseFloat(gaps?.rowGap ?? "") || 0;
-      const box = sr
-        ? {
-            left: sr.left - gx * 0.8,
-            right: sr.right + gx * 0.8,
-            top: sr.top - gy * 0.8,
-            bottom: sr.bottom + gy * 0.8,
-          }
-        : null;
-      if (box && sr?.width && !fits(camFit)) {
-        let lo = 0;
-        let hi = camFit;
-        for (let i = 0; i < 16; i++) {
-          const mid = (lo + hi) / 2;
-          if (fits(mid)) lo = mid;
-          else hi = mid;
+        const gap =
+          parseFloat(getComputedStyle(camSlot.parentElement!).rowGap) || 0;
+        const need = Math.ceil(
+          Math.min(2 * reach + SLOT_PAD - gap, sr.width * 1.6),
+        );
+        if (Math.abs(need - slotNeed) > 2) {
+          slotNeed = need;
+          camSlot.style.minHeight = `${need}px`;
         }
-        camFit = lo;
       }
       printTo.set(
         viewX + printNdc.x * halfW,
@@ -605,7 +593,7 @@ export function mountPolaroid600(
     let shotFor = "";
     const corner = new THREE.Vector3();
     const snapshot = () => {
-      const key = `${canvas.clientWidth}x${canvas.clientHeight}:${camSlot?.offsetWidth}`;
+      const key = `${canvas.clientWidth}x${canvas.clientHeight}:${camSlot?.offsetWidth}x${camSlot?.offsetHeight}`;
       if (!camSlot || !shotImg || key === shotFor) return;
       shotFor = key;
       const hidden = [deskGroup, print, printShadow].filter((o) => o.visible);
@@ -633,21 +621,31 @@ export function mountPolaroid600(
         y0 = Math.min(y0, sy);
         y1 = Math.max(y1, sy);
       }
-      x0 = Math.max(Math.floor(x0), 0);
-      y0 = Math.max(Math.floor(y0), 0);
-      x1 = Math.min(Math.ceil(x1), canvas.clientWidth);
-      y1 = Math.min(Math.ceil(y1), canvas.clientHeight);
-      const r = canvas.width / canvas.clientWidth;
+      const cw = canvas.clientWidth;
+      const ch = canvas.clientHeight;
+      x0 = Math.floor(x0);
+      y0 = Math.floor(y0);
+      const w = Math.min(Math.ceil(x1) - x0, cw);
+      const h = Math.min(Math.ceil(y1) - y0, ch);
+      x1 = x0 + w;
+      y1 = y0 + h;
+      const r = canvas.width / cw;
       const cut = document.createElement("canvas");
-      cut.width = Math.round((x1 - x0) * r);
-      cut.height = Math.round((y1 - y0) * r);
+      cut.width = Math.round(w * r);
+      cut.height = Math.round(h * r);
       if (cut.width > 0 && cut.height > 0) {
+        // Draw just the camera's box into the canvas's corner, so it's whole even where it's below the fold.
+        view.setViewOffset(cw, ch, x0, y0, w, h);
+        renderer.setViewport(0, 0, w, h);
+        renderer.render(scene, view);
+        view.clearViewOffset();
+        renderer.setViewport(0, 0, cw, ch);
         cut
           .getContext("2d")!
           .drawImage(
             canvas,
-            x0 * r,
-            y0 * r,
+            0,
+            canvas.height - cut.height,
             cut.width,
             cut.height,
             0,
@@ -728,6 +726,12 @@ export function mountPolaroid600(
 
       // 4. Pull back over the desk, seen at an angle with its edges, then up to a top-down view; the print is taken
       // out of the slot, arcs over with a flutter, touches down short of its spot and slides in, face down.
+      const fovNow =
+        z > 0 ? VIEW_FOV + (DESK_FOV - VIEW_FOV) * easeInOut(z) : VIEW_FOV;
+      if (view.fov !== fovNow) {
+        view.fov = fovNow;
+        view.updateProjectionMatrix();
+      }
       if (z > 0) {
         planDesk();
         camera.scale.setScalar(1 + (camFit - 1) * lower);
