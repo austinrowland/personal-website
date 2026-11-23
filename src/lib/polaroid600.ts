@@ -435,10 +435,12 @@ export function mountPolaroid600(
     // The camera's footprint standing on the desk, to size it next to the prints like a real Polaroid 600.
     camera.rotation.set(0, TURN_TO, 0);
     camera.updateMatrixWorld(true);
-    const foot = new THREE.Box3()
+    const footBox = new THREE.Box3()
       .setFromObject(body)
-      .getSize(new THREE.Vector3());
+      .translate(camera.position.clone().negate());
+    const foot = footBox.getSize(new THREE.Vector3());
     camera.rotation.set(0, 0, 0);
+    const corner3 = new THREE.Vector3();
     const qUpright = new THREE.Quaternion();
     const euler = new THREE.Euler();
     let camFit = 1;
@@ -472,14 +474,59 @@ export function mountPolaroid600(
       const camNdc = sr?.width
         ? ndc(sr.left + sr.width / 2, sr.top + sr.height / 2)
         : ndc(tx < vw / 2 ? vw * 0.72 : vw * 0.28, vh * 0.42);
-      const kk = (2 * halfW) / vw;
-      // A real camera is about 1.4 prints wide; narrow screens fit it to its spot.
-      camFit = (CAMERA_PRINTS * W) / foot.x;
-      if (sr?.width) camFit = Math.min(camFit, (sr.width * kk) / foot.x);
       const printNdc = ndc(tx, ty);
       // Screen-up is -z. Choose the view so the camera model lands at camNdc.
       const viewX = -camNdc.x * halfW;
       const viewZ = camNdc.y * halfH;
+      // A real camera is about 1.4 prints wide. Where its spot is smaller (one or two columns), shrink it until all
+      // of it, its top included, which looms larger from above, stays inside the spot and off the prints.
+      camFit = (CAMERA_PRINTS * W) / foot.x;
+      const fits = (sc: number) => {
+        for (let i = 0; i < 8; i++) {
+          corner3.set(
+            i & 1 ? footBox.max.x : footBox.min.x,
+            i & 2 ? footBox.max.y : footBox.min.y,
+            i & 4 ? footBox.max.z : footBox.min.z,
+          );
+          const d = H - sc * (restY + corner3.y);
+          const x =
+            vw / 2 +
+            ((sc * corner3.x - viewX) / (d * tan * view.aspect)) * (vw / 2);
+          const y = vh / 2 + ((sc * corner3.z - viewZ) / (d * tan)) * (vh / 2);
+          if (
+            x < box!.left ||
+            x > box!.right ||
+            y < box!.top ||
+            y > box!.bottom
+          )
+            return false;
+        }
+        return true;
+      };
+      // The spot plus the empty gutters around it.
+      const gaps = camSlot?.parentElement
+        ? getComputedStyle(camSlot.parentElement)
+        : null;
+      const gx = parseFloat(gaps?.columnGap ?? "") || 0;
+      const gy = parseFloat(gaps?.rowGap ?? "") || 0;
+      const box = sr
+        ? {
+            left: sr.left - gx * 0.8,
+            right: sr.right + gx * 0.8,
+            top: sr.top - gy * 0.8,
+            bottom: sr.bottom + gy * 0.8,
+          }
+        : null;
+      if (box && sr?.width && !fits(camFit)) {
+        let lo = 0;
+        let hi = camFit;
+        for (let i = 0; i < 16; i++) {
+          const mid = (lo + hi) / 2;
+          if (fits(mid)) lo = mid;
+          else hi = mid;
+        }
+        camFit = lo;
+      }
       printTo.set(
         viewX + printNdc.x * halfW,
         0.008,
