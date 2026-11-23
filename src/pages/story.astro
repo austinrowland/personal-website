@@ -94,6 +94,13 @@ const at = closing.text.indexOf(closing.ask);
     width: min(100%, 24rem);
     margin-inline: auto;
   }
+  /* Sticky art is its own stacking context, so the relief's blend has to happen here to reach the page. */
+  .chapter-art {
+    mix-blend-mode: multiply;
+  }
+  :global([data-theme="dark"]) .chapter-art {
+    mix-blend-mode: screen;
+  }
   .story-p {
     font-family: var(--font-display);
     font-size: clamp(1.2rem, 2.2vw, 1.45rem);
