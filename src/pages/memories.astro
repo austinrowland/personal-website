@@ -47,6 +47,9 @@ const soonTilt = -4;
           </span>
         </div>
       </li>
+      <li class="camera-slot" data-camera-slot data-md-skip aria-hidden="true">
+        <img alt="" decoding="async" />
+      </li>
       {
         gallery.map((p, i) => (
           <li
@@ -115,8 +118,11 @@ const soonTilt = -4;
     display: block;
     height: calc(100cqw + 2.51rem);
     transform: rotate(var(--tilt));
-    background: linear-gradient(135deg, #252321, #171615);
+    background:
+      linear-gradient(to top, rgb(0 0 0 / 0.18) 17%, rgb(255 255 255 / 0.06) 17% calc(17% + 1px), transparent 0),
+      linear-gradient(135deg, #252321, #171615);
     box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.07),
       0 2px 3px rgb(0 0 0 / 0.25),
       0 18px 30px -14px rgb(0 0 0 / 0.6);
     color: #f2eee6;
@@ -192,6 +198,37 @@ const soonTilt = -4;
   }
   :global([data-theme="dark"]) .desk[data-layout="desk"] {
     --desk-shade: rgb(10 8 6 / 0.45);
+  }
+  /* Where the camera is set down, next to the print it just made. The intro pins its own cutout of the 3D camera here. */
+  .camera-slot {
+    display: none;
+  }
+  .desk[data-layout="desk"] ul {
+    grid-auto-flow: dense;
+  }
+  /* Where the camera is set down; only the intro puts it there. */
+  :global(html[data-intro="play"]) .desk[data-layout="desk"] .camera-slot {
+    display: block;
+    z-index: 5;
+    min-height: 15rem;
+    pointer-events: none;
+    container-type: inline-size;
+  }
+  @media (min-width: 640px) {
+    :global(html[data-intro="play"]) .desk[data-layout="desk"] .camera-slot {
+      grid-column: span 2;
+    }
+  }
+  .camera-slot img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(100%, 24rem);
+    max-width: none;
+    translate: -50% -50%;
+  }
+  .camera-slot img:not([src]) {
+    visibility: hidden;
   }
   :global(html[data-intro="play"]:not([data-landed])) .desk[data-layout="desk"] .desk-top {
     visibility: hidden;
