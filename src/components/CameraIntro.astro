@@ -308,6 +308,7 @@ const POSTER = poster.src;
       const before = desk?.getBoundingClientRect().top ?? 0;
       delete doc.dataset.intro;
       delete doc.dataset.landed;
+      delete doc.dataset.still;
       const shift = (desk?.getBoundingClientRect().top ?? 0) - before;
       if (desk && before < innerHeight && shift) scrollBy({ top: shift, behavior: "instant" });
     };
@@ -317,6 +318,7 @@ const POSTER = poster.src;
     /** The live camera failed: the still takes over where the sequence is. */
     const toStill = () => {
       liveFailed = true;
+      doc.dataset.still = "";
       stop?.();
       stop = undefined;
       delete stage.dataset.live;
@@ -324,6 +326,7 @@ const POSTER = poster.src;
     };
     poster.addEventListener("error", () => liveFailed && giveUp());
     if (liveFailed && stillBroken()) return giveUp();
+    if (liveFailed) doc.dataset.still = "";
 
     // Scroll drives the page from the first frame, whether or not the 3D camera has loaded.
     let p = progress();
@@ -376,6 +379,7 @@ const POSTER = poster.src;
       stop = mountPolaroid600(root.querySelector("canvas")!, model, {
         progress: () => p,
         landing,
+        desk: () => document.querySelector<HTMLElement>('[data-desk][data-layout="desk"] [data-desk-top]'),
         onReady: () => (stage.dataset.live = ""),
         onError: toStill,
       });

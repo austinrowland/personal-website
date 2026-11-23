@@ -1,12 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
-import InkScene from "../components/InkScene.astro";
+import Relief from "../components/Relief.astro";
 import { chapters, closing, values, valuesTitle } from "../data/story";
 import { pages } from "../data/pages";
 import { profilePageJsonLd } from "../lib/structured-data";
 
 const at = closing.text.indexOf(closing.ask);
-const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
 ---
 
 <Base title={pages.story.title} description={pages.story.description} jsonLd={profilePageJsonLd()}>
@@ -42,24 +41,25 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     {
       chapters.map((c, i) => (
         <section class:list={["chapter", { flip: i % 2 === 1 }]} data-chapter aria-labelledby={`chapter-${i}`}>
-          <div class="chapter-art">
-            <InkScene scene={c.scene} class="w-full text-ink" />
-            <span class="hanko" data-hanko aria-hidden="true">{seals[i]}</span>
-          </div>
-          <div class="chapter-text">
-            <hgroup>
-              <p class="label text-muted" data-line>
-                {String(i + 1).padStart(2, "0")} · {c.place}
-              </p>
-              <h2 id={`chapter-${i}`} class="mt-3 font-display text-4xl leading-tight sm:text-5xl" data-line>
-                {c.title}
-              </h2>
-            </hgroup>
-            {c.paragraphs.map((p) => (
-              <p class="story-p mt-6" data-line>
-                {p}
-              </p>
-            ))}
+          <div class="chapter-pin">
+            <div class="chapter-art">
+              <Relief scene={c.scene} class="w-full" />
+            </div>
+            <div class="chapter-text">
+              <hgroup>
+                <p class="label text-muted" data-line>
+                  {String(i + 1).padStart(2, "0")} · {c.place}
+                </p>
+                <h2 id={`chapter-${i}`} class="mt-3 font-display text-4xl leading-tight sm:text-5xl" data-line>
+                  {c.title}
+                </h2>
+              </hgroup>
+              {c.paragraphs.map((p) => (
+                <p class="story-p mt-6" data-line>
+                  {p}
+                </p>
+              ))}
+            </div>
           </div>
         </section>
       ))
@@ -86,30 +86,24 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     }
   }
   .chapter {
+    padding-block: 3.5rem;
+  }
+  .chapter-pin {
     display: grid;
     gap: 2rem;
     align-items: start;
-    padding-block: 3.5rem;
   }
   .chapter-art {
     position: relative;
-    width: min(100%, 17rem);
+    width: min(100%, 24rem);
     margin-inline: auto;
   }
-  .hanko {
-    position: absolute;
-    right: 0.25rem;
-    bottom: 0.5rem;
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border: 2px solid var(--accent);
-    border-radius: 3px;
-    color: var(--accent);
-    font: 600 0.7rem/1 var(--font-mono);
-    transform: rotate(-4deg);
-    opacity: 0.85;
+  /* Sticky boxes are their own stacking contexts, so the relief's blend has to happen at the outermost one to reach the page. */
+  .chapter-pin {
+    mix-blend-mode: multiply;
+  }
+  :global([data-theme="dark"]) .chapter-pin {
+    mix-blend-mode: screen;
   }
   .story-p {
     font-family: var(--font-display);
@@ -119,21 +113,42 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
   }
   @media (min-width: 768px) {
     .chapter {
-      grid-template-columns: 1fr 1fr;
-      gap: 5rem;
       min-height: 125vh;
       padding-block: 0;
     }
+    .chapter-pin {
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+    }
     .chapter-art {
       position: sticky;
-      top: 22vh;
-      width: min(100%, 24rem);
+      top: 14vh;
+      width: min(100%, 32rem);
     }
     .chapter-text {
       padding-block: 26vh 30vh;
     }
     .flip .chapter-art {
       order: 2;
+    }
+  }
+  /* Desktop: each chapter pins its sculpture and text side by side for a beat of scrolling before moving on. */
+  @media (min-width: 768px) and (min-height: 700px) {
+    .chapter {
+      height: 170vh;
+    }
+    .chapter-pin {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      align-items: center;
+    }
+    .chapter-art {
+      position: relative;
+      top: auto;
+    }
+    .chapter-text {
+      padding-block: 0;
     }
   }
   .hero-stroke path {
@@ -151,8 +166,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     stroke-dashoffset: 1;
   }
   :global(.js) .chapter :global(.ink-w),
-  :global(.js) .chapter [data-line],
-  :global(.js) .chapter [data-hanko] {
+  :global(.js) .chapter [data-line] {
     opacity: 0;
   }
   @media print {
@@ -160,8 +174,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
       stroke-dashoffset: 0 !important;
     }
     .chapter :global(.ink-w),
-    .chapter [data-line],
-    .chapter [data-hanko] {
+    .chapter [data-line] {
       opacity: 1 !important;
       transform: none !important;
     }
@@ -175,18 +188,20 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
       stroke-dashoffset: 0;
     }
     :global(.js) .chapter :global(.ink-w),
-    :global(.js) .chapter [data-line],
-    :global(.js) .chapter [data-hanko] {
+    :global(.js) .chapter [data-line] {
       opacity: 1;
     }
   }
 </style>
 
 <script>
+  import { mountReliefs } from "../lib/reliefGL";
   const clamp = (v: number) => Math.min(1, Math.max(0, v));
   const ease = (t: number) => t * t * (3 - 2 * t);
 
   function initStory() {
+    const unmount = mountReliefs(document.querySelector("main") ?? document.body);
+    if (unmount) document.addEventListener("astro:before-swap", unmount, { once: true });
     const chapters = [...document.querySelectorAll<HTMLElement>("[data-chapter]")];
     if (!chapters.length || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const items = chapters.map((el) => ({
@@ -194,7 +209,6 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
       strokes: [...el.querySelectorAll<SVGElement>(".ink-s")],
       washes: [...el.querySelectorAll<SVGElement>(".ink-w")],
       lines: [...el.querySelectorAll<HTMLElement>("[data-line]")],
-      seal: el.querySelector<HTMLElement>("[data-hanko]"),
     }));
 
     // Each chapter's progress runs 0 → 1 as it scrolls from the bottom of the window to the
@@ -202,7 +216,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     const update = () => {
       raf = 0;
       const vh = innerHeight;
-      for (const { el, strokes, washes, lines, seal } of items) {
+      for (const { el, strokes, washes, lines } of items) {
         const r = el.getBoundingClientRect();
         if (r.bottom < -vh || r.top > vh * 2) continue;
         const p = clamp((vh * 0.92 - r.top) / (Math.min(r.height, vh * 1.1) * 0.75));
@@ -212,11 +226,6 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
         });
         const w = String(ease(clamp((p - 0.45) / 0.3)));
         washes.forEach((s) => (s.style.opacity = w));
-        if (seal) {
-          const t = ease(clamp((p - 0.72) / 0.12));
-          seal.style.opacity = String(t * 0.85);
-          seal.style.transform = `rotate(-4deg) scale(${1.4 - t * 0.4})`;
-        }
         lines.forEach((l, i) => {
           const t = ease(clamp((p - 0.08 - i * 0.12) / 0.18));
           l.style.opacity = String(t);
