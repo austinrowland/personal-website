@@ -6,7 +6,6 @@ import { pages } from "../data/pages";
 import { profilePageJsonLd } from "../lib/structured-data";
 
 const at = closing.text.indexOf(closing.ask);
-const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
 ---
 
 <Base title={pages.story.title} description={pages.story.description} jsonLd={profilePageJsonLd()}>
@@ -44,7 +43,6 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
         <section class:list={["chapter", { flip: i % 2 === 1 }]} data-chapter aria-labelledby={`chapter-${i}`}>
           <div class="chapter-art">
             <Relief scene={c.scene} class="w-full" />
-            <span class="hanko" data-hanko aria-hidden="true">{seals[i]}</span>
           </div>
           <div class="chapter-text">
             <hgroup>
@@ -96,21 +94,6 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     width: min(100%, 24rem);
     margin-inline: auto;
   }
-  .hanko {
-    position: absolute;
-    right: 0.25rem;
-    bottom: 0.5rem;
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border: 2px solid var(--accent);
-    border-radius: 3px;
-    color: var(--accent);
-    font: 600 0.7rem/1 var(--font-mono);
-    transform: rotate(-4deg);
-    opacity: 0.85;
-  }
   .story-p {
     font-family: var(--font-display);
     font-size: clamp(1.2rem, 2.2vw, 1.45rem);
@@ -151,8 +134,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     stroke-dashoffset: 1;
   }
   :global(.js) .chapter :global(.ink-w),
-  :global(.js) .chapter [data-line],
-  :global(.js) .chapter [data-hanko] {
+  :global(.js) .chapter [data-line] {
     opacity: 0;
   }
   @media print {
@@ -160,8 +142,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
       stroke-dashoffset: 0 !important;
     }
     .chapter :global(.ink-w),
-    .chapter [data-line],
-    .chapter [data-hanko] {
+    .chapter [data-line] {
       opacity: 1 !important;
       transform: none !important;
     }
@@ -175,8 +156,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
       stroke-dashoffset: 0;
     }
     :global(.js) .chapter :global(.ink-w),
-    :global(.js) .chapter [data-line],
-    :global(.js) .chapter [data-hanko] {
+    :global(.js) .chapter [data-line] {
       opacity: 1;
     }
   }
@@ -197,7 +177,6 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
       strokes: [...el.querySelectorAll<SVGElement>(".ink-s")],
       washes: [...el.querySelectorAll<SVGElement>(".ink-w")],
       lines: [...el.querySelectorAll<HTMLElement>("[data-line]")],
-      seal: el.querySelector<HTMLElement>("[data-hanko]"),
     }));
 
     // Each chapter's progress runs 0 → 1 as it scrolls from the bottom of the window to the
@@ -205,7 +184,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     const update = () => {
       raf = 0;
       const vh = innerHeight;
-      for (const { el, strokes, washes, lines, seal } of items) {
+      for (const { el, strokes, washes, lines } of items) {
         const r = el.getBoundingClientRect();
         if (r.bottom < -vh || r.top > vh * 2) continue;
         const p = clamp((vh * 0.92 - r.top) / (Math.min(r.height, vh * 1.1) * 0.75));
@@ -215,11 +194,6 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
         });
         const w = String(ease(clamp((p - 0.45) / 0.3)));
         washes.forEach((s) => (s.style.opacity = w));
-        if (seal) {
-          const t = ease(clamp((p - 0.72) / 0.12));
-          seal.style.opacity = String(t * 0.85);
-          seal.style.transform = `rotate(-4deg) scale(${1.4 - t * 0.4})`;
-        }
         lines.forEach((l, i) => {
           const t = ease(clamp((p - 0.08 - i * 0.12) / 0.18));
           l.style.opacity = String(t);

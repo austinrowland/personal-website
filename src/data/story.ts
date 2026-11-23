@@ -11,7 +11,7 @@ export type Chapter = {
 export const chapters: Chapter[] = [
   {
     place: "Walkersville, Maryland",
-    title: "Keeping score",
+    title: "Keeping Score",
     scene: "town",
     paragraphs: [
       "I grew up in Walkersville, Maryland, where everything was a competition: grades, sports, whatever my friends could turn into a race. I was a top performer for most of my life, and I liked it best when I was winning.",
@@ -20,7 +20,7 @@ export const chapters: Chapter[] = [
   },
   {
     place: "Georgia Tech",
-    title: "Building for tomorrow",
+    title: "Building for Tomorrow",
     scene: "tower",
     paragraphs: [
       "Georgia Tech was the first place I wasn't at the top. Sophomore year, my money for school fell through. Most weeks ran about 100 hours between a job at Blue Donkey Coffee, my RA job, and five of the hardest classes I've taken, and I came close to leaving for the military.",
@@ -29,7 +29,7 @@ export const chapters: Chapter[] = [
   },
   {
     place: "Spread the Love · Tikkun Olam Makers",
-    title: "Noticing the gaps",
+    title: "Noticing the Gaps",
     scene: "note",
     paragraphs: [
       "So I tried to do everything, and that's where I started noticing gaps. Some were small: a campus that could use more kindness became Spread the Love, free cookies and handwritten notes on the lawn.",
@@ -38,7 +38,7 @@ export const chapters: Chapter[] = [
   },
   {
     place: "Avova Health",
-    title: "A real need, and a real business",
+    title: "A Real Need, and a Real Business",
     scene: "pulse",
     paragraphs: [
       "Avova Health came from the same place. Patients kept telling us their records were scattered across every provider they'd ever seen, so I founded a company to build an AI health companion that pulled them into one profile.",
@@ -47,7 +47,7 @@ export const chapters: Chapter[] = [
   },
   {
     place: "TEDxGeorgiaTech",
-    title: "Ambition and humanity",
+    title: "Ambition and Humanity",
     scene: "stage",
     paragraphs: [
       "In my fourth year I gave a TEDx talk about ambition, my guiding light and my Achilles heel. For years I had pushed myself to make every hour productive, and I kept swinging between good stretches and months where I felt like I wasn't doing enough.",
@@ -56,7 +56,7 @@ export const chapters: Chapter[] = [
   },
   {
     place: "San Francisco, today",
-    title: "Live for today, build for tomorrow",
+    title: "Live for Today, Build for Tomorrow",
     scene: "trail",
     paragraphs: [
       "My passions have changed shape more than direction. Now they're narrower and deeper: go where technology meets real people, watch where it fails, then build the fix. Currently, the world's most urgent problem to address is how humanity will responsibly apply AI to transform the lives of people all over the world and every industry, and I aim to be a part of that solution.",
@@ -65,7 +65,7 @@ export const chapters: Chapter[] = [
   },
 ];
 
-export const valuesTitle = "Three things I try to live by";
+export const valuesTitle = "Three Things I Try to Live By";
 
 export const values = [
   "Make the work visible.",
@@ -74,4 +74,7 @@ export const values = [
 ];
 
 /** The closing line; `ask` is linked to /contact. */
-export const closing = { text: "If any of this sounds like a problem you're working on, let's talk.", ask: "let's talk" };
+export const closing = {
+  text: "If any of this sounds like a problem you're working on, let's talk.",
+  ask: "let's talk",
+};
