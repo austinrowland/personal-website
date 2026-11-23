@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import InkScene from "../components/InkScene.astro";
+import Relief from "../components/Relief.astro";
 import { chapters, closing, values, valuesTitle } from "../data/story";
 import { pages } from "../data/pages";
 import { profilePageJsonLd } from "../lib/structured-data";
@@ -43,7 +43,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
       chapters.map((c, i) => (
         <section class:list={["chapter", { flip: i % 2 === 1 }]} data-chapter aria-labelledby={`chapter-${i}`}>
           <div class="chapter-art">
-            <InkScene scene={c.scene} class="w-full text-ink" />
+            <Relief scene={c.scene} class="w-full" />
             <span class="hanko" data-hanko aria-hidden="true">{seals[i]}</span>
           </div>
           <div class="chapter-text">
@@ -93,7 +93,7 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
   }
   .chapter-art {
     position: relative;
-    width: min(100%, 17rem);
+    width: min(100%, 24rem);
     margin-inline: auto;
   }
   .hanko {
@@ -126,8 +126,8 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
     }
     .chapter-art {
       position: sticky;
-      top: 22vh;
-      width: min(100%, 24rem);
+      top: 14vh;
+      width: min(100%, 32rem);
     }
     .chapter-text {
       padding-block: 26vh 30vh;
@@ -183,10 +183,13 @@ const seals = chapters.map((_, i) => String(i + 1).padStart(2, "0"));
 </style>
 
 <script>
+  import { mountReliefs } from "../lib/reliefGL";
   const clamp = (v: number) => Math.min(1, Math.max(0, v));
   const ease = (t: number) => t * t * (3 - 2 * t);
 
   function initStory() {
+    const unmount = mountReliefs(document.querySelector("main") ?? document.body);
+    if (unmount) document.addEventListener("astro:before-swap", unmount, { once: true });
     const chapters = [...document.querySelectorAll<HTMLElement>("[data-chapter]")];
     if (!chapters.length || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const items = chapters.map((el) => ({

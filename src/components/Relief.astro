@@ -1,0 +1,47 @@
+---
+/**
+ * A plaster bas-relief for a Story chapter. The image stores shading only (the flat wall is 80% grey),
+ * so it can sit on either theme: CSS tints it onto the paper, and the WebGL layer animates it on scroll.
+ */
+import { getImage } from "astro:assets";
+import type { InkScene } from "../data/story";
+import town from "../assets/story/town.png";
+import tower from "../assets/story/tower.png";
+import note from "../assets/story/note.png";
+import pulse from "../assets/story/pulse.png";
+import stage from "../assets/story/stage.png";
+import trail from "../assets/story/trail.png";
+
+interface Props {
+  scene: InkScene;
+  class?: string;
+}
+const { scene, class: className } = Astro.props;
+const src = { town, tower, note, pulse, stage, trail }[scene];
+const img = await getImage({ src, width: 1024, format: "webp", quality: 82 });
+---
+
+<div class:list={["relief", className]} data-relief aria-hidden="true">
+  <img src={img.src} width="1024" height="1024" alt="" loading="eager" decoding="async" draggable="false" />
+</div>
+
+<style>
+  .relief {
+    aspect-ratio: 1;
+  }
+  .relief img {
+    width: 100%;
+    height: 100%;
+    filter: brightness(1.25) grayscale(1);
+    mix-blend-mode: multiply;
+    user-select: none;
+  }
+  :global([data-theme="dark"]) .relief img {
+    filter: brightness(1.25) invert(1);
+    mix-blend-mode: screen;
+    opacity: 0.35;
+  }
+  :global(.relief-gl) .relief img {
+    visibility: hidden;
+  }
+</style>
