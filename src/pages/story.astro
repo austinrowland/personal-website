@@ -169,7 +169,7 @@ const at = closing.text.indexOf(closing.ask);
   :global(.js) .chapter [data-line] {
     opacity: 0;
   }
-  /* With the plaster surface on, text leans with scroll speed and its letterpress shadow follows the light. */
+  /* Lab: ?fx=texture. Text leans with scroll speed and its letterpress shadow follows the light. */
   :global(.fx-texture) .chapter-text {
     transform: skewY(calc(var(--sv, 0) * -0.6deg)) translateY(calc(var(--sv, 0) * -6px));
   }
@@ -211,16 +211,14 @@ const at = closing.text.indexOf(closing.ask);
 </style>
 
 <script>
-  import { mountPageSurface } from "../lib/pageSurface";
   import { mountReliefs } from "../lib/reliefGL";
   const clamp = (v: number) => Math.min(1, Math.max(0, v));
   const ease = (t: number) => t * t * (3 - 2 * t);
 
   function initStory() {
-    // Lab: the plaster surface is on by default; ?fx=plain shows the reliefs on flat paper (tag story-relief-v1).
-    const plain = new URLSearchParams(location.search).get("fx") === "plain";
-    for (const unmount of [plain ? undefined : mountPageSurface(), mountReliefs(document.querySelector("main") ?? document.body)])
-      if (unmount) document.addEventListener("astro:before-swap", unmount, { once: true });
+    const texture = new URLSearchParams(location.search).get("fx") === "texture";
+    const unmount = mountReliefs(document.querySelector("main") ?? document.body, { texture });
+    if (unmount) document.addEventListener("astro:before-swap", unmount, { once: true });
     const chapters = [...document.querySelectorAll<HTMLElement>("[data-chapter]")];
     if (!chapters.length || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const items = chapters.map((el) => ({
