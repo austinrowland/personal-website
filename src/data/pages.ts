@@ -30,7 +30,7 @@ export const pages = {
   writing: {
     path: "/writing",
     title: "Writing",
-    headline: "My thoughts and views on the world",
+    headline: "My Thoughts and Views on the World",
     description: "Essays and field notes from Austin Rowland on agents, APIs, and building.",
   },
   story: {
