@@ -13,7 +13,7 @@ export const experience: Experience[] = [
     end: "Now",
     role: "Founding Forward Deployed Engineer",
     org: "Postman",
-    take: "Working inside the largest API programs to see where agents get stuck, then fixing the route.",
+    take: "Agentic infrastructure for enterprises. Worked on FDE, Applied AI, and AI Research to identify gaps and create solutions for various AI & agent related problems.",
     points: [
       "Part of the CTO's frontier team, running a Build, Operate, Scale model with strategic enterprises.",
       "Helped take Postman from one product to five in a year, working out the roadmap for each new product with our frontier enterprise customers.",
@@ -29,7 +29,7 @@ export const experience: Experience[] = [
     end: "Oct 2025",
     role: "Software Engineer",
     org: "Palo Alto Networks",
-    take: "Core networking and OS work on PAN-OS, and an early piece of the company's agentic coding platform.",
+    take: "Core networking and OS work on PAN-OS, and early contributions to the company's agentic coding harness.",
     points: [
       "Shipped network, infrastructure, and security features in Python, C, and Linux for a firewall OS used by 100K+ businesses.",
       "Designed an IKE/IPSec daemon for more scalable, secure GlobalProtect VPN access.",
@@ -42,7 +42,7 @@ export const experience: Experience[] = [
     end: "Aug 2024",
     role: "Founder",
     org: "Avova Health",
-    take: "Found a real need, and learned that a real need and a working business are two different problems.",
+    take: "Built for a highly painful, real-world need. Learned valuable lessons on the difference between a great product and a great business in this venture.",
     points: [
       "Built an AI health companion that pulled each patient's records from every provider into one profile, on React, Node, and AWS.",
       "Shaped the product through patient interviews, then worked through HIPAA, messy medical data, and keeping the AI's answers grounded.",
@@ -54,7 +54,7 @@ export const experience: Experience[] = [
     end: "Dec 2023",
     role: "Software Engineer Intern",
     org: "Cisco Systems",
-    take: "Learned that most security work is root-cause work.",
+    take: "Learned that the key to scaling work is to automate your job. Become an expert on what you do, then work to replace yourself.",
     points: [
       "Resolved 700+ recurring cloud security issues through root-cause analysis with Wiz and AWS.",
       "Automated vulnerability triage and remediation for 500+ containerized applications.",
@@ -65,7 +65,7 @@ export const experience: Experience[] = [
     end: "Jul 2022",
     role: "Cybersecurity Intern",
     org: "Georgia Tech Research Institute",
-    take: "First time building for systems that can't fail quietly.",
+    take: "First time building for enterprise-grade systems that cannot afford to fail.",
     points: [
       "Developed threat-resistant PLC software for critical infrastructure endpoints.",
       "Built a PLC device with Python and Arduino for packet analysis, IAM, and logic monitoring.",
@@ -96,12 +96,12 @@ export const projects: Project[] = [
     kind: "project",
     years: "2026",
     summary:
-      "An assessment that grades how well agents can discover, understand, and operate an API: 25 checks across five categories.",
+      "A research-backed assessment that grades how well an agent can discover, understand, and operate your product.",
     photo: "postman-ai-ready-apis",
     href: "https://www.postman.com/ai/ai-ready-apis",
   },
   {
-    title: "Customer insights agent",
+    title: "Customer Insights Agent",
     kind: "project",
     years: "2026",
     summary:
@@ -112,7 +112,7 @@ export const projects: Project[] = [
     kind: "venture",
     years: "2024",
     summary:
-      "Our finalist pitch at Mayo Clinic's 2024 startup competition. On stage in front of a room of doctors, I told the story we kept hearing in patient interviews: records scattered across every provider they'd ever seen. Then I showed how Avova's AI health companion pulled them into one profile, and why prevention starts with seeing the whole picture.",
+      "Avova Health pitch at Mayo Clinic startup competition. We told the story we heard from customers on scattered records and provider challenges. Then we showed how Avova's AI companion could retrieve all their records into one profile with personalized analysis, and discussed how preventative health starts with seeing the whole picture.",
     photo: "avova-health",
   },
   {
@@ -120,7 +120,7 @@ export const projects: Project[] = [
     kind: "project",
     years: "2023–2025",
     summary:
-      "Free cookies and handwritten notes on the Georgia Tech lawn: 500, then 1,000, then 4,000+ in total.",
+      "An idea I started with one of my best friends. Created a Georgia Tech school tradition on Valentine's Day of handing out free cookies and handwritten notes from people all over the world. We wanted to make sure that every student felt the love on Valentine's Day. Eventually led to over 4,000 cookies and handwritten notes being given out during my tenure, and that number is still growing today.",
     photo: "spread-the-love",
     href: "https://nique.net/life/students-give-out-2000-cookies-for-valentines-day",
   },
@@ -129,23 +129,23 @@ export const projects: Project[] = [
     kind: "project",
     years: "2022–2024",
     summary:
-      "Led 100+ student makers building assistive technology for 20+ families, with $45k+ raised and three makeathons.",
+      "An assistive technology organization that I led in Atlanta. The concept was simple: match groups of engineers with specific individuals or families living with a disability to create assistive technology that addressed a unique need. Raised $45k, built for more than 20 families in 2 years, and continue to impact more lives today.",
     photo: "tom-build-day",
   },
   {
-    title: "Passive haptic rehab gloves",
+    title: "Passive Haptic Rehab Gloves",
     kind: "project",
     years: "2023",
     summary:
-      "A full-stack app with computer vision tracking to measure stroke patients' motor recovery.",
+      "Worked under Thad Starner's Passive Haptic Rehab Gloves lab. Built a full-stack app with computer vision tracking to measure stroke patients' motor recovery that would pair with the gloves that the team had created.",
     photo: "phr-gloves",
   },
   {
-    title: "Ambition might be your Achilles heel",
+    title: "Ambition Might Be Your Achilles Heel",
     kind: "talk",
     years: "2023",
     summary:
-      "TEDxGeorgiaTech. Ambition expands the field of possibility; discipline is what moves you across it.",
+      "First public speaking venture. Discussed the benefits and challenges of being an ambitious person, with takeaways to help listeners discover their own Achilles Heel and work towards solving it.",
     photo: "tedx-gt",
     href: "/writing/ambition-might-be-your-achilles-heel",
   },
