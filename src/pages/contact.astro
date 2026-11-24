@@ -35,6 +35,11 @@ import { site } from "../data/site";
 </Base>
 
 <script>
+  import { startPageBg } from "../lib/homeBg";
+  document.addEventListener("astro:page-load", () => {
+    if (location.pathname.replace(/\/$/, "") === "/contact") startPageBg();
+  });
+
   function initCopy() {
     document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
       if (btn.dataset.bound) return;

@@ -388,3 +388,28 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     gl?.getExtension("WEBGL_lose_context")?.loseContext();
   };
 }
+
+/**
+ * Mounts the `?bg=` background (drift by default, none with `?bg=none`) until the next page swap,
+ * following reduced motion live: it stops when that's turned on and starts again when it's turned off.
+ */
+export function startPageBg() {
+  const q = new URLSearchParams(location.search).get("bg");
+  if (q === "none") return;
+  const kind = homeBgs.includes(q as HomeBg) ? (q as HomeBg) : "drift";
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  let unmount = mountHomeBg(kind);
+  const onReduce = () => {
+    unmount?.();
+    unmount = reduce.matches ? undefined : mountHomeBg(kind);
+  };
+  reduce.addEventListener("change", onReduce);
+  document.addEventListener(
+    "astro:before-swap",
+    () => {
+      reduce.removeEventListener("change", onReduce);
+      unmount?.();
+    },
+    { once: true },
+  );
+}

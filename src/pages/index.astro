@@ -59,27 +59,8 @@ const typeDone = 700 + chars.length * 55;
 </Base>
 
 <script>
-  import { homeBgs, mountHomeBg, type HomeBg } from "../lib/homeBg";
+  import { startPageBg } from "../lib/homeBg";
   document.addEventListener("astro:page-load", () => {
-    if (location.pathname !== "/") return;
-    const q = new URLSearchParams(location.search).get("bg");
-    if (q === "none") return;
-    const kind = homeBgs.includes(q as HomeBg) ? (q as HomeBg) : "drift";
-    // Follow reduced motion live: stop when it's turned on, start again when it's turned off.
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)");
-    let unmount = mountHomeBg(kind);
-    const onReduce = () => {
-      unmount?.();
-      unmount = reduce.matches ? undefined : mountHomeBg(kind);
-    };
-    reduce.addEventListener("change", onReduce);
-    document.addEventListener(
-      "astro:before-swap",
-      () => {
-        reduce.removeEventListener("change", onReduce);
-        unmount?.();
-      },
-      { once: true },
-    );
+    if (location.pathname === "/") startPageBg();
   });
 </script>
