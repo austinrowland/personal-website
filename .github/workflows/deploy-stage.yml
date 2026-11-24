@@ -1,0 +1,29 @@
+name: deploy-stage
+
+# Deploys to staging: Workers Builds deploys whatever lands on the staging branch to austinrowland-com-staging.
+# Runs on every merge to main, or by hand for any branch, tag or commit (until the next merge replaces it).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit to put on staging
+        default: main
+        required: true
+
+permissions:
+  contents: write
+
+concurrency: deploy-stage
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+      - run: git push --force origin HEAD:refs/heads/staging
+      - run: echo "Put ${{ inputs.ref || github.ref_name }} ($(git rev-parse --short HEAD)) on staging; Workers Builds deploys it to https://austinrowland-com-staging.austinrowland2002.workers.dev." >> "$GITHUB_STEP_SUMMARY"

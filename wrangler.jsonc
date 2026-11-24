@@ -24,8 +24,9 @@
   // Previews (one per branch/PR) need no separate settings: the site has no bindings besides ASSETS.
   "previews": {},
   "env": {
-    // Workers Builds deploys main here (austinrowland-com-staging on workers.dev); the Deploy
-    // action promotes main to production. Routes and vars aren't inherited from the top level.
+    // Workers Builds deploys the staging branch (moved by the deploy-stage action) here, as
+    // austinrowland-com-staging on workers.dev; deploy-prod promotes main to production.
+    // Routes and vars aren't inherited from the top level.
     "staging": {
       "workers_dev": true,
       "routes": [],
