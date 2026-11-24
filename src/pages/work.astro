@@ -315,6 +315,8 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     width: 0.55em;
     height: 1em;
     margin-left: 2px;
+    /* Takes up no room, so a full line never wraps just for the caret. */
+    margin-right: calc(-0.55em - 2px);
     vertical-align: -2px;
     background: var(--accent);
     animation: blink 1s steps(1) infinite;
