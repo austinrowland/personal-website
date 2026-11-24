@@ -13,6 +13,7 @@ const typeDone = 700 + chars.length * 55;
 
 <Base jsonLd={homeJsonLd()}>
   <section
+    data-page-bg
     class="mx-auto flex min-h-[calc(100svh-10rem)] max-w-6xl flex-col justify-center gap-10 px-6 pt-12 pb-24"
   >
     <h1 aria-label={greeting} class="font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl">
@@ -60,7 +61,5 @@ const typeDone = 700 + chars.length * 55;
 
 <script>
   import { startPageBg } from "../lib/homeBg";
-  document.addEventListener("astro:page-load", () => {
-    if (location.pathname === "/") startPageBg();
-  });
+  document.addEventListener("astro:page-load", startPageBg);
 </script>

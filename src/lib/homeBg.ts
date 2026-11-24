@@ -390,10 +390,15 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
 }
 
 /**
- * Mounts the `?bg=` background (drift by default, none with `?bg=none`) until the next page swap,
- * following reduced motion live: it stops when that's turned on and starts again when it's turned off.
+ * On pages with a `data-page-bg` element (whatever URL they were reached by), mounts the `?bg=` background
+ * (drift by default, none with `?bg=none`) until the next page swap, following reduced motion live:
+ * it stops when that's turned on and starts again when it's turned off.
  */
 export function startPageBg() {
+  // Each page's script adds this listener, so after visiting several pages it runs more than once per load.
+  const host = document.querySelector<HTMLElement>("[data-page-bg]");
+  if (!host || host.dataset.pageBgOn) return;
+  host.dataset.pageBgOn = "";
   const q = new URLSearchParams(location.search).get("bg");
   if (q === "none") return;
   const kind = homeBgs.includes(q as HomeBg) ? (q as HomeBg) : "drift";
