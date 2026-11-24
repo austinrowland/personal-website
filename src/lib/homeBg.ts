@@ -65,6 +65,11 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     lastMove = performance.now();
   };
   addEventListener("pointermove", onPointer, { passive: true });
+  const abort = () => {
+    removeEventListener("pointermove", onPointer);
+    themeObs.disconnect();
+    return undefined;
+  };
   const step = (t: number) => {
     if (t - lastMove > 2500 && (kind !== "pixel" || touch)) {
       const s = t / 1000;
@@ -94,7 +99,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
       alpha: false,
       powerPreference: "low-power",
     });
-    if (!gl) return;
+    if (!gl) return abort();
     const g = gl;
     const sh = (type: number, src: string) => {
       const s = g.createShader(type)!;
@@ -106,7 +111,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     g.attachShader(prog, sh(g.VERTEX_SHADER, TIDE_VERT));
     g.attachShader(prog, sh(g.FRAGMENT_SHADER, TIDE_FRAG));
     g.linkProgram(prog);
-    if (!g.getProgramParameter(prog, g.LINK_STATUS)) return;
+    if (!g.getProgramParameter(prog, g.LINK_STATUS)) return abort();
     g.useProgram(prog);
     g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer());
     g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
@@ -174,6 +179,11 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
       };
       let last: { x: number; y: number } | null = null;
       const paint = (x: number, y: number) => {
+        // Pointer moves in agent view would otherwise pile up strokes that flash on return to human view.
+        if (document.documentElement.dataset.reader === "agent") {
+          last = null;
+          return;
+        }
         line(last ?? { x, y }, x, y);
         last = { x, y };
       };
@@ -237,7 +247,8 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
             const m = Math.min(W, H) * 0.08;
             if (b.x < m || b.x > W - m || b.y < m || b.y > H - m) {
               const to = Math.atan2(H / 2 - b.y, W / 2 - b.x);
-              b.a += (((to - b.a + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * Math.min(1, 3 * s);
+              const d = to - b.a;
+              b.a += (d - Math.round(d / (Math.PI * 2)) * Math.PI * 2) * Math.min(1, 3 * s);
             }
             const from = { x: b.x, y: b.y };
             b.x += Math.cos(b.a) * b.v * s;
@@ -370,7 +381,8 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
   let raf = 0;
   const frame = (t: number) => {
     raf = requestAnimationFrame(frame);
-    if (document.hidden) return;
+    // Paused while the tab is hidden or the page is swapped for its Markdown in agent view.
+    if (document.hidden || document.documentElement.dataset.reader === "agent") return;
     step(t);
     draw(t);
   };
@@ -385,4 +397,34 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     cv.remove();
     gl?.getExtension("WEBGL_lose_context")?.loseContext();
   };
+}
+
+/**
+ * On pages with a `data-page-bg` element (whatever URL they were reached by), mounts the `?bg=` background
+ * (drift by default, none with `?bg=none`) until the next page swap, following reduced motion live:
+ * it stops when that's turned on and starts again when it's turned off.
+ */
+export function startPageBg() {
+  // Each page's script adds this listener, so after visiting several pages it runs more than once per load.
+  const host = document.querySelector<HTMLElement>("[data-page-bg]");
+  if (!host || host.dataset.pageBgOn) return;
+  host.dataset.pageBgOn = "";
+  const q = new URLSearchParams(location.search).get("bg");
+  if (q === "none") return;
+  const kind = homeBgs.includes(q as HomeBg) ? (q as HomeBg) : "drift";
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  let unmount = mountHomeBg(kind);
+  const onReduce = () => {
+    unmount?.();
+    unmount = reduce.matches ? undefined : mountHomeBg(kind);
+  };
+  reduce.addEventListener("change", onReduce);
+  document.addEventListener(
+    "astro:before-swap",
+    () => {
+      reduce.removeEventListener("change", onReduce);
+      unmount?.();
+    },
+    { once: true },
+  );
 }

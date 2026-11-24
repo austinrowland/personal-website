@@ -50,7 +50,7 @@ export const pages = {
   contact: {
     path: "/contact",
     title: "Contact",
-    headline: "Building with agents? Let's talk.",
+    headline: "Building something? Overlapping interests? Let's talk.",
     description: "Get in touch with Austin Rowland or book a 30-minute call.",
   },
 } satisfies Record<string, PageMeta>;
