@@ -216,6 +216,7 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
       removeEventListener("scroll", onScroll);
       ro.disconnect();
       io.disconnect();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     },
   };
 }

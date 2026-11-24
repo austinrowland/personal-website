@@ -614,7 +614,13 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     const roles = group("role");
     const projs = group("proj");
     const reduce = matchMedia("(prefers-reduced-motion: reduce)");
-    const jolts = reduce.matches ? undefined : startJolts(stage, seq.querySelector<HTMLCanvasElement>("[data-jolts]")!);
+    const joltCanvas = seq.querySelector<HTMLCanvasElement>("[data-jolts]")!;
+    let jolts = reduce.matches ? undefined : startJolts(stage, joltCanvas);
+    const onReduce = () => {
+      jolts?.stop();
+      jolts = reduce.matches ? undefined : startJolts(stage, joltCanvas);
+    };
+    reduce.addEventListener("change", onReduce);
     const onPointer = (e: PointerEvent) => jolts?.near(e.clientX, e.clientY);
     document.addEventListener("pointerdown", onPointer);
 
@@ -845,6 +851,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
         stop();
         stopTyping();
         jolts?.stop();
+        reduce.removeEventListener("change", onReduce);
         document.removeEventListener("pointerdown", onPointer);
         removeEventListener("resize", measure);
         cancelGlide();
