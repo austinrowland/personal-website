@@ -96,12 +96,12 @@ export const projects: Project[] = [
     kind: "project",
     years: "2026",
     summary:
-      "An assessment that grades how well agents can discover, understand, and operate an API: 25 checks across five categories.",
+      "A research-backed assessment that grades how well an agent can discover, understand, and operate your product.",
     photo: "postman-ai-ready-apis",
     href: "https://www.postman.com/ai/ai-ready-apis",
   },
   {
-    title: "Customer insights agent",
+    title: "Customer Insights Agent",
     kind: "project",
     years: "2026",
     summary:
@@ -112,7 +112,7 @@ export const projects: Project[] = [
     kind: "venture",
     years: "2024",
     summary:
-      "Our finalist pitch at Mayo Clinic's 2024 startup competition. On stage in front of a room of doctors, I told the story we kept hearing in patient interviews: records scattered across every provider they'd ever seen. Then I showed how Avova's AI health companion pulled them into one profile, and why prevention starts with seeing the whole picture.",
+      "Avova Health pitch at Mayo Clinic startup competition. We told the story we heard from customers on scattered records and provider challenges. Then we showed how Avova's AI companion could retrieve all their records into one profile with personalized analysis, and discussed how preventative health starts with seeing the whole picture.",
     photo: "avova-health",
   },
   {
@@ -120,7 +120,7 @@ export const projects: Project[] = [
     kind: "project",
     years: "2023–2025",
     summary:
-      "Free cookies and handwritten notes on the Georgia Tech lawn: 500, then 1,000, then 4,000+ in total.",
+      "An idea I started with one of my best friends. Created a Georgia Tech school tradition on Valentine's Day of handing out free cookies and handwritten notes from people all over the world. We wanted to make sure that every student felt the love on Valentine's Day. Eventually led to over 4,000 cookies and handwritten notes being given out during my tenure, and that number is still growing today.",
     photo: "spread-the-love",
     href: "https://nique.net/life/students-give-out-2000-cookies-for-valentines-day",
   },
@@ -129,23 +129,23 @@ export const projects: Project[] = [
     kind: "project",
     years: "2022–2024",
     summary:
-      "Led 100+ student makers building assistive technology for 20+ families, with $45k+ raised and three makeathons.",
+      "An assistive technology organization that I led in Atlanta. The concept was simple: match groups of engineers with specific individuals or families living with a disability to create assistive technology that addressed a unique need. Raised $45k, built for more than 20 families in 2 years, and continue to impact more lives today.",
     photo: "tom-build-day",
   },
   {
-    title: "Passive haptic rehab gloves",
+    title: "Passive Haptic Rehab Gloves",
     kind: "project",
     years: "2023",
     summary:
-      "A full-stack app with computer vision tracking to measure stroke patients' motor recovery.",
+      "Worked under Thad Starner's Passive Haptic Rehab Gloves lab. Built a full-stack app with computer vision tracking to measure stroke patients' motor recovery that would pair with the gloves that the team had created.",
     photo: "phr-gloves",
   },
   {
-    title: "Ambition might be your Achilles heel",
+    title: "Ambition Might Be Your Achilles Heel",
     kind: "talk",
     years: "2023",
     summary:
-      "TEDxGeorgiaTech. Ambition expands the field of possibility; discipline is what moves you across it.",
+      "First public speaking venture. Discussed the benefits and challenges of being an ambitious person, with takeaways to help listeners discover their own Achilles Heel and work towards solving it.",
     photo: "tedx-gt",
     href: "/writing/ambition-might-be-your-achilles-heel",
   },
