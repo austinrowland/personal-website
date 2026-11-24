@@ -7,11 +7,21 @@
 const VERT = `attribute vec2 p;varying vec2 vUv;varying vec2 vPx;varying float vW;uniform vec4 uRect;uniform vec2 uRes;
 void main(){vUv=p;vec2 px=uRect.xy+p*uRect.zw;vPx=px;vW=uRect.z;vec2 c=px/uRes*2.-1.;gl_Position=vec4(c.x,-c.y,0.,1.);}`;
 
-const FRAG = `precision mediump float;varying vec2 vUv;varying vec2 vPx;varying float vW;uniform sampler2D uTex,uMask;
-uniform float uVel,uTime,uSolid,uDark;uniform vec3 uPaper;uniform vec2 uLight;
-float S(vec2 uv){return texture2D(uTex,uv).r/.8;}
+const FRAG = `precision mediump float;varying vec2 vUv;varying vec2 vPx;varying float vW;uniform sampler2D uTex,uMask,uTex2,uMask2;
+uniform float uVel,uTime,uSolid,uDark,uMix,uDir;uniform vec3 uPaper;uniform vec2 uLight;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+1.),f.x),f.y);}
+// Morphing from one chapter's relief (uTex) into the next (uTex2): the plaster softens, sags and flows,
+// and the new carving takes over along a ragged front that runs the way the sculpture is travelling.
+float melt(){return sin(3.14159*uMix);}
+float front(vec2 uv){float x=uDir>0.?uv.x:1.-uv.x;return smoothstep(-.12,.12,uMix*1.5-.25-(n(uv*3.1+11.)*.55+(1.-x)*.45));}
+vec2 flow(vec2 uv,float seed){float k=melt();return (vec2(n(uv*2.6+seed),n(uv*2.6+seed+17.))-.5)*k*.2+vec2(0.,k*k*.07*n(vec2(uv.x*7.,seed)));}
+float S(vec2 uv){float k=melt();float b=k*2.2;
+  float a=texture2D(uTex,uv+flow(uv,1.),b).r;
+  if(uMix<=0.)return a/.8;
+  float c=texture2D(uTex2,uv+flow(uv,5.),b).r;
+  return (1.+(mix(a,c,front(uv))/.8-1.)*(1.-.3*k));}
+float M(vec2 uv){return mix(texture2D(uMask,uv+flow(uv,1.)).r,texture2D(uMask2,uv+flow(uv,5.)).r,front(uv));}
 void main(){
   vec2 uv=vUv;float v=uVel;
   float bend=(uv.x-.5)*(uv.x-.5)*4.;
@@ -35,7 +45,7 @@ void main(){
   vec2 L=uLight-vPx;float fall=exp(-dot(L,L)/(vW*vW*.5));
   float spec=clamp(dot(-gr,normalize(L+1e-4))*6.,-.25,.35)*fall*vis*edge;
   vec3 col=uPaper*(r+spec*.22);
-  if(uDark>.5){float obj=texture2D(uMask,base).r*vis*edge;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);
+  if(uDark>.5){float obj=M(base)*vis*edge;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);
     vec3 stone=mix(uPaper,vec3(clamp(.2+(s-1.)*.45+key,0.,1.)),obj)+spec*.22*obj;
     vec3 carved=uPaper+vec3(r-1.)*1.15+spec*.35;
     col=mix(carved,stone,.5);}
@@ -144,6 +154,8 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
   gl.useProgram(prog);
   gl.uniform1i(gl.getUniformLocation(prog, "uTex"), 0);
   gl.uniform1i(gl.getUniformLocation(prog, "uMask"), 1);
+  gl.uniform1i(gl.getUniformLocation(prog, "uTex2"), 2);
+  gl.uniform1i(gl.getUniformLocation(prog, "uMask2"), 3);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(
     gl.ARRAY_BUFFER,
@@ -163,6 +175,8 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     dark: U("uDark"),
     paper: U("uPaper"),
     light: U("uLight"),
+    mix: U("uMix"),
+    dir: U("uDir"),
   };
 
   const reliefs: Relief[] = els.map((el) => ({
@@ -205,7 +219,12 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
       );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MIN_FILTER,
+      data instanceof Uint8Array ? gl.LINEAR : gl.LINEAR_MIPMAP_LINEAR,
+    );
+    if (!(data instanceof Uint8Array)) gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     return t;
   };
@@ -267,6 +286,8 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
   };
   addEventListener("pointermove", onPointer, { passive: true });
 
+  // Matches the Story page's desktop layout, where each chapter pins its sculpture and text for a beat.
+  const pinnedLayout = matchMedia("(min-width: 768px) and (min-height: 700px)");
   let lastY = scrollY;
   let vel = 0;
   let alive = true;
@@ -294,28 +315,68 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     gl.uniform3f(u.paper, paper[0], paper[1], paper[2]);
     gl.uniform2f(u.light, light.x, light.y);
     const vh = innerHeight;
-    for (const r of reliefs) {
-      if (!r.tex) continue;
-      const b = r.el.getBoundingClientRect();
-      if (b.bottom < -vh * 0.2 || b.top > vh * 1.2) continue;
-      const solid = solidity(r.chapter.getBoundingClientRect(), vh);
-      if (solid < 0.003) continue;
-      gl.uniform1f(u.solid, solid);
-      // Draw a margin around the box so bent edges never clip; the wall there is flat paper anyway.
-      const m = b.width * 0.08;
-      gl.uniform4f(
-        u.rect,
-        b.left - m,
-        b.top - m,
-        b.width + 2 * m,
-        b.height + 2 * m,
-      );
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, r.mask);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, r.tex);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    }
+    const pinned = pinnedLayout.matches;
+    const boxes = reliefs.map((r) => r.el.getBoundingClientRect());
+    const chapters = reliefs.map((r) => r.chapter.getBoundingClientRect());
+    reliefs.forEach((r, i) => {
+      const b = boxes[i];
+      const c = chapters[i];
+      const next = chapters[i + 1];
+      if (!pinned || (!i && c.top > 0) || (!next && c.top < 0)) {
+        // Stacked phone layout, the first relief arriving and the last one leaving: gather from or scatter into dabs.
+        if (b.bottom < -vh * 0.2 || b.top > vh * 1.2) return;
+        draw(r, r, 0, b, b, solidity(c, vh));
+      } else if (c.top <= 0 && (!next || next.top >= vh)) {
+        draw(r, r, 0, b, b, 1);
+      }
+      if (pinned && next && next.top > 0 && next.top < vh) {
+        // Between two pinned chapters the sculpture stays on the wall and melts from one carving into the next,
+        // sliding across to where the next one will pin.
+        const at = (k: number) => {
+          const p = reliefs[k].el
+            .closest<HTMLElement>(".chapter-pin")!
+            .getBoundingClientRect();
+          const a = boxes[k];
+          return new DOMRect(a.left, a.top - p.top, a.width, a.height);
+        };
+        draw(
+          r,
+          reliefs[i + 1],
+          ramp((1 - next.top / vh - 0.1) / 0.8),
+          at(i),
+          at(i + 1),
+          1,
+        );
+      }
+    });
+  };
+  const draw = (
+    a: Relief,
+    z: Relief,
+    t: number,
+    from: DOMRect,
+    to: DOMRect,
+    solid: number,
+  ) => {
+    if (!a.tex || !z.tex || solid < 0.003) return;
+    const lerp = (p: number, q: number) => p + (q - p) * t;
+    const [x, y, w, h] = [
+      lerp(from.left, to.left),
+      lerp(from.top, to.top),
+      lerp(from.width, to.width),
+      lerp(from.height, to.height),
+    ];
+    gl.uniform1f(u.solid, solid);
+    gl.uniform1f(u.mix, a === z ? 0 : t);
+    gl.uniform1f(u.dir, to.left >= from.left ? 1 : -1);
+    // Draw a margin around the box so bent edges never clip; the wall there is flat paper anyway.
+    const m = w * 0.08;
+    gl.uniform4f(u.rect, x - m, y - m, w + 2 * m, h + 2 * m);
+    [a.tex, a.mask, z.tex, z.mask].forEach((tex, unit) => {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+    });
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
   raf = requestAnimationFrame(frame);
 
