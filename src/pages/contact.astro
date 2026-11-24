@@ -21,7 +21,7 @@ import { site } from "../data/site";
     </div>
   </PageIntro>
 
-  <section class="mx-auto max-w-4xl px-6 pb-28">
+  <section class="mx-auto max-w-4xl px-6 pb-28" data-page-bg>
     <div class="mb-6 flex items-baseline justify-between">
       <h2 class="font-display text-3xl">Book a call</h2>
       <a href={site.calUrl} target="_blank" rel="noopener noreferrer" class="label link text-muted">
@@ -35,6 +35,9 @@ import { site } from "../data/site";
 </Base>
 
 <script>
+  import { startPageBg } from "../lib/homeBg";
+  document.addEventListener("astro:page-load", startPageBg);
+
   function initCopy() {
     document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
       if (btn.dataset.bound) return;
