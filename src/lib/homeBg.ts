@@ -1,10 +1,10 @@
 /**
- * Lab backgrounds for the homepage, picked with ?bg=tide|field|grain (default tide).
- * All three sit on one fixed canvas behind the intro, follow the theme's paper/ink colors,
- * lean toward the pointer, drift on their own on touch screens, and stay off for reduced motion.
+ * Lab backgrounds for the homepage, picked with ?bg=pixel|tide|field|grain (default pixel).
+ * All sit on one fixed canvas behind the intro, follow the theme's paper/ink colors,
+ * react to the pointer, drift on their own on touch screens, and stay off for reduced motion.
  */
-export type HomeBg = "tide" | "field" | "grain";
-export const homeBgs: HomeBg[] = ["tide", "field", "grain"];
+export type HomeBg = "pixel" | "tide" | "field" | "grain";
+export const homeBgs: HomeBg[] = ["pixel", "tide", "field", "grain"];
 
 const hex = (v: string) => {
   const m = v.trim().match(/^#([0-9a-f]{6})$/i);
@@ -51,6 +51,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
   themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   const rgba = (c: number[], a: number) => `rgba(${c.map((v) => Math.round(v * 255)).join(",")},${a})`;
 
+  const touch = matchMedia("(hover: none)").matches;
   const target = { x: innerWidth * 0.7, y: innerHeight * 0.45 };
   const cur = { ...target };
   let lastMove = -1e9;
@@ -61,7 +62,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
   };
   addEventListener("pointermove", onPointer, { passive: true });
   const step = (t: number) => {
-    if (t - lastMove > 2500) {
+    if (t - lastMove > 2500 && (kind !== "pixel" || touch)) {
       const s = t / 1000;
       target.x = innerWidth * (0.62 + 0.25 * Math.sin(s * 0.3));
       target.y = innerHeight * (0.5 + 0.25 * Math.sin(s * 0.45 + 1));
@@ -80,6 +81,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     onResize();
   };
   let draw: (t: number) => void;
+  let unbind = () => {};
   let gl: WebGLRenderingContext | null = null;
 
   if (kind === "tide") {
@@ -126,7 +128,84 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
       cv.height = Math.round(H * dpr);
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    if (kind === "field") {
+    if (kind === "pixel") {
+      // A grid of square tiles; the pointer paints a ragged brush stroke that fades out behind it.
+      let S = 12;
+      let cols = 0;
+      let rows = 0;
+      let heat = new Float32Array(0);
+      let grain = new Float32Array(0);
+      let live = false;
+      const base = onResize;
+      onResize = () => {
+        base();
+        S = W < 700 ? 10 : 12;
+        cols = Math.ceil(W / S);
+        rows = Math.ceil(H / S);
+        heat = new Float32Array(cols * rows);
+        grain = Float32Array.from({ length: cols * rows }, () => Math.random());
+      };
+      const R = () => (W < 700 ? 44 : 60);
+      const stamp = (x: number, y: number) => {
+        const r = R();
+        const c0 = Math.max(0, Math.floor((x - r) / S));
+        const c1 = Math.min(cols - 1, Math.floor((x + r) / S));
+        const r0 = Math.max(0, Math.floor((y - r) / S));
+        const r1 = Math.min(rows - 1, Math.floor((y + r) / S));
+        for (let j = r0; j <= r1; j++)
+          for (let i = c0; i <= c1; i++) {
+            const d = Math.hypot((i + 0.5) * S - x, (j + 0.5) * S - y) / r;
+            const k = j * cols + i;
+            const v = 1 - d * d - grain[k] * 0.45;
+            if (v > heat[k]) heat[k] = v;
+          }
+        live = true;
+      };
+      let last: { x: number; y: number } | null = null;
+      const paint = (x: number, y: number) => {
+        const from = last ?? { x, y };
+        const n = Math.max(1, Math.ceil(Math.hypot(x - from.x, y - from.y) / (S / 2)));
+        for (let s = 1; s <= n; s++) stamp(from.x + ((x - from.x) * s) / n, from.y + ((y - from.y) * s) / n);
+        last = { x, y };
+      };
+      const onMove = (e: PointerEvent) => paint(e.clientX, e.clientY);
+      const onLeave = () => (last = null);
+      addEventListener("pointermove", onMove, { passive: true });
+      addEventListener("pointerdown", onMove, { passive: true });
+      document.documentElement.addEventListener("pointerleave", onLeave);
+      unbind = () => {
+        removeEventListener("pointermove", onMove);
+        removeEventListener("pointerdown", onMove);
+        document.documentElement.removeEventListener("pointerleave", onLeave);
+      };
+      let prev = 0;
+      let drift: { x: number; y: number } | null = null;
+      draw = (t) => {
+        const dt = Math.min(t - prev, 50);
+        prev = t;
+        if (touch && t - lastMove > 2500) {
+          paint(cur.x, cur.y);
+          drift = cur;
+        } else if (drift) {
+          drift = null;
+          last = null;
+        }
+        if (!live) return;
+        g.clearRect(0, 0, W, H);
+        const fade = dt / 900;
+        const gap = S > 10 ? 2 : 1.5;
+        live = false;
+        for (let k = 0; k < heat.length; k++) {
+          const v = heat[k];
+          if (v <= 0) continue;
+          heat[k] = v - fade;
+          live = true;
+          g.fillStyle = rgba(ink, (0.045 + 0.17 * Math.min(v, 1)) * (0.6 + 0.4 * grain[k]));
+          g.fillRect((k % cols) * S, Math.floor(k / cols) * S, S - gap, S - gap);
+        }
+        if (!live) g.clearRect(0, 0, W, H);
+      };
+    } else if (kind === "field") {
       let pts: { x: number; y: number; a: number }[] = [];
       const base = onResize;
       onResize = () => {
@@ -215,6 +294,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     cancelAnimationFrame(raf);
     removeEventListener("resize", resize);
     removeEventListener("pointermove", onPointer);
+    unbind();
     themeObs.disconnect();
     cv.remove();
     gl?.getExtension("WEBGL_lose_context")?.loseContext();

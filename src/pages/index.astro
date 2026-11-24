@@ -64,7 +64,7 @@ const typeDone = 700 + chars.length * 55;
     if (location.pathname !== "/") return;
     const q = new URLSearchParams(location.search).get("bg");
     if (q === "none") return;
-    const kind = homeBgs.includes(q as HomeBg) ? (q as HomeBg) : "tide";
+    const kind = homeBgs.includes(q as HomeBg) ? (q as HomeBg) : "pixel";
     const unmount = mountHomeBg(kind);
     if (unmount) document.addEventListener("astro:before-swap", unmount, { once: true });
   });
