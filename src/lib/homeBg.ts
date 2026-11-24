@@ -371,7 +371,8 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
   let raf = 0;
   const frame = (t: number) => {
     raf = requestAnimationFrame(frame);
-    if (document.hidden) return;
+    // Paused while the tab is hidden or the page is swapped for its Markdown in agent view.
+    if (document.hidden || document.documentElement.dataset.reader === "agent") return;
     step(t);
     draw(t);
   };
