@@ -45,16 +45,21 @@ Workers Builds (Cloudflare's GitHub integration) builds the repo on every push:
 
 | Event | Build command | Deploy command | Result |
 | --- | --- | --- | --- |
-| Push to `main` | `npm run build` | `npx wrangler deploy --env staging` | staging: `austinrowland-com-staging.austinrowland2002.workers.dev` |
+| Push to `staging` (the deploy-stage action, on every merge to `main`) | `npm run build` | `npx wrangler deploy --env staging` | staging: `austinrowland-com-staging.austinrowland2002.workers.dev` |
 | Push to `production` | `npm run build` | `npx wrangler deploy` | production: `austinrowland.com` |
 | Push to any other branch / PR | `npm run build` | `npx wrangler preview` | a Preview URL per branch, commented on the PR |
 
-Merges land on staging only. To ship, run the **Deploy** GitHub action (Actions → Deploy → Run workflow),
-which fast-forwards `production` to `main`. Roll back with `npx wrangler rollback` or the Cloudflare dashboard.
+Merges land on staging only. Two GitHub actions control the deploy branches (Actions → Run workflow):
+
+- **deploy-stage** runs on every merge to `main` and moves `staging` to it. Run it by hand to put any branch,
+  tag or commit on staging before merging; the next merge to `main` replaces it.
+- **deploy-prod** fast-forwards `production` to `main`, shipping it to `austinrowland.com`.
+
+Roll back with `npx wrangler rollback` or the Cloudflare dashboard.
 
 **Launch switch:** `austinrowland.com` and `www.austinrowland.com` are attached as custom domains, but
 the Worker answers them with a noindex "coming soon" page (and a `Disallow: /` robots.txt) until
-`vars.SITE_LIVE` in `wrangler.jsonc` is `"true"`. To launch, flip it in a PR, merge, and run Deploy.
+`vars.SITE_LIVE` in `wrangler.jsonc` is `"true"`. To launch, flip it in a PR, merge, and run deploy-prod.
 Staging and Preview URLs always serve the full site.
 
 GitHub Actions CI (`.github/workflows/ci.yml`) still gates PRs with `npm run check` (`astro check` plus the Worker type check), the build, `npm test`,

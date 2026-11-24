@@ -1,4 +1,4 @@
-name: Deploy
+name: deploy-prod
 
 # Promotes main to austinrowland.com: Workers Builds deploys whatever lands on the production branch.
 on:
@@ -7,7 +7,7 @@ on:
 permissions:
   contents: write
 
-concurrency: deploy
+concurrency: deploy-prod
 
 jobs:
   deploy:
