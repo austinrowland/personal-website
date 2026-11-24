@@ -174,6 +174,11 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
       };
       let last: { x: number; y: number } | null = null;
       const paint = (x: number, y: number) => {
+        // Pointer moves in agent view would otherwise pile up strokes that flash on return to human view.
+        if (document.documentElement.dataset.reader === "agent") {
+          last = null;
+          return;
+        }
         line(last ?? { x, y }, x, y);
         last = { x, y };
       };
