@@ -5,7 +5,7 @@
  */
 type Pt = [number, number];
 type Path = { pts: Pt[]; cum: number[]; len: number; pads: number[] };
-type Jolt = { path: Path; s: number; dir: 1 | -1; a: number };
+type Jolt = { path: Path; s: number; dir: 1 | -1; a: number; speed: number; tail: number };
 type Flash = { p: Pt; t: number; a: number };
 
 // The board's 220px tile, traced exactly as the .backdrop mask in work.astro draws it.
@@ -17,8 +17,6 @@ const ROUTES: Pt[][] = [
   [[0, 120], [30, 120], [50, 100]],
 ];
 const PADS: Pt[] = [[150, 60], [110, 100], [30, 120], [210, 90], [60, 150]];
-const SPEED = 520;
-const TAIL = 110;
 const FLASH_MS = 420;
 
 function toPath(pts: Pt[]): Path {
@@ -82,7 +80,7 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
   const spawn = (path: Path, s: number, dir: 1 | -1, a: number) => {
     if (jolts.length > 24) return;
     color = getComputedStyle(canvas).getPropertyValue("--jolt").trim() || color;
-    jolts.push({ path, s, dir, a });
+    jolts.push({ path, s, dir, a, speed: 380 + Math.random() * 360, tail: 70 + Math.random() * 80 });
     if (!raf) {
       last = performance.now();
       raf = requestAnimationFrame(frame);
@@ -93,7 +91,7 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
   const draw = (j: Jolt) => {
     const end = j.dir > 0 ? j.path.len : 0;
     const head = j.dir > 0 ? Math.min(j.s, end) : Math.max(j.s, end);
-    const tail = Math.max(0, Math.min(j.path.len, j.s - j.dir * TAIL));
+    const tail = Math.max(0, Math.min(j.path.len, j.s - j.dir * j.tail));
     const N = 10;
     ctx.lineCap = "round";
     ctx.shadowColor = `rgb(${color} / ${0.9 * j.a})`;
@@ -125,11 +123,11 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     jolts = jolts.filter((j) => {
       const prev = j.s;
-      j.s += j.dir * SPEED * dt;
+      j.s += j.dir * j.speed * dt;
       for (const pad of j.path.pads)
         if ((pad - prev) * (pad - j.s) <= 0 && pad !== prev) flashes.push({ p: at(j.path, pad), t: now, a: j.a });
       draw(j);
-      return j.dir > 0 ? j.s - TAIL < j.path.len : j.s + TAIL > 0;
+      return j.dir > 0 ? j.s - j.tail < j.path.len : j.s + j.tail > 0;
     });
     flashes = flashes.filter((f) => {
       const t = (now - f.t) / FLASH_MS;
@@ -154,8 +152,8 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
 
   const rand = <T>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
 
-  // A few jolts start on the traces closest to a point (client coordinates) and run away from it.
-  const near = (cx: number, cy: number, n = 3) => {
+  // One to three jolts start on random traces near a point (client coordinates) and run away from it.
+  const near = (cx: number, cy: number) => {
     const r = stage.getBoundingClientRect();
     const x = cx - r.left;
     const y = cy - r.top;
@@ -163,28 +161,28 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
     const tx = Math.floor(x / TILE);
     const ty = Math.floor(y / TILE);
     const hits: { path: Path; s: number; d: number }[] = [];
-    for (let dy = -1; dy <= 1; dy++)
-      for (let dx = -1; dx <= 1; dx++)
+    for (let dy = -2; dy <= 2; dy++)
+      for (let dx = -2; dx <= 2; dx++)
         for (const p of PATHS) {
           const path = offset(p, (tx + dx) * TILE, (ty + dy) * TILE);
           hits.push({ path, ...project(path, x, y) });
         }
-    hits.sort((a, b) => a.d - b.d);
-    for (const h of hits.slice(0, n)) {
+    const pool = hits.filter((h) => h.d < 180).sort(() => Math.random() - 0.5);
+    for (const h of pool.slice(0, 1 + Math.floor(Math.random() * 3))) {
       const toEnd = h.path.len - h.s;
       const dir = toEnd < 40 ? -1 : h.s < 40 ? 1 : Math.random() < 0.5 ? 1 : -1;
       spawn(h.path, h.s, dir, 1);
     }
   };
 
-  // One jolt from the start of a random trace somewhere on screen.
+  // One jolt from a random point on a random trace somewhere on screen.
   const random = (a = 0.85) => {
     if (!visible) return;
     const tx = Math.floor(Math.random() * Math.ceil(stage.clientWidth / TILE));
     const ty = Math.floor(Math.random() * Math.ceil(stage.clientHeight / TILE));
     const path = offset(rand(PATHS), tx * TILE, ty * TILE);
     const dir = Math.random() < 0.5 ? 1 : -1;
-    spawn(path, dir > 0 ? 0 : path.len, dir, a);
+    spawn(path, Math.random() * path.len * 0.6 * (dir > 0 ? 1 : -1) + (dir > 0 ? 0 : path.len), dir, a);
   };
 
   let idle = 0;
