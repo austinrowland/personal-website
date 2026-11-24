@@ -1,11 +1,9 @@
 ---
 import Base from "../layouts/Base.astro";
 import Relief from "../components/Relief.astro";
-import { chapters, closing, values, valuesTitle } from "../data/story";
+import { chapters, themes, values, valuesTitle } from "../data/story";
 import { pages } from "../data/pages";
 import { profilePageJsonLd } from "../lib/structured-data";
-
-const at = closing.text.indexOf(closing.ask);
 
 // The hero's chiseled groove: a V-cut that tapers to a point at each end, with slightly uneven, hand-cut edges.
 const groove = (() => {
@@ -65,7 +63,16 @@ const groove = (() => {
         <path class="floor" d={groove.floor} />
       </svg>
     </div>
-    <p class="label mt-16 text-muted" aria-hidden="true">scroll ↓</p>
+    <ul class="themes mt-10 flex flex-col gap-1 font-display text-xl sm:text-2xl" data-reveal style="--i:2">
+      {
+        themes.map((t) => (
+          <li>
+            {t.place} taught me <em>{t.lesson}</em>.
+          </li>
+        ))
+      }
+    </ul>
+    <p class="label mt-12 text-muted" aria-hidden="true">scroll ↓</p>
   </section>
 
   <div class="mx-auto max-w-6xl px-6 pb-16">
@@ -102,15 +109,16 @@ const groove = (() => {
     <ul class="mt-6 flex flex-col gap-2 font-display text-xl italic text-ink/80 sm:text-2xl" data-reveal style="--i:1">
       {values.map((v) => <li>{v}</li>)}
     </ul>
-    <p class="mt-12 text-lg text-ink/80" data-reveal style="--i:2">
-      {closing.text.slice(0, at)}
-      <a class="link" href="/contact">{closing.ask}</a>
-      {closing.text.slice(at + closing.ask.length)}
-    </p>
   </section>
 </Base>
 
 <style>
+  .themes {
+    color: color-mix(in srgb, var(--color-ink) 75%, transparent);
+  }
+  .themes em {
+    color: var(--color-ink);
+  }
   @media (min-width: 768px) {
     .story-hero {
       min-height: min(78vh, 44rem);

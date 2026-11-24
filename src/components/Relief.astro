@@ -9,7 +9,8 @@ import town from "../assets/story/town.png";
 import tower from "../assets/story/tower.png";
 import note from "../assets/story/note.png";
 import pulse from "../assets/story/pulse.png";
-import stage from "../assets/story/stage.png";
+import scale from "../assets/story/scale.png";
+import agent from "../assets/story/agent.png";
 import trail from "../assets/story/trail.png";
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
   class?: string;
 }
 const { scene, class: className } = Astro.props;
-const src = { town, tower, note, pulse, stage, trail }[scene];
+const src = { town, tower, note, pulse, scale, agent, trail }[scene];
 const img = await getImage({ src, width: 1024, format: "webp", quality: 82 });
 ---
 
