@@ -43,6 +43,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
   <section class="seq" aria-label="Experience and highlights" data-seq>
     <div class="stage" data-stage>
       <div class="backdrop" aria-hidden="true"><div class="orbit"></div></div>
+      <canvas class="jolts" aria-hidden="true" data-jolts></canvas>
       <div class="stage-head" data-head>
         <span class="label text-muted" data-head-label aria-hidden="true">experience</span>
         <div class="flex items-center gap-3">
@@ -378,6 +379,19 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     background: color-mix(in oklab, var(--ink) 17%, transparent);
     mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' fill='none' stroke='%23000' stroke-width='1.2'><path d='M0 40H60L80 60H150M150 60V120L170 140H220M40 220V170L60 150H110M110 150V100M190 0V30L210 50V90M0 120H30L50 100'/><g stroke-width='1.4'><circle cx='150' cy='60' r='3'/><circle cx='110' cy='100' r='3'/><circle cx='30' cy='120' r='3'/><circle cx='210' cy='90' r='3'/><circle cx='60' cy='150' r='3'/></g></svg>") 0 0 / 220px 220px;
   }
+  /* Jolts run on top of the board's traces but fade out later than the board does. */
+  .jolts {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    mask: radial-gradient(ellipse 85% 80% at 50% 50%, #000 45%, transparent 90%);
+    --jolt: 56 182 240;
+  }
+  :global([data-theme="dark"]) .jolts {
+    --jolt: 125 211 252;
+  }
   .orbit {
     position: absolute;
     top: 50%;
@@ -532,6 +546,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
 </style>
 
 <script>
+  import { startJolts } from "../lib/circuitJolts";
   type Pose = { x: number; y: number; z: number; ry: number; rz: number; s: number; op: number; b: number };
   type Group = {
     root: HTMLElement;
@@ -597,6 +612,9 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     const roles = group("role");
     const projs = group("proj");
     const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+    const jolts = reduce.matches ? undefined : startJolts(stage, seq.querySelector<HTMLCanvasElement>("[data-jolts]")!);
+    const onPointer = (e: PointerEvent) => jolts?.near(e.clientX, e.clientY);
+    document.addEventListener("pointerdown", onPointer);
 
     // Roles start evenly around the ring and leave when they reach its right edge;
     // highlights enter at its left edge and finish evenly spaced.
@@ -717,6 +735,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       g.panels.forEach((p, j) => p.classList.toggle("is-active", j === g.active));
       if (g === mode) counter.textContent = `${pad(g.active + 1)} / ${pad(n)}`;
       const el = g.panels[g.active].querySelector<HTMLElement>("[data-type]");
+      if (animate) jolts?.random();
       if (animate && el) type(el);
       else if (el && g === mode) typed.add(el);
     };
@@ -823,6 +842,8 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       () => {
         stop();
         stopTyping();
+        jolts?.stop();
+        document.removeEventListener("pointerdown", onPointer);
         removeEventListener("resize", measure);
         cancelGlide();
         for (const ev of ["wheel", "touchstart", "keydown"]) removeEventListener(ev, cancelGlide);
