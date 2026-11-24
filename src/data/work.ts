@@ -13,7 +13,7 @@ export const experience: Experience[] = [
     end: "Now",
     role: "Founding Forward Deployed Engineer",
     org: "Postman",
-    take: "Working inside the largest API programs to see where agents get stuck, then fixing the route.",
+    take: "Agentic infrastructure for enterprises. Worked on FDE, Applied AI, and AI Research to identify gaps and create solutions for various AI & agent related problems.",
     points: [
       "Part of the CTO's frontier team, running a Build, Operate, Scale model with strategic enterprises.",
       "Helped take Postman from one product to five in a year, working out the roadmap for each new product with our frontier enterprise customers.",
@@ -29,7 +29,7 @@ export const experience: Experience[] = [
     end: "Oct 2025",
     role: "Software Engineer",
     org: "Palo Alto Networks",
-    take: "Core networking and OS work on PAN-OS, and an early piece of the company's agentic coding platform.",
+    take: "Core networking and OS work on PAN-OS, and early contributions to the company's agentic coding harness.",
     points: [
       "Shipped network, infrastructure, and security features in Python, C, and Linux for a firewall OS used by 100K+ businesses.",
       "Designed an IKE/IPSec daemon for more scalable, secure GlobalProtect VPN access.",
@@ -42,7 +42,7 @@ export const experience: Experience[] = [
     end: "Aug 2024",
     role: "Founder",
     org: "Avova Health",
-    take: "Found a real need, and learned that a real need and a working business are two different problems.",
+    take: "Built for a highly painful, real-world need. Learned valuable lessons on the difference between a great product and a great business in this venture.",
     points: [
       "Built an AI health companion that pulled each patient's records from every provider into one profile, on React, Node, and AWS.",
       "Shaped the product through patient interviews, then worked through HIPAA, messy medical data, and keeping the AI's answers grounded.",
@@ -54,7 +54,7 @@ export const experience: Experience[] = [
     end: "Dec 2023",
     role: "Software Engineer Intern",
     org: "Cisco Systems",
-    take: "Learned that most security work is root-cause work.",
+    take: "Learned that the key to scaling work is to automate your job. Become an expert on what you do, then work to replace yourself.",
     points: [
       "Resolved 700+ recurring cloud security issues through root-cause analysis with Wiz and AWS.",
       "Automated vulnerability triage and remediation for 500+ containerized applications.",
@@ -65,7 +65,7 @@ export const experience: Experience[] = [
     end: "Jul 2022",
     role: "Cybersecurity Intern",
     org: "Georgia Tech Research Institute",
-    take: "First time building for systems that can't fail quietly.",
+    take: "First time building for enterprise-grade systems that cannot afford to fail.",
     points: [
       "Developed threat-resistant PLC software for critical infrastructure endpoints.",
       "Built a PLC device with Python and Arduino for packet analysis, IAM, and logic monitoring.",
