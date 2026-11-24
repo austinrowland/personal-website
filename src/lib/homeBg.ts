@@ -237,7 +237,8 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
             const m = Math.min(W, H) * 0.08;
             if (b.x < m || b.x > W - m || b.y < m || b.y > H - m) {
               const to = Math.atan2(H / 2 - b.y, W / 2 - b.x);
-              b.a += (((to - b.a + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * Math.min(1, 3 * s);
+              const d = to - b.a;
+              b.a += (d - Math.round(d / (Math.PI * 2)) * Math.PI * 2) * Math.min(1, 3 * s);
             }
             const from = { x: b.x, y: b.y };
             b.x += Math.cos(b.a) * b.v * s;
