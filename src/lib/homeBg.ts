@@ -1,10 +1,11 @@
 /**
- * Lab backgrounds for the homepage, picked with ?bg=pixel|tide|field|grain (default pixel).
+ * Lab backgrounds for the homepage, picked with ?bg=drift|pixel|tide|field|grain (default drift).
  * All sit on one fixed canvas behind the intro, follow the theme's paper/ink colors,
- * react to the pointer, drift on their own on touch screens, and stay off for reduced motion.
+ * and stay off for reduced motion. "drift" paints pixel strokes on its own; the rest
+ * react to the pointer and drift on their own on touch screens.
  */
-export type HomeBg = "pixel" | "tide" | "field" | "grain";
-export const homeBgs: HomeBg[] = ["pixel", "tide", "field", "grain"];
+export type HomeBg = "drift" | "pixel" | "tide" | "field" | "grain";
+export const homeBgs: HomeBg[] = ["drift", "pixel", "tide", "field", "grain"];
 
 const hex = (v: string) => {
   const m = v.trim().match(/^#([0-9a-f]{6})$/i);
@@ -48,7 +49,10 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
   };
   readTheme();
   const themeObs = new MutationObserver(readTheme);
-  themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  themeObs.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
   const rgba = (c: number[], a: number) => `rgba(${c.map((v) => Math.round(v * 255)).join(",")},${a})`;
 
   const touch = matchMedia("(hover: none)").matches;
@@ -85,7 +89,11 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
   let gl: WebGLRenderingContext | null = null;
 
   if (kind === "tide") {
-    gl = cv.getContext("webgl", { antialias: false, alpha: false, powerPreference: "low-power" });
+    gl = cv.getContext("webgl", {
+      antialias: false,
+      alpha: false,
+      powerPreference: "low-power",
+    });
     if (!gl) return;
     const g = gl;
     const sh = (type: number, src: string) => {
@@ -128,8 +136,8 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
       cv.height = Math.round(H * dpr);
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    if (kind === "pixel") {
-      // A grid of square tiles; the pointer paints a ragged brush stroke that fades out behind it.
+    if (kind === "pixel" || kind === "drift") {
+      // A grid of square tiles; a brush paints ragged strokes that fade out behind it.
       let S = 12;
       let cols = 0;
       let rows = 0;
@@ -146,8 +154,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
         grain = Float32Array.from({ length: cols * rows }, () => Math.random());
       };
       const R = () => (W < 700 ? 44 : 60);
-      const stamp = (x: number, y: number) => {
-        const r = R();
+      const stamp = (x: number, y: number, r = R()) => {
         const c0 = Math.max(0, Math.floor((x - r) / S));
         const c1 = Math.min(cols - 1, Math.floor((x + r) / S));
         const r0 = Math.max(0, Math.floor((y - r) / S));
@@ -161,56 +168,20 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
           }
         live = true;
       };
+      const line = (from: { x: number; y: number }, x: number, y: number, r = R()) => {
+        const n = Math.max(1, Math.ceil(Math.hypot(x - from.x, y - from.y) / (S / 2)));
+        for (let s = 1; s <= n; s++) stamp(from.x + ((x - from.x) * s) / n, from.y + ((y - from.y) * s) / n, r);
+      };
       let last: { x: number; y: number } | null = null;
       const paint = (x: number, y: number) => {
-        const from = last ?? { x, y };
-        const n = Math.max(1, Math.ceil(Math.hypot(x - from.x, y - from.y) / (S / 2)));
-        for (let s = 1; s <= n; s++) stamp(from.x + ((x - from.x) * s) / n, from.y + ((y - from.y) * s) / n);
+        line(last ?? { x, y }, x, y);
         last = { x, y };
       };
-      // A finger that is down (even if still) pauses the idle drift; a new touch starts a fresh stroke.
-      let down = false;
-      let drift: { x: number; y: number } | null = null;
-      const onMove = (e: PointerEvent) => paint(e.clientX, e.clientY);
-      const onDown = (e: PointerEvent) => {
-        down = true;
-        drift = null;
-        last = null;
-        lastMove = performance.now();
-        paint(e.clientX, e.clientY);
-      };
-      const onUp = () => {
-        down = false;
-        last = null;
-        lastMove = performance.now();
-      };
-      const onLeave = () => (last = null);
-      addEventListener("pointermove", onMove, { passive: true });
-      addEventListener("pointerdown", onDown, { passive: true });
-      addEventListener("pointerup", onUp, { passive: true });
-      addEventListener("pointercancel", onUp, { passive: true });
-      document.documentElement.addEventListener("pointerleave", onLeave);
-      unbind = () => {
-        removeEventListener("pointermove", onMove);
-        removeEventListener("pointerdown", onDown);
-        removeEventListener("pointerup", onUp);
-        removeEventListener("pointercancel", onUp);
-        document.documentElement.removeEventListener("pointerleave", onLeave);
-      };
       let prev = 0;
-      draw = (t) => {
-        const dt = Math.min(t - prev, 50);
-        prev = t;
-        if (touch && !down && t - lastMove > 2500) {
-          paint(cur.x, cur.y);
-          drift = cur;
-        } else if (drift) {
-          drift = null;
-          last = null;
-        }
+      const render = (dt: number, life: number) => {
         if (!live) return;
         g.clearRect(0, 0, W, H);
-        const fade = dt / 900;
+        const fade = dt / life;
         const gap = S > 10 ? 2 : 1.5;
         live = false;
         for (let k = 0; k < heat.length; k++) {
@@ -223,6 +194,103 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
         }
         if (!live) g.clearRect(0, 0, W, H);
       };
+      if (kind === "drift") {
+        // A few unseen brushes wander the page on smooth, curling paths. Each stroke swells in,
+        // tapers out, rests, then starts again somewhere new.
+        const brushes = Array.from({ length: innerWidth < 700 ? 2 : 3 }, (_, i) => ({
+          x: 0,
+          y: 0,
+          a: 0,
+          v: 0,
+          r: 0,
+          w: 0,
+          ph: 0,
+          age: 0,
+          life: 0,
+          rest: 300 + i * 900,
+        }));
+        type Brush = (typeof brushes)[number];
+        const spawn = (b: Brush) => {
+          b.x = W * (0.08 + 0.84 * Math.random());
+          b.y = H * (0.1 + 0.8 * Math.random());
+          b.a = Math.random() * Math.PI * 2;
+          b.v = (W < 700 ? 110 : 170) * (0.7 + 0.6 * Math.random());
+          b.r = R() * (0.6 + 0.45 * Math.random());
+          b.w = 0.6 + Math.random();
+          b.ph = Math.random() * 100;
+          b.age = 0;
+          b.life = 1800 + Math.random() * 2600;
+        };
+        draw = (t) => {
+          const dt = Math.min(t - prev, 50);
+          prev = t;
+          for (const b of brushes) {
+            if (b.rest > 0) {
+              b.rest -= dt;
+              if (b.rest <= 0) spawn(b);
+              continue;
+            }
+            b.age += dt;
+            const s = dt / 1000;
+            b.a += (Math.sin(b.ph + b.age * 0.0011 * b.w) * 1.5 + Math.sin(b.ph * 1.7 + b.age * 0.0023) * 0.7) * s;
+            // Near an edge, turn back toward the middle of the page.
+            const m = Math.min(W, H) * 0.08;
+            if (b.x < m || b.x > W - m || b.y < m || b.y > H - m) {
+              const to = Math.atan2(H / 2 - b.y, W / 2 - b.x);
+              b.a += (((to - b.a + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * Math.min(1, 3 * s);
+            }
+            const from = { x: b.x, y: b.y };
+            b.x += Math.cos(b.a) * b.v * s;
+            b.y += Math.sin(b.a) * b.v * s;
+            const p = Math.min(b.age / b.life, 1);
+            line(from, b.x, b.y, b.r * (0.3 + 0.7 * Math.sin(Math.PI * p) ** 0.6));
+            if (p >= 1) b.rest = 300 + Math.random() * 1500;
+          }
+          render(dt, 1400);
+        };
+      } else {
+        // A finger that is down (even if still) pauses the idle drift; a new touch starts a fresh stroke.
+        let down = false;
+        let drift: { x: number; y: number } | null = null;
+        const onMove = (e: PointerEvent) => paint(e.clientX, e.clientY);
+        const onDown = (e: PointerEvent) => {
+          down = true;
+          drift = null;
+          last = null;
+          lastMove = performance.now();
+          paint(e.clientX, e.clientY);
+        };
+        const onUp = () => {
+          down = false;
+          last = null;
+          lastMove = performance.now();
+        };
+        const onLeave = () => (last = null);
+        addEventListener("pointermove", onMove, { passive: true });
+        addEventListener("pointerdown", onDown, { passive: true });
+        addEventListener("pointerup", onUp, { passive: true });
+        addEventListener("pointercancel", onUp, { passive: true });
+        document.documentElement.addEventListener("pointerleave", onLeave);
+        unbind = () => {
+          removeEventListener("pointermove", onMove);
+          removeEventListener("pointerdown", onDown);
+          removeEventListener("pointerup", onUp);
+          removeEventListener("pointercancel", onUp);
+          document.documentElement.removeEventListener("pointerleave", onLeave);
+        };
+        draw = (t) => {
+          const dt = Math.min(t - prev, 50);
+          prev = t;
+          if (touch && !down && t - lastMove > 2500) {
+            paint(cur.x, cur.y);
+            drift = cur;
+          } else if (drift) {
+            drift = null;
+            last = null;
+          }
+          render(dt, 900);
+        };
+      }
     } else if (kind === "field") {
       let pts: { x: number; y: number; a: number }[] = [];
       const base = onResize;
