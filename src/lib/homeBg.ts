@@ -168,22 +168,40 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
         for (let s = 1; s <= n; s++) stamp(from.x + ((x - from.x) * s) / n, from.y + ((y - from.y) * s) / n);
         last = { x, y };
       };
+      // A finger that is down (even if still) pauses the idle drift; a new touch starts a fresh stroke.
+      let down = false;
+      let drift: { x: number; y: number } | null = null;
       const onMove = (e: PointerEvent) => paint(e.clientX, e.clientY);
+      const onDown = (e: PointerEvent) => {
+        down = true;
+        drift = null;
+        last = null;
+        lastMove = performance.now();
+        paint(e.clientX, e.clientY);
+      };
+      const onUp = () => {
+        down = false;
+        last = null;
+        lastMove = performance.now();
+      };
       const onLeave = () => (last = null);
       addEventListener("pointermove", onMove, { passive: true });
-      addEventListener("pointerdown", onMove, { passive: true });
+      addEventListener("pointerdown", onDown, { passive: true });
+      addEventListener("pointerup", onUp, { passive: true });
+      addEventListener("pointercancel", onUp, { passive: true });
       document.documentElement.addEventListener("pointerleave", onLeave);
       unbind = () => {
         removeEventListener("pointermove", onMove);
-        removeEventListener("pointerdown", onMove);
+        removeEventListener("pointerdown", onDown);
+        removeEventListener("pointerup", onUp);
+        removeEventListener("pointercancel", onUp);
         document.documentElement.removeEventListener("pointerleave", onLeave);
       };
       let prev = 0;
-      let drift: { x: number; y: number } | null = null;
       draw = (t) => {
         const dt = Math.min(t - prev, 50);
         prev = t;
-        if (touch && t - lastMove > 2500) {
+        if (touch && !down && t - lastMove > 2500) {
           paint(cur.x, cur.y);
           drift = cur;
         } else if (drift) {
