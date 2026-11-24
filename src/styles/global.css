@@ -136,9 +136,10 @@
   content: "";
   position: absolute;
   left: 100%;
-  top: 0.14em;
+  /* Cap height to just under the baseline, so it lines up with the letters. */
+  top: 0.25em;
   width: 0.06em;
-  height: 0.82em;
+  height: 0.8em;
   margin-left: 0.04em;
   background: currentColor;
   opacity: 0;
