@@ -109,7 +109,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
                   </h3>
                 </hgroup>
                 <p class="take" data-type>{job.take}</p>
-                <ul class="mt-4 flex flex-col gap-2 text-ink/80">
+                <ul class="mt-4 flex flex-col gap-2 text-ink/90">
                   {job.points.map((p) => (
                     <li class="flex gap-3">
                       <span class="text-accent" aria-hidden="true">—</span>
@@ -303,7 +303,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     font-family: var(--font-mono);
     font-size: 0.95rem;
     line-height: 1.6;
-    color: color-mix(in oklab, var(--ink) 80%, transparent);
+    color: color-mix(in oklab, var(--ink) 92%, transparent);
   }
   .panel-title {
     margin-top: 0.25rem;
@@ -378,7 +378,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     content: "";
     position: absolute;
     inset: 0;
-    background: color-mix(in oklab, var(--ink) 17%, transparent);
+    background: color-mix(in oklab, var(--ink) 12%, transparent);
     mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' fill='none' stroke='%23000' stroke-width='1.2'><path d='M0 40H60L80 60H150M150 60V120L170 140H220M40 220V170L60 150H110M110 150V100M190 0V30L210 50V90M0 120H30L50 100'/><g stroke-width='1.4'><circle cx='150' cy='60' r='3'/><circle cx='110' cy='100' r='3'/><circle cx='30' cy='120' r='3'/><circle cx='210' cy='90' r='3'/><circle cx='60' cy='150' r='3'/></g></svg>") 0 0 / 220px 220px;
   }
   /* Jolts run on top of the board's traces but fade out later than the board does. */
@@ -492,6 +492,10 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
     min-height: 6rem;
     overflow-y: auto;
     opacity: 0;
+    /* A soft patch of paper under the text, feathered at the edges, so the board and jolts fade out where you read. */
+    --veil: color-mix(in oklab, var(--paper) 86%, transparent);
+    background: var(--veil);
+    box-shadow: 0 0 16px 8px var(--veil);
   }
   :global(.js) .panel {
     display: none;
@@ -508,6 +512,7 @@ const highlightSpan = `${Math.min(...years)} — ${Math.max(...years)}`;
       right: auto;
       width: min(86vw, 36rem);
       transform: translateX(-50%);
+      box-shadow: 0 0 32px 20px var(--veil);
     }
   }
   @media (min-width: 1024px) {
