@@ -13,7 +13,8 @@ const POSTER = poster.src;
 ---
 
 <section class="scrolly" data-scrolly data-model={MODEL}>
-  <script is:inline define:vars={{ MODEL, POSTER }}>
+  <!-- Reruns on every visit: the client router otherwise skips an inline script it already ran on an earlier visit. -->
+  <script is:inline data-astro-rerun define:vars={{ MODEL, POSTER }}>
     (() => {
       const d = document.documentElement;
       const play =
@@ -22,12 +23,13 @@ const POSTER = poster.src;
         !/[?&]intro=off\b/.test(location.search);
       if (play) {
         d.dataset.intro = "play";
+        const preload = (href) => document.head.querySelector(`link[rel="preload"][href="${href}"]`);
         const still = document.createElement("link");
         still.rel = "preload";
         still.as = "image";
         still.fetchPriority = "high";
         still.href = POSTER;
-        document.head.append(still);
+        if (!preload(POSTER)) document.head.append(still);
         if ("DecompressionStream" in window && document.createElement("canvas").getContext("webgl2")) {
           d.dataset.live3d = "";
           const link = document.createElement("link");
@@ -35,7 +37,7 @@ const POSTER = poster.src;
           link.as = "fetch";
           link.crossOrigin = "anonymous";
           link.href = MODEL;
-          document.head.append(link);
+          if (!preload(MODEL)) document.head.append(link);
         } else delete d.dataset.live3d;
       } else delete d.dataset.intro;
     })();
