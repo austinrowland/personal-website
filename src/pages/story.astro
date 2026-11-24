@@ -196,19 +196,20 @@ const groove = (() => {
     overflow: visible;
     clip-path: inset(-6px calc(100% - var(--cut)) -6px 0);
   }
+  /* The same plaster tones as the reliefs below: warm greys on light paper, neutral greys on dark. */
   .chisel-cut {
-    --shade-top: color-mix(in oklab, var(--ink) 44%, var(--paper));
-    --shade-deep: color-mix(in oklab, var(--ink) 72%, var(--paper));
-    --lit-deep: color-mix(in oklab, var(--ink) 30%, var(--paper));
-    --lit-top: color-mix(in oklab, var(--ink) 6%, var(--paper));
+    --shade-top: #cfcbc6;
+    --shade-deep: #a29e99;
+    --lit-deep: #d9d5cf;
+    --lit-top: #f0ede8;
     --lip: #fff;
   }
   :global([data-theme="dark"]) .chisel-cut {
-    --shade-top: color-mix(in oklab, #000 55%, var(--paper));
-    --shade-deep: #000;
-    --lit-deep: color-mix(in oklab, var(--ink) 16%, var(--paper));
-    --lit-top: color-mix(in oklab, var(--ink) 38%, var(--paper));
-    --lip: color-mix(in oklab, var(--ink) 30%, var(--paper));
+    --shade-top: #0b0b0b;
+    --shade-deep: #040404;
+    --lit-deep: #2c2c2c;
+    --lit-top: #4a4a4a;
+    --lip: #3a3a3a;
   }
   .shade-top {
     stop-color: var(--shade-top);
@@ -238,19 +239,27 @@ const groove = (() => {
     stroke: var(--lip);
     stroke-width: 1.1;
   }
-  /* Stone chips knocked loose at the cutting edge on each strike. */
+  /* Plaster flakes knocked loose along the cut on each strike. */
   .chisel :global(.chip) {
     position: absolute;
     pointer-events: none;
-    background: color-mix(in oklab, var(--ink) 34%, var(--paper));
-    clip-path: polygon(10% 0, 100% 30%, 70% 100%, 0 70%);
+    background: #e4e0da;
+    clip-path: polygon(10% 0, 100% 25%, 75% 100%, 0 65%);
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.28));
+  }
+  :global([data-theme="dark"]) .chisel :global(.chip) {
+    background: #4a4a4a;
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.6));
   }
   .chisel :global(.dust) {
     position: absolute;
     pointer-events: none;
     border-radius: 50%;
-    background: color-mix(in oklab, var(--ink) 18%, var(--paper));
-    filter: blur(2px);
+    background: #d9d5cf;
+    filter: blur(3px);
+  }
+  :global([data-theme="dark"]) .chisel :global(.dust) {
+    background: #2c2c2c;
   }
   :global(.js) .chapter :global(.ink-s) {
     stroke-dasharray: 1;
@@ -292,7 +301,7 @@ const groove = (() => {
   const clamp = (v: number) => Math.min(1, Math.max(0, v));
   const ease = (t: number) => t * t * (3 - 2 * t);
 
-  /** Cuts the hero groove in left to right, one chisel strike at a time, throwing chips off the cutting edge. */
+  /** Cuts the hero groove in left to right with a few heavy chisel strikes, each shedding flakes along the new cut. */
   function chisel() {
     const el = document.querySelector<HTMLElement>("[data-chisel]");
     if (!el || el.dataset.cut) return;
@@ -303,52 +312,66 @@ const groove = (() => {
     let cut = 0;
     const strike = () => {
       const from = cut;
-      cut = Math.min(100, cut + 4.5 + Math.random() * 4.5);
-      // A strike drives the edge forward fast, then it settles; the pause between strikes is uneven, like a hand.
-      const to = cut;
+      const to = (cut = Math.min(100, cut + 12 + Math.random() * 6));
       const clip = (c: number) => `inset(-6px ${100 - c}% -6px 0)`;
       svg
         .animate([{ clipPath: clip(from) }, { clipPath: clip(to) }], {
-          duration: 70,
+          duration: 140,
           easing: "cubic-bezier(0.2, 0.9, 0.3, 1)",
           fill: "forwards",
         })
-        .finished.then((a) => {
-          el.style.setProperty("--cut", `${to}%`);
-          a.cancel();
-        }, () => {});
-      spray(el, (cut / 100) * el.offsetWidth);
-      if (cut < 100) timers.push(window.setTimeout(strike, 110 + Math.random() * 70));
+        .finished.then(
+          (a) => {
+            el.style.setProperty("--cut", `${to}%`);
+            a.cancel();
+          },
+          () => {},
+        );
+      shed(el, (from / 100) * el.offsetWidth, (to / 100) * el.offsetWidth);
+      // An uneven pause between strikes, like a hand resetting the chisel.
+      if (cut < 100) timers.push(window.setTimeout(strike, 260 + Math.random() * 140));
     };
     timers.push(window.setTimeout(strike, 450));
     document.addEventListener("astro:before-swap", () => timers.forEach(clearTimeout), { once: true });
   }
 
-  function spray(el: HTMLElement, x: number) {
+  /** Flakes from the stretch just cut: the biggest pop up off the chisel's edge, the rest crumble and fall below the line. */
+  function shed(el: HTMLElement, from: number, to: number) {
     const y = el.offsetHeight / 2;
-    const bits = 2 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < bits + 2; i++) {
-      const dust = i >= bits;
+    const add = (cls: string, size: number, x: number, frames: Keyframe[], duration: number, delay = 0) => {
       const bit = document.createElement("span");
-      bit.className = dust ? "dust" : "chip";
-      const size = dust ? 5 + Math.random() * 6 : 1.5 + Math.random() * 2.5;
+      bit.className = cls;
       Object.assign(bit.style, { width: `${size}px`, height: `${size}px`, left: `${x - size / 2}px`, top: `${y - size / 2}px` });
       el.append(bit);
-      // Chips fly up and forward off the edge, then fall; dust drifts and fades where it was struck.
-      const dx = dust ? 4 + Math.random() * 8 : 6 + Math.random() * 22;
-      const up = dust ? 3 + Math.random() * 5 : 6 + Math.random() * 12;
-      const fall = dust ? -2 : 10 + Math.random() * 18;
-      const spin = (Math.random() - 0.5) * 540;
       bit
-        .animate(
-          [
-            { transform: "translate(0, 0) rotate(0deg)", opacity: dust ? 0.7 : 1 },
-            { transform: `translate(${dx * 0.55}px, ${-up}px) rotate(${spin * 0.5}deg)`, opacity: dust ? 0.4 : 1, offset: 0.35 },
-            { transform: `translate(${dx}px, ${fall}px) rotate(${spin}deg)`, opacity: 0 },
-          ],
-          { duration: dust ? 700 + Math.random() * 300 : 450 + Math.random() * 300, easing: "cubic-bezier(0.3, 0.6, 0.6, 1)" },
-        )
+        .animate(frames, { duration, delay, easing: "linear", fill: "backwards" })
         .finished.then(() => bit.remove(), () => bit.remove());
+    };
+    // Sampled along a parabola so the flakes accelerate as they fall.
+    const arc = (dx: number, up: number, fall: number, spin: number) =>
+      [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => ({
+        transform: `translate(${dx * t}px, ${-up * 4 * t * (1 - t) + fall * t * t}px) rotate(${spin * t}deg)`,
+        opacity: t < 0.75 ? 1 : (1 - t) * 4,
+      }));
+    const spin = () => (Math.random() - 0.5) * 720;
+    for (let i = 0; i < 3 + Math.random() * 2; i++)
+      add("chip", 3 + Math.random() * 3, to, arc(8 + Math.random() * 26, 10 + Math.random() * 14, 34 + Math.random() * 30, spin()), 650 + Math.random() * 300);
+    for (let i = 0; i < 7 + Math.random() * 5; i++) {
+      const x = from + (to - from) * Math.random() ** 0.6;
+      add("chip", 1.5 + Math.random() * 2.5, x, arc((Math.random() - 0.3) * 10, Math.random() * 4, 26 + Math.random() * 34, spin()), 600 + Math.random() * 500, Math.random() * 260);
+    }
+    for (let i = 0; i < 2; i++) {
+      const x = to - Math.random() * 10;
+      add(
+        "dust",
+        8 + Math.random() * 8,
+        x,
+        [
+          { transform: "translate(0, 0) scale(0.6)", opacity: 0.8 },
+          { transform: `translate(${4 + Math.random() * 8}px, ${6 + Math.random() * 6}px) scale(1.6)`, opacity: 0 },
+        ],
+        800 + Math.random() * 400,
+      );
     }
   }
 
