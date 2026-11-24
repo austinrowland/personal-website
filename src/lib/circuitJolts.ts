@@ -60,6 +60,12 @@ const offset = (path: Path, ox: number, oy: number): Path => ({
 export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return { near() {}, random() {}, stop() {} };
+  const clear = () => {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  };
   let jolts: Jolt[] = [];
   let flashes: Flash[] = [];
   let raf = 0;
@@ -120,7 +126,7 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
   const frame = (now: number) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    clear();
     jolts = jolts.filter((j) => {
       const prev = j.s;
       j.s += j.dir * j.speed * dt;
@@ -216,7 +222,7 @@ export function startJolts(stage: HTMLElement, canvas: HTMLCanvasElement) {
       removeEventListener("scroll", onScroll);
       ro.disconnect();
       io.disconnect();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      clear();
     },
   };
 }
