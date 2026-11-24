@@ -65,6 +65,11 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     lastMove = performance.now();
   };
   addEventListener("pointermove", onPointer, { passive: true });
+  const abort = () => {
+    removeEventListener("pointermove", onPointer);
+    themeObs.disconnect();
+    return undefined;
+  };
   const step = (t: number) => {
     if (t - lastMove > 2500 && (kind !== "pixel" || touch)) {
       const s = t / 1000;
@@ -94,7 +99,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
       alpha: false,
       powerPreference: "low-power",
     });
-    if (!gl) return;
+    if (!gl) return abort();
     const g = gl;
     const sh = (type: number, src: string) => {
       const s = g.createShader(type)!;
@@ -106,7 +111,7 @@ export function mountHomeBg(kind: HomeBg): (() => void) | undefined {
     g.attachShader(prog, sh(g.VERTEX_SHADER, TIDE_VERT));
     g.attachShader(prog, sh(g.FRAGMENT_SHADER, TIDE_FRAG));
     g.linkProgram(prog);
-    if (!g.getProgramParameter(prog, g.LINK_STATUS)) return;
+    if (!g.getProgramParameter(prog, g.LINK_STATUS)) return abort();
     g.useProgram(prog);
     g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer());
     g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
