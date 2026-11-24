@@ -43,7 +43,7 @@ void main(){
   if(uDark>.5){float obj=texture2D(uMask,base).r*vis;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);
     vec3 stone=mix(uPaper,vec3(clamp(.2+(s-1.)*.45+key,0.,1.)),obj)+spec*.22*obj;
     vec3 carved=uPaper+vec3(r-1.)*1.15+spec*.35;
-    col=mix(carved,stone,.5);}
+    col=mix(carved,stone,.5)*(1.-.18*obj);}
   gl_FragColor=vec4(col,1.);
 }`;
 
