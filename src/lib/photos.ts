@@ -18,8 +18,7 @@ const photoFocus: Record<string, string> = {
   "tedx-gt": "42% 58%",
   "spread-the-love": "50% 38%",
   "tom-build-day": "55% 45%",
-  "georgia-tech-graduation": "42% 45%",
-  "graduation-interview": "50% 40%",
+  "gt-with-bethanie": "29% 50%",
   "guatemala-summit": "28% 50%",
   "postman-ai-ready-apis": "60% 35%",
 };

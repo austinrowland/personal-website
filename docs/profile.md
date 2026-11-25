@@ -143,8 +143,9 @@ field reports — one operating pattern with different props.
   tedx-gt.jpg, tikkun-olam-speech.jpg, ultramarathon.JPG
 - **Site photos** (web-sized, in `src/assets/photos/`): tedx-gt,
   spread-the-love, tom-build-day (toddler mobility trainer build day),
-  avova-health (Mayo Clinic stage), georgia-tech-graduation,
-  graduation-interview (interviewed on mic at commencement),
+  avova-health (Mayo Clinic stage), gt-with-bethanie (Austin and
+  Bethanie in gowns at GT), valentines-albums (custom Valentine's Day
+  album cover, Luv Wav Bounces Vol. 2),
   guatemala-summit (volcano summit, active volcano in the background),
   postman-ai-ready-apis (with the "Are your APIs ready for AI agents?"
   billboard in SF), fishbowl (the Fishbowl band and friends on a
