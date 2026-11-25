@@ -13,7 +13,7 @@
   },
   "observability": { "enabled": true },
   // Launch switch: austinrowland.com serves a "coming soon" page until this is "true".
-  "vars": { "SITE_LIVE": "false" },
+  "vars": { "SITE_LIVE": "true" },
   // Production lives only on the custom domains; staging (below) owns the workers.dev site.
   "workers_dev": false,
   "preview_urls": true,
