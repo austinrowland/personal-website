@@ -5,6 +5,8 @@ import { agentHeaders, decodePath, markdownTokens, notFoundPath, planRequest, re
 // austinrowland.com shows a placeholder until SITE_LIVE is "true" in wrangler.jsonc; staging on
 // workers.dev and Preview URLs always serve the full site.
 const LAUNCH_HOSTS = new Set(["austinrowland.com", "www.austinrowland.com"]);
+// www and plain http links land on the one address search engines should index.
+const CANONICAL_ORIGIN = "https://austinrowland.com";
 
 const PLACEHOLDER = `<!doctype html>
 <html lang="en">
@@ -34,6 +36,9 @@ const CONDITIONAL_HEADERS = ["if-match", "if-none-match", "if-modified-since", "
 
 export default {
   async fetch(request, env) {
+    const requested = new URL(request.url);
+    if (LAUNCH_HOSTS.has(requested.hostname) && requested.origin !== CANONICAL_ORIGIN)
+      return Response.redirect(CANONICAL_ORIGIN + requested.pathname + requested.search, 301);
     if (LAUNCH_HOSTS.has(new URL(request.url).hostname) && env.SITE_LIVE !== "true") return placeholder(request);
     const url = new URL(request.url);
     const moved = redirectFor(decodePath(request.url));
