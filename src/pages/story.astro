@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import Relief from "../components/Relief.astro";
-import { chapters, themes, values, valuesTitle } from "../data/story";
+import { chapters, values, valuesTitle } from "../data/story";
 import { pages } from "../data/pages";
 import { profilePageJsonLd } from "../lib/structured-data";
 
@@ -63,16 +63,7 @@ const groove = (() => {
         <path class="floor" d={groove.floor} />
       </svg>
     </div>
-    <ul class="themes mt-10 flex flex-col gap-1 font-display text-xl sm:text-2xl" data-reveal style="--i:2">
-      {
-        themes.map((t) => (
-          <li>
-            {t.place} taught me <em>{t.lesson}</em>.
-          </li>
-        ))
-      }
-    </ul>
-    <p class="label mt-12 text-muted" aria-hidden="true">scroll ↓</p>
+    <p class="label mt-16 text-muted" aria-hidden="true">scroll ↓</p>
   </section>
 
   <div class="mx-auto max-w-6xl px-6 pb-16">
@@ -113,12 +104,6 @@ const groove = (() => {
 </Base>
 
 <style>
-  .themes {
-    color: color-mix(in srgb, var(--color-ink) 75%, transparent);
-  }
-  .themes em {
-    color: var(--color-ink);
-  }
   @media (min-width: 768px) {
     .story-hero {
       min-height: min(78vh, 44rem);

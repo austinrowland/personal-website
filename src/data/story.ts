@@ -9,13 +9,6 @@ export type Chapter = {
   paragraphs: string[];
 };
 
-/** The three places, and what each one taught. Shown under the hero, in the order the chapters visit them. */
-export const themes = [
-  { place: "Walkersville", lesson: "compassion" },
-  { place: "Atlanta", lesson: "ambition" },
-  { place: "San Francisco", lesson: "endurance" },
-];
-
 export const chapters: Chapter[] = [
   {
     place: "Walkersville, Maryland",
