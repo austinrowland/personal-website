@@ -60,7 +60,7 @@ export const chapters: Chapter[] = [
     title: "Building for an Agentic World",
     scene: "agent",
     paragraphs: [
-      "My role at Postman covers lots of different challenges. I was hired into Postman as a founding FDE, but the nature of my job evolved constantly as the company worked to figure out its AI-native pivot. I ended up working under the CTO across FDE, Applied AI, AI research, and GTM strategy.",
+      "My role at Postman covers lots of different challenges. I was hired into Postman as a founding FDE, but the nature of my job evolved constantly as the company worked to figure out its AI-native pivot. I worked on building with enterprise customers and scaling up across all 5 products in the portfolio. I ended up working under the CTO across FDE, Applied AI, AI research, and GTM strategy.",
       "During this chapter, the founder in me took over to navigate these challenges. Pick specific domains or products, become an expert in them, and continue solving bottlenecks for both customers and Postman to create scaled impact in various elements of the portfolio. I am very proud of the work I have shipped here at Postman as a result of owning my work end-to-end.",
     ],
   },
