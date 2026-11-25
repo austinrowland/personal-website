@@ -19,7 +19,7 @@ export const themes = [
 export const chapters: Chapter[] = [
   {
     place: "Walkersville, Maryland",
-    title: "Learning",
+    title: "Learning to Serve Others",
     scene: "town",
     paragraphs: [
       "I grew up in Walkersville, Maryland with a great friend group. Everything was a competition: grades, sports, hobbies. School came naturally to me and I had loved learning growing up. While technology wasn't a big focus in our area, it was the place I built a lot of my values.",
