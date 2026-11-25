@@ -331,7 +331,7 @@ const agentsMd = [
     const fill = mode === "agent" ? "#111" : css.getPropertyValue("--paper").trim() || "#fff";
     const speck = mode === "agent" ? "#e6e6e6" : css.getPropertyValue("--ink").trim() || "#000";
 
-    const T = Math.round(Math.min(96, Math.max(48, Math.min(w, h) / 9)));
+    const T = Math.round(Math.min(40, Math.max(24, Math.min(w, h) / 22)));
     const ox = from.left + from.width / 2;
     const oy = from.top + from.height / 2;
     const far = Math.max(Math.hypot(ox, oy), Math.hypot(w - ox, oy), Math.hypot(ox, h - oy), Math.hypot(w - ox, h - oy));
