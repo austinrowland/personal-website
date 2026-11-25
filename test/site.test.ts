@@ -261,7 +261,7 @@ describe("agent files", () => {
     for (const path of sitemapPaths()) {
       const html = readFileSync(`dist${path}index.html`, "utf8");
       assert.ok(html.includes(`<link rel="alternate" type="text/markdown" href="${markdownPathFor(path)}"`), path);
-      assert.match(html, /<meta property="og:image" content="https:\/\/austinrowland\.com\/og\.png"/);
+      assert.match(html, /<meta property="og:image" content="https:\/\/austinrowland\.com\/og\.png(\?v=\d+)?"/);
       for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) JSON.parse(m[1]);
     }
     assert.match(readFileSync("dist/index.html", "utf8"), /"@type":"Person"/);

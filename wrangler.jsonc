@@ -12,6 +12,8 @@
     "not_found_handling": "404-page"
   },
   "observability": { "enabled": true },
+  // wrangler dev otherwise rewrites local requests to austinrowland.com, which the Worker redirects.
+  "dev": { "host": "localhost" },
   // Launch switch: austinrowland.com serves a "coming soon" page until this is "true".
   "vars": { "SITE_LIVE": "true" },
   // Production lives only on the custom domains; staging (below) owns the workers.dev site.
