@@ -16,6 +16,9 @@ interface Props {
   loading?: "eager" | "lazy";
   /** "contain" shows the whole photo inside the frame instead of cropping. */
   fit?: "cover" | "contain";
+  /** Frame width ÷ height when cropping with cover, so `sizes` covers the cropped-away overflow. */
+  frameAspect?: number;
+  quality?: number;
 }
 
 const {
@@ -29,10 +32,22 @@ const {
   sizes = "(min-width: 768px) 50vw, 100vw",
   loading = "lazy",
   fit = "cover",
+  frameAspect,
+  quality,
 } = Astro.props;
 
 const image = src ?? getPhoto(name);
 const focus = getPhotoFocus(name);
+
+// A wide photo cropped into a narrower frame is drawn wider than the frame, so ask for more pixels.
+const overflow = image && fit === "cover" && frameAspect ? Math.max(1, image.width / image.height / frameAspect) : 1;
+const scaledSizes =
+  overflow > 1
+    ? sizes
+        .split(",")
+        .map((entry) => entry.trim().replace(/(\S+)$/, (len) => `calc(${len} * ${overflow.toFixed(3)})`))
+        .join(", ")
+    : sizes;
 ---
 
 <figure class="flex flex-col gap-2">
@@ -43,8 +58,9 @@ const focus = getPhotoFocus(name);
           src={image}
           alt={alt}
           widths={[...new Set(widths.map((w) => Math.min(w, image.width)))]}
-          sizes={sizes}
+          sizes={scaledSizes}
           loading={loading}
+          quality={quality}
           class:list={[
             "h-full w-full",
             fit === "contain" ? "object-contain" : "object-cover",

@@ -24,7 +24,16 @@ const Tag = href ? "a" : "div";
   }
   <div class="inner">
     <div class="face front">
-      <Photo alt={photo.alt} name={photo.name} class="aspect-square" imgClass="film" sizes="(min-width: 768px) 22rem, 90vw" />
+      <Photo
+        alt={photo.alt}
+        name={photo.name}
+        class="aspect-square"
+        imgClass="film"
+        sizes="(min-width: 768px) 22rem, 90vw"
+        widths={[480, 800, 1200, 1600, 2400]}
+        frameAspect={1}
+        quality={90}
+      />
       <p class="caption">{photo.caption}</p>
     </div>
     {
