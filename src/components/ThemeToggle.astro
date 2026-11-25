@@ -1,17 +1,36 @@
 <button
   type="button"
   data-theme-toggle
-  class="label flex items-center gap-1.5 text-muted transition-colors hover:text-ink"
+  class="flex h-6 w-6 items-center justify-center text-muted transition-colors hover:text-ink"
   aria-label="Toggle dark mode"
+  title="Toggle dark mode"
 >
-  <span
+  <svg
     aria-hidden="true"
-    class="inline-block h-2.5 w-2.5 rounded-full border border-current bg-transparent dark:bg-current"
-  ></span>
-  <span class="inline">
-    <span class="dark:hidden">light</span>
-    <span class="hidden dark:inline">dark</span>
-  </span>
+    class="h-[15px] w-[15px] dark:hidden"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path
+      d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+    ></path>
+  </svg>
+  <svg
+    aria-hidden="true"
+    class="hidden h-[15px] w-[15px] dark:block"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
 </button>
 
 <script>
