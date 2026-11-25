@@ -45,7 +45,7 @@ const scaledSizes =
   overflow > 1
     ? sizes
         .split(",")
-        .map((entry) => entry.trim().replace(/(\S+)$/, (len) => `calc(${len} * ${overflow.toFixed(3)})`))
+        .map((entry) => entry.trim().replace(/^(\([^)]*\)\s+)?(.+)$/, (_, media = "", len) => `${media}calc(${len} * ${overflow.toFixed(3)})`))
         .join(", ")
     : sizes;
 ---
