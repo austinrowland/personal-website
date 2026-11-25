@@ -1,47 +1,59 @@
 /**
  * One fixed WebGL canvas behind the Story page that draws every chapter's relief where its <img> sits.
- * Each relief gathers out of scattered brush dabs as its chapter scrolls in, holds solid beside the text,
- * and scatters as the chapter leaves; scroll velocity also bends and smears the plaster,
- * and the pointer (or a slow drift on touch screens) rakes a light across it.
+ * Like a sculpted plaster wall: each relief swells up out of the flat wall as it scrolls in and sinks back
+ * into it as it leaves, along a flowing front where the plaster softens and sags as it changes height.
+ * Scroll velocity bends the plaster, and the pointer (or a slow drift on touch screens) rakes a light across it.
  */
 const VERT = `attribute vec2 p;varying vec2 vUv;varying vec2 vPx;varying float vW;uniform vec4 uRect;uniform vec2 uRes;
 void main(){vUv=p;vec2 px=uRect.xy+p*uRect.zw;vPx=px;vW=uRect.z;vec2 c=px/uRes*2.-1.;gl_Position=vec4(c.x,-c.y,0.,1.);}`;
 
-const FRAG = `precision mediump float;varying vec2 vUv;varying vec2 vPx;varying float vW;uniform sampler2D uTex,uMask;
-uniform float uVel,uTime,uSolid,uDark;uniform vec3 uPaper;uniform vec2 uLight;
-float S(vec2 uv){return texture2D(uTex,uv).r/.8;}
-float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+const FRAG = `#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 vUv;varying vec2 vPx;varying float vW;uniform sampler2D uTex,uMask;
+uniform float uVel,uIn,uOut,uDark,uScroll;uniform vec3 uPaper;uniform vec2 uLight;
+float h(vec2 p){p=mod(p,64.);return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+1.),f.x),f.y);}
+float fbm(vec2 p){return .6*n(p)+.3*n(p*2.3+7.)+.1*n(p*5.1+3.);}
+// How far the plaster stands out of the wall here: it rises from the bottom as the relief scrolls in and
+// sinks from the top as it scrolls out, along a ragged front fixed to the wall so it flows past as you scroll.
+float extrude(vec2 uv,vec2 wall){
+  vec2 w=wall+vec2(fbm(wall*1.3),fbm(wall*1.3+9.))*.9;
+  float rise=.55*fbm(w)+.45*(1.-uv.y);
+  float sink=.55*fbm(w+21.)+.45*uv.y;
+  return smoothstep(rise-.16,rise+.16,uIn*1.5-.25)*(1.-smoothstep(sink-.16,sink+.16,uOut*1.5-.25));
+}
 void main(){
   vec2 uv=vUv;float v=uVel;
   float bend=(uv.x-.5)*(uv.x-.5)*4.;
   uv.y+=v*.07*bend;
-  uv.x+=v*.035*(sin(uv.y*9.+uTime*1.7)*.6+sin(uv.y*23.-uTime*2.3)*.4);
-  float a=clamp(1.-uSolid+abs(v)*.35,0.,1.);
-  float ang=n(uv*2.3+3.)*4.;float c=cos(ang),sn=sin(ang);mat2 m=mat2(c,-sn,sn,c);
-  vec2 sc=vec2(1.,2.8);float cs=mix(1./70.,1./16.,a);
-  vec2 dp=(m*uv)*sc/cs;vec2 di=floor(dp),df=fract(dp);
-  float best=9.;vec2 bc=vec2(0.);float bh=0.;
-  for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));vec2 o=vec2(h(di+g),h(di+g+19.));float d=length(g+o-df);if(d<best){best=d;bc=di+g+o;bh=h(di+g+5.);}}
-  vec2 cuv=(bc*cs/sc)*m+(vec2(h(bc),h(bc+3.))-.5)*a*.05;
-  vec2 base=mix(uv,cuv,smoothstep(.02,.55,a));
-  float s=0.;for(int i=0;i<5;i++){s+=S(base+vec2(0.,(float(i)/4.-.5)*v*.09));}s/=5.;
-  float th=.45*bh+.3*n(uv*5.)+.25*min(1.,length(uv-.5)*1.6);
-  float vis=smoothstep(0.,.22,uSolid*1.3-th)*(1.-smoothstep(.45,1.,best)*a*.8);
+  vec2 wall=(vPx+vec2(0.,uScroll))/260.;
+  float e=extrude(vUv,wall);
+  // Where the height is changing the plaster is soft: it blurs, flows and sags a little.
+  float m=4.*e*(1.-e);
+  vec2 base=uv+(vec2(fbm(wall*2.+4.),fbm(wall*2.+13.))-.5)*m*.09+vec2(0.,m*.035);
+  float b=m*2.5;
+  float s=texture2D(uTex,base,b).r/.8;
+  float lift=mix(.05,1.,e)*clamp(min(uIn,1.-uOut)*6.,0.,1.);
   vec2 q=min(vUv,1.-vUv);float edge=smoothstep(0.,.09,min(q.x,q.y));
-  float r=1.+(s-1.)*vis*edge;
-  vec2 e=vec2(1.5/1024.,0.);
-  vec2 gr=vec2(S(base+e.xy)-S(base-e.xy),S(base+e.yx)-S(base-e.yx));
+  float vis=lift*edge;
+  float r=1.+(s-1.)*vis;
+  vec2 ex=vec2(1.5/1024.,0.);
+  vec2 gr=vec2(texture2D(uTex,base+ex.xy,b).r-texture2D(uTex,base-ex.xy,b).r,texture2D(uTex,base+ex.yx,b).r-texture2D(uTex,base-ex.yx,b).r)/.8;
   vec2 L=uLight-vPx;float fall=exp(-dot(L,L)/(vW*vW*.5));
-  float spec=clamp(dot(-gr,normalize(L+1e-4))*6.,-.25,.35)*fall*vis*edge;
+  float spec=clamp(dot(-gr,normalize(L+1e-4))*6.,-.25,.35)*fall*vis;
   vec3 col=uPaper*(r+spec*.22);
-  if(uDark>.5){float obj=texture2D(uMask,base).r*vis*edge;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);col=mix(uPaper,vec3(clamp(.2+(s-1.)*.45+key,0.,1.)),obj)+spec*.22*obj;}
+  if(uDark>.5){float obj=texture2D(uMask,base).r*vis;float key=clamp(dot(-gr,vec2(.7,.7))*3.5,-.05,.07);
+    vec3 stone=mix(uPaper,vec3(clamp(.2+(s-1.)*.45+key,0.,1.)),obj)+spec*.22*obj;
+    vec3 carved=uPaper+vec3(r-1.)*1.15+spec*.35;
+    col=mix(carved,stone,.5)*(1.-.18*obj);}
   gl_FragColor=vec4(col,1.);
 }`;
 
 type Relief = {
   el: HTMLElement;
-  chapter: HTMLElement;
   img: HTMLImageElement;
   tex: WebGLTexture | null;
   mask: WebGLTexture | null;
@@ -52,15 +64,11 @@ const ramp = (v: number) => {
   return t * t * (3 - 2 * t);
 };
 
-/**
- * How finished a chapter's relief is: it gathers from loose dabs while the chapter scrolls in,
- * holds solid while its text is beside it, and scatters again as the chapter leaves.
- */
-const solidity = (c: DOMRect, vh: number) =>
-  Math.min(
-    ramp((vh * 0.95 - c.top) / (vh * 0.55)),
-    ramp((c.bottom - vh * 0.3) / (vh * 0.4)),
-  );
+/** How far a relief has risen out of the wall as its box scrolls in from below, and sunk back as it leaves at the top. */
+const rising = (b: DOMRect, vh: number) =>
+  ramp((vh - b.top) / (vh * 0.45));
+const sinking = (b: DOMRect, vh: number) =>
+  ramp((vh * 0.35 - b.bottom) / (vh * 0.4));
 
 const MASK = 128;
 
@@ -155,8 +163,9 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     rect: U("uRect"),
     res: U("uRes"),
     vel: U("uVel"),
-    time: U("uTime"),
-    solid: U("uSolid"),
+    rise: U("uIn"),
+    sink: U("uOut"),
+    scroll: U("uScroll"),
     dark: U("uDark"),
     paper: U("uPaper"),
     light: U("uLight"),
@@ -164,7 +173,6 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
 
   const reliefs: Relief[] = els.map((el) => ({
     el,
-    chapter: el.closest<HTMLElement>("[data-chapter]") ?? el,
     img: el.querySelector("img")!,
     tex: null,
     mask: null,
@@ -202,7 +210,12 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
       );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MIN_FILTER,
+      data instanceof Uint8Array ? gl.LINEAR : gl.LINEAR_MIPMAP_LINEAR,
+    );
+    if (!(data instanceof Uint8Array)) gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     return t;
   };
@@ -286,18 +299,19 @@ export function mountReliefs(root: HTMLElement): (() => void) | undefined {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform2f(u.res, innerWidth, innerHeight);
     gl.uniform1f(u.vel, vel);
-    gl.uniform1f(u.time, t / 1000);
     gl.uniform1f(u.dark, dark);
     gl.uniform3f(u.paper, paper[0], paper[1], paper[2]);
     gl.uniform2f(u.light, light.x, light.y);
+    gl.uniform1f(u.scroll, scrollY);
     const vh = innerHeight;
     for (const r of reliefs) {
       if (!r.tex) continue;
       const b = r.el.getBoundingClientRect();
-      if (b.bottom < -vh * 0.2 || b.top > vh * 1.2) continue;
-      const solid = solidity(r.chapter.getBoundingClientRect(), vh);
-      if (solid < 0.003) continue;
-      gl.uniform1f(u.solid, solid);
+      const rise = rising(b, vh);
+      const sink = sinking(b, vh);
+      if (rise < 0.003 || sink > 0.997) continue;
+      gl.uniform1f(u.rise, rise);
+      gl.uniform1f(u.sink, sink);
       // Draw a margin around the box so bent edges never clip; the wall there is flat paper anyway.
       const m = b.width * 0.08;
       gl.uniform4f(
