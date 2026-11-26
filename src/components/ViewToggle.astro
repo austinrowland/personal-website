@@ -98,13 +98,44 @@ const agentsMd = [
     background: currentColor;
   }
 
+  /* Agent palette follows the light/dark theme. */
+  :global(html) {
+    --agent-bg: #f7f7f5;
+    --agent-text: #2a2a2a;
+    --agent-strong: #0d0d0d;
+    --agent-muted: #6e6e6e;
+    --agent-url: #707070;
+    --agent-faint: #707070;
+    --agent-rule: #e2e2de;
+    --agent-chip: #d9d9d5;
+    --agent-switch-line: #d6d6d2;
+    --agent-hover: #a3a39f;
+    --agent-current: #8a8a86;
+    --agent-pressed: #e4e4e0;
+    --agent-switch-bg: rgba(250, 250, 248, 0.9);
+  }
+  :global(html[data-theme="dark"]) {
+    --agent-bg: #111;
+    --agent-text: #e6e6e6;
+    --agent-strong: #f2f2f2;
+    --agent-muted: #8a8a8a;
+    --agent-url: #7f7f7f;
+    --agent-faint: #7f7f7f;
+    --agent-rule: #262626;
+    --agent-chip: #2e2e2e;
+    --agent-switch-line: #333;
+    --agent-hover: #4a4a4a;
+    --agent-current: #5a5a5a;
+    --agent-pressed: #3a3a3a;
+    --agent-switch-bg: rgba(40, 40, 40, 0.9);
+  }
   /* Agent mode: the whole site becomes Markdown on a terminal-style page. */
   :global(html[data-reader="agent"]) {
-    background: #111;
-    color-scheme: dark;
+    background: var(--agent-bg);
+    color-scheme: light;
   }
   :global(html[data-reader="agent"] body) {
-    background: #111;
+    background: var(--agent-bg);
   }
   :global(html[data-reader="agent"] [data-human-view]) {
     display: none !important;
@@ -113,18 +144,18 @@ const agentsMd = [
     display: block;
   }
   :global(html[data-reader="agent"]) .switch-group {
-    border-color: #333;
-    background: rgba(40, 40, 40, 0.9);
+    border-color: var(--agent-switch-line);
+    background: var(--agent-switch-bg);
   }
-  :global(html[data-reader="agent"]) .theme-slot {
-    display: none;
+  :global(html[data-reader="agent"][data-theme="dark"]) {
+    color-scheme: dark;
   }
   :global(html[data-reader="agent"]) .view-mode {
-    color: #8a8a8a;
+    color: var(--agent-muted);
   }
   :global(html[data-reader="agent"]) .view-mode[aria-pressed="true"] {
-    color: #f2f2f2;
-    background: #3a3a3a;
+    color: var(--agent-strong);
+    background: var(--agent-pressed);
   }
   /* The Markdown view fills the window: a full-height frame, a sticky row of page paths, a wide reading column. */
   [data-agent-view] {
@@ -132,13 +163,13 @@ const agentsMd = [
     font-family: var(--font-mono);
     font-size: 14px;
     line-height: 1.75;
-    color: #e6e6e6;
+    color: var(--agent-text);
   }
   .agent-frame {
     min-height: 100vh;
     margin: 0 clamp(0.5rem, 2vw, 2rem);
-    border-left: 1px solid #262626;
-    border-right: 1px solid #262626;
+    border-left: 1px solid var(--agent-rule);
+    border-right: 1px solid var(--agent-rule);
     padding: 0 clamp(1rem, 3vw, 2.5rem) 7rem;
   }
   .agent-nav {
@@ -149,7 +180,7 @@ const agentsMd = [
     justify-content: space-between;
     gap: 1rem;
     padding: 0.75rem 0;
-    background: #111;
+    background: var(--agent-bg);
     font-size: 13px;
   }
   .chips,
@@ -165,24 +196,24 @@ const agentsMd = [
   }
   .chip {
     flex-shrink: 0;
-    border: 1px solid #2e2e2e;
+    border: 1px solid var(--agent-chip);
     padding: 0.2rem 0.6rem;
-    color: #8a8a8a;
+    color: var(--agent-muted);
     white-space: nowrap;
     text-decoration: none;
   }
   [data-agent-view] a.chip:hover,
   .agent-bar button:hover {
-    color: #f2f2f2;
+    color: var(--agent-strong);
     text-decoration: none;
-    border-color: #4a4a4a;
+    border-color: var(--agent-hover);
   }
   [data-agent-view] a.chip[aria-current="page"],
   [data-agent-view] a.chip-home {
-    color: #f2f2f2;
+    color: var(--agent-strong);
   }
   [data-agent-view] a.chip[aria-current="page"] {
-    border-color: #5a5a5a;
+    border-color: var(--agent-current);
   }
   .agent-bar button {
     cursor: pointer;
@@ -201,7 +232,7 @@ const agentsMd = [
     max-width: 84ch;
     margin: 6rem auto 0;
     padding-top: 2rem;
-    border-top: 1px solid #262626;
+    border-top: 1px solid var(--agent-rule);
     font-size: 13px;
   }
   .foot-cols {
@@ -211,7 +242,7 @@ const agentsMd = [
   }
   .foot-line {
     margin-top: 3rem;
-    color: #6a6a6a;
+    color: var(--agent-faint);
   }
   @media (max-width: 640px) {
     [data-agent-view] {
@@ -222,7 +253,7 @@ const agentsMd = [
     }
   }
   [data-agent-view] :global(a) {
-    color: #f2f2f2;
+    color: var(--agent-strong);
     text-decoration: none;
   }
   [data-agent-view] :global(a:hover) {
@@ -230,7 +261,7 @@ const agentsMd = [
     text-decoration-color: var(--color-accent);
   }
   [data-agent-view] :global(.md-url) {
-    color: #7a7a7a;
+    color: var(--agent-url);
   }
 </style>
 <script>
@@ -327,8 +358,8 @@ const agentsMd = [
     cv.height = Math.ceil(h * dpr);
     ctx.scale(dpr, dpr);
     const css = getComputedStyle(document.documentElement);
-    const fill = mode === "agent" ? "#111" : css.getPropertyValue("--paper").trim() || "#fff";
-    const speck = mode === "agent" ? "#e6e6e6" : css.getPropertyValue("--ink").trim() || "#000";
+    const fill = css.getPropertyValue(mode === "agent" ? "--agent-bg" : "--paper").trim() || "#fff";
+    const speck = css.getPropertyValue(mode === "agent" ? "--agent-text" : "--ink").trim() || "#000";
 
     const T = Math.round(Math.min(40, Math.max(24, Math.min(w, h) / 22)));
     const ox = from.left + from.width / 2;
